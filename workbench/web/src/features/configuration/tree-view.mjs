@@ -14,12 +14,12 @@ const chevron = '<span class="tree-chevron" aria-hidden="true"></span>';
 // 无子项的行也保留同宽的行尾占位，让状态徽标在所有行落在同一竖列。
 const chevronBlank = '<span class="tree-chevron tree-chevron-blank" aria-hidden="true"></span>';
 
-export function renderConfigurationTree(guide, activeStep, activeModule = '', activeTab = 'config') {
+export function renderConfigurationTree(guide, activeStep, activeModule = '') {
   const moduleBranch = (item, step) => {
     const active = activeModule === item.id;
     const number = moduleNumber(step,item.id);
-    const route = tab => `#/project/${step.id}?module=${encodeURIComponent(item.id)}&tab=${tab}`;
-    return `<li><details class="configuration-module-branch" data-tree-branch data-state-key="tree-module-${item.id}" ${active?'open':''}><summary><a class="configuration-tree-module ${active?'active':''}" href="${route('config')}" data-tree-module="${item.id}" data-state="${item.state}" ${active?'aria-current="location"':''}><span class="tree-module-number">${number}</span><span class="tree-module-title">${esc(item.title)}</span>${configurationStatus(item)}</a>${chevron}</summary><ul class="configuration-module-pages" aria-label="${esc(item.title)}配置">${[['config','配置'],['data','数据'],['interfaces','接口']].map(([tab,label])=>`<li><a href="${route(tab)}" data-tree-tab="${tab}" ${active && (activeTab || 'config') === tab?'aria-current="page"':''}>${label}</a></li>`).join('')}</ul></details></li>`;
+    const route = `#/project/${step.id}?module=${encodeURIComponent(item.id)}&tab=config`;
+    return `<li class="configuration-tree-item configuration-module-leaf"><a class="configuration-tree-module ${active?'active':''}" href="${route}" data-tree-module="${item.id}" data-state="${item.state}" ${active?'aria-current="page"':''}><span class="tree-module-number">${number}</span><span class="tree-module-title">${esc(item.title)}</span>${configurationStatus(item)}</a>${chevronBlank}</li>`;
   };
   return `<nav class="configuration-tree guide-steps" aria-label="配置步骤" data-live="guide-steps"><div class="configuration-tree-heading"><strong>配置目录</strong>${fieldHelp('参数与依赖检查通过后自动打勾。修改配置会重新检查；对勾仅表示配置完整，设备时序与性能仍需实测。','完成状态')}</div><ul>${guide.steps.map((step,index) => {
     const active = step.id === activeStep, children = step.children || [], included = children.filter(child => child.state !== 'disabled');

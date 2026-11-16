@@ -1,9 +1,10 @@
-import { checkAlgorithmChildren } from '../modules/algorithm/children.mjs';
+import { checkAlgorithmChildren, CHILD_TYPES } from '../modules/algorithm/children.mjs';
 import { checkAlgorithmPaths } from '../modules/algorithm/foc-lifecycle/paths.mjs';
 import { checkCoreConfigShape } from '../modules/hardware/hw-platform/cores.mjs';
 import { checkResourceShape } from '../modules/hardware/hw-board/resources.mjs';
 import { checkTripShape } from '../modules/hardware/hw-safety/paths.mjs';
 import { checkDriverCommandShape } from '../modules/hardware/hw-drivers/protocol.mjs';
+import { checkCustomDriverShape } from '../modules/hardware/hw-drivers/custom-drivers.mjs';
 import { select, choices, unset } from '../modules/shared/fields.mjs';
 export { MODULES, MODULE_IDS } from '../modules/registry.mjs';
 /** Shared module metadata for project configuration and reusable driver profiles. */
@@ -16,22 +17,24 @@ export const LAYERS = Object.freeze([
 export const TARGET_FIELDS = Object.freeze([
   select('vendor', 'MCU 厂商', choices([unset, ['st', 'ST'], ['hpmicro', '先楫 HPMicro'], ['other', '其他']]), 'compile', '选型信息不会自动证明外设能力或实时性能。'),
   { key: 'mcu', label: 'MCU 型号', type: 'text', phase: 'compile', description: '选择已维护的 MCU 型号；生成支持范围由构建检查确认。', required: true, defaultValue: '' },
-  { key: 'board', label: 'PCBA 型号 / 版本', type: 'text', phase: 'init', description: '选择已维护的 PCBA 型号或版本。新增板卡需实现对应适配。', required: true, defaultValue: '' },
+  { key: 'board', label: '版本', type: 'text', phase: 'init', description: '填写驱动器版本字符串，例如 V1.0 或 Rev.A。', required: true, defaultValue: '' },
 ]);
 
 const parameterError = message => { throw new Error(message); };
 export function checkParameter(value, parameter, location) {
   if (value === null) return;
   switch (parameter.type) {
-    case 'algorithm-children': checkAlgorithmChildren(value); break;
+    case 'algorithm-children': { const moduleId=location?.split('.').at(-2); checkAlgorithmChildren(value,Object.hasOwn(CHILD_TYPES,moduleId)?moduleId:undefined); break; }
     case 'algorithm-paths': checkAlgorithmPaths(value); break;
     case 'core-config': checkCoreConfigShape(value); break;
     case 'resource-list': checkResourceShape(value); break;
     case 'trip-list': checkTripShape(value); break;
     case 'command-list': checkDriverCommandShape(value); break;
+    case 'custom-driver-list': checkCustomDriverShape(value); break;
     case 'number': if (typeof value !== 'number' || !Number.isFinite(value)) parameterError(`${location} 必须是有限数字或 null。`); break;
     case 'integer': if (!Number.isSafeInteger(value)) parameterError(`${location} 必须是安全整数或 null。`); break;
     case 'boolean': if (typeof value !== 'boolean') parameterError(`${location} 必须是布尔值或 null。`); break;
+    case 'signal-reference':
     case 'text': if (typeof value !== 'string') parameterError(`${location} 必须是文本或 null。`); break;
     case 'select': if (!parameter.options.some(option => option.value === value)) parameterError(`${location} 不是允许的选项。`); break;
     case 'multiselect':

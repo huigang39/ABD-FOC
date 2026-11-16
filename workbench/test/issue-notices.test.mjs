@@ -19,7 +19,30 @@ test('issue dialog entry points safely preserve IDs and titles containing HTML d
   assert(!html.includes('<script>'));
   assert.match(html, /data-live="a&quot;b"/);
   assert.match(html, /type="button"/);
+  assert.match(html, /aria-label="&lt;script&gt;&quot;检查&quot;&lt;\/script&gt;，1 项"/);
+  assert.match(html, /title="&lt;script&gt;&quot;检查&quot;&lt;\/script&gt;，1 项"/);
   assert.equal(issueNoticeButton([]), '');
+});
+
+test('issue actions use a check icon, exact accessible count and the highest relevant severity', () => {
+  for (const [levels, level] of [
+    [['info', 'warning', 'error'], 'error'],
+    [['success', 'pending'], 'warning'],
+    [['warning', 'info'], 'warning'],
+    [['info', 'success'], 'normal'],
+  ]) {
+    const issues = levels.map((value, index) => ({ id: `issue-${index}`, level: value }));
+    const html = issueNoticeButton(issues, { label: '查看分区检查' });
+    assert.match(html, new RegExp(`data-level="${level}"`));
+    assert.match(html, /<use href="\/assets\/icons\.svg#check"/);
+    assert.match(html, new RegExp(`aria-label="查看分区检查，${issues.length} 项"`));
+    assert.match(html, new RegExp(`<span class="notification-action-count" aria-hidden="true">${issues.length}<\\/span>`));
+    assert.deepEqual(issueGroups(html), [issues.map(issue => issue.id)]);
+    assert.doesNotMatch(html, /<\/svg>查看分区检查/);
+  }
+  const many = Array.from({ length: 120 }, (_, index) => ({ id: `issue-${index}`, level: 'info' }));
+  assert.match(issueNoticeButton(many), />120<\/span>/);
+  assert.match(issueNoticeButton([], { showEmpty: true }), /data-level="normal"[^>]*aria-label="查看检查结果，0 项"/);
 });
 
 test('shelf diagnostics keep the selected scope without truncating or rendering detailed feedback inline', () => {

@@ -14,16 +14,21 @@ import { newModuleProject } from './support/new-project.mjs';
 const params = p => p.instances['hw-drivers'].parameters;
 const motor = p => params(p).motorEncoderCommands;
 const dataCommand = (overrides = {}) => Object.assign(createDriverCommand('data', 'test-data'), overrides);
-test('serial roles mount the command editor inside the communication section only', () => {
-  const p = createNeo75hProject(), resources = p.instances['hw-board'].parameters.resources;
-  const html = renderSensorConfig(params(p), f => `<input data-key="${f.key}">`, { renderTransport: role => renderSensorTransport(params(p), role, resources, { mcu: p.target.mcu, owner: 'driver' }), renderCommands: role => renderCommandEditor(role, params(p)[role.prefix + 'Commands'] || []) });
-  assert.match(html, /通信与帧格式/); assert.match(html, /data-edit="pcba-resource" data-id="USART2" data-owner="driver"/);
-  assert.match(html, /data-action="add-driver-command" data-role="motor" data-purpose="data"/);
-  assert.match(html, /data-edit="driver-command" data-id="motor-data"/);
-  assert.doesNotMatch(html, /data-key="motorEncoderTransferMode"|data-key="motorEncoderRequestHex"/);
-  params(p).motorEncoderInterface = 'adc'; params(p).outputEncoderInterface = 'adc'; params(p).torqueSensorInterface = 'adc';
-  assert.doesNotMatch(renderSensorConfig(params(p), () => '', { renderCommands: role => renderCommandEditor(role, []) }), /add-driver-command/);
+test('driver cards expose model and configured peripheral dropdown while keeping rates and protocol editors hidden', () => {
+  const p = createNeo75hProject(), before = structuredClone(params(p)), fields = [];
+  const resources = p.instances['hw-board'].parameters.resources;
+  const html = renderSensorConfig(params(p), field => { fields.push(field); return `<input data-key="${field.key}">`; }, { resources, renderTransport: () => { throw new Error('transport editor must not render'); }, renderCommands: () => { throw new Error('command editor must not render'); } });
+  assert.deepEqual(fields.map(field => field.key), ['motorEncoderModel','motorEncoderResource','outputEncoderModel','outputEncoderResource','torqueSensorModel','torqueSensorResource','gateDriverModel','gateDriverResource','gateDriverEnablePin']);
+  for (const field of fields.filter(field => field.key.endsWith('Resource'))) {
+    assert.equal(field.type, 'select');
+    assert.equal(field.label, '外设');
+    assert.ok(field.options.some(option => option.value === params(p)[field.key]));
+    assert.ok(field.options.every(option => !option.value || resources.some(resource => resource.id === option.value && resource.instance)));
+  }
+  assert.doesNotMatch(html, /通信与帧格式|data-edit="pcba-resource"|add-driver-command|data-edit="driver-command"|sensor-communication|type="checkbox"|bind-driver-resource|data-instance=/);
+  assert.deepEqual(params(p), before);
 });
+
 test('command editor renders every whitelisted field and hides data-only keys', () => {
   const p = createNeo75hProject();
   const html = renderCommandEditor(SENSOR_ROLES[0], motor(p), { owner: 'driver-1' });

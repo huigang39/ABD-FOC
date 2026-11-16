@@ -1,8 +1,10 @@
+import { migrateMotionLoopParameters } from '../../modules/application/app-motion/migration.mjs';
 /** Independent design-time layer releases. These snapshots do not contain firmware.
  * Shared interface structures, faults, protocol, build settings and equipment catalogs
  * stay on the project: applying a layer never deletes cross-layer references.
  */
 import { LAYERS, MODULES, TARGET_FIELDS, checkParameter } from '../../core/catalog.mjs';
+import { migrateAngleDelayParameters } from '../../modules/algorithm/foc-compensation/migration.mjs';
 import { createMemoryLayout, createMemoryPlan, checkMemoryLayoutShape } from '../deployment/flash.mjs';
 
 export const LAYER_VERSION_IDS = Object.freeze(['hardware', 'foc', 'app']);
@@ -130,12 +132,13 @@ function checkProvenance(provenance, layer, location) {
 }
 function checkSnapshot(snapshot, layer, location) {
   if (layer === 'foc') snapshot = migrateLegacySafetyState(snapshot);
+  if (layer === 'foc') migrateAngleDelayParameters(snapshot?.instances);
   keys(snapshot, ['instances', 'provenance', ...(layer === 'hardware' ? ['target','memoryLayout'] : []), ...(layer === 'foc' ? ['compatibility'] : [])], location, layer==='hardware'?['memoryLayout']:layer==='foc'?['compatibility']:[]);
   if (Object.hasOwn(snapshot, 'compatibility')) checkCompatibilityShape(snapshot.compatibility);
-  keys(snapshot.instances, layerModules[layer].map(module => module.id), `${location}.instances`,layer==='foc'?['foc-compensation']:[]);
+  keys(snapshot.instances, layerModules[layer].map(module => module.id), `${location}.instances`,layer==='foc'?['foc-compensation','foc-filter']:[]);
   for (const module of layerModules[layer]) {
     const instance = snapshot.instances[module.id], path = `${location}.instances.${module.id}`;
-    if(!instance&&module.id==='foc-compensation')continue;
+    if(!Object.hasOwn(snapshot.instances,module.id)&&['foc-compensation','foc-filter'].includes(module.id))continue;
     keys(instance, ['enabled', 'runtimeEnabled', 'parameters'], path);
     for (const key of ['enabled', 'runtimeEnabled']) if (typeof instance[key] !== 'boolean') throw new Error(`${path}.${key} 必须是布尔值。`);
     // Known parameters may be absent in an older snapshot; restore their catalog defaults.
@@ -177,10 +180,12 @@ export function checkLayerVersionsShape(value) {
 
 function normalizedSnapshot(snapshot, layer) {
   const normalized = layer === 'foc' ? migrateLegacySafetyState(snapshot) : structuredClone(snapshot);
+  if (layer === 'foc') migrateAngleDelayParameters(normalized.instances);
+  if (layer === 'app') migrateMotionLoopParameters(normalized.instances);
   if(layer==='hardware')normalized.memoryLayout??=createMemoryLayout();
   const calibration=normalized.instances['app-calibration']?.parameters;
   if(calibration&&!Object.hasOwn(calibration,'enabledProcedures'))calibration.enabledProcedures=Array.isArray(calibration.procedures)?[...calibration.procedures]:[];
-  if(layer==='foc'&&!Object.hasOwn(normalized.instances,'foc-compensation'))normalized.instances['foc-compensation']={enabled:false,runtimeEnabled:false,parameters:{}};
+  if(layer==='foc')for(const id of ['foc-compensation','foc-filter'])if(!Object.hasOwn(normalized.instances,id))normalized.instances[id]={enabled:false,runtimeEnabled:false,parameters:{}};
   for (const module of layerModules[layer]) for (const parameter of module.params) {
     if (!Object.hasOwn(normalized.instances[module.id].parameters, parameter.key)) normalized.instances[module.id].parameters[parameter.key] = structuredClone(parameter.defaultValue);
   }

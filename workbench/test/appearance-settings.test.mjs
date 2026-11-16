@@ -167,7 +167,7 @@ test('安装幂等且卸载全部监听；卸载后 setTheme/setMode 返回 fals
 });
 
 test('设置面板渲染主题与深浅两个分段单选组并附说明', () => {
-  const html = renderAppearanceSettings({ theme: 'neumorphism', mode: 'system', motionEnabled: true });
+  const html = renderAppearanceSettings({ theme: 'neumorphism', mode: 'system' });
   assert.match(html, /<details[^>]*data-native-menu/);
   assert.match(html, /aria-label="设置"/);
   assert.match(html, /icons\.svg#settings/);
@@ -180,15 +180,12 @@ test('设置面板渲染主题与深浅两个分段单选组并附说明', () =>
   assert.match(html, /<span class="appearance-pill">跟随系统<\/span>/);
   assert.match(html, /appearance-hint">新拟物同时提供浅色与深色材质/);
   assert.doesNotMatch(html, /data-appearance-mode[^>]*disabled/);
-  const defaultHtml = renderAppearanceSettings({ theme: 'default', mode: 'dark', motionEnabled: false });
+  const defaultHtml = renderAppearanceSettings({ theme: 'default', mode: 'dark' });
   assert.match(defaultHtml, /<input type="radio" name="appearance-mode" value="dark" data-appearance-mode checked>/);
   assert.doesNotMatch(html, /<select|<option/);
   assert.ok(html.indexOf('name="appearance-theme"') < html.indexOf('name="appearance-mode"'), '主题段在深浅段之前');
-  assert.match(html, /data-action="toggle-visual-motion" aria-pressed="true"/);
+  assert.doesNotMatch(html, /toggle-visual-motion|motion-toggle|appearance-motion-row|竖线动效/);
   assert.doesNotMatch(html, /<dialog|aria-modal|data-action="[^"]*theme/);
-  const disabled = renderAppearanceSettings({ motionAvailable: false, motionEnabled: true });
-  assert.match(disabled, /aria-pressed="false"[^>]*disabled/);
-  assert.match(disabled, /动效不可用/);
 });
 
 test('新拟物主题：表面与基底同色，双影成对，文字与状态色保持可读对比', () => {

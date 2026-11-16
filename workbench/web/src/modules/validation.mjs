@@ -6,6 +6,7 @@ import { validateCompensation } from './algorithm/foc-compensation/validation.mj
 import { validateCurrentLoop } from './algorithm/foc-current/design.mjs';
 import { validateCalibration } from './application/app-calibration/validation.mjs';
 import { validateCia402 } from './application/app-state/cia402.mjs';
+import { validateSignalConsumers } from './algorithm/consumers.mjs';
 
 /** Feature validation is pure; whole-project geometry and contracts remain in model. */
 export function validateModuleConfiguration(project) {
@@ -18,5 +19,6 @@ export function validateModuleConfiguration(project) {
     ...validateCurrentLoop(project),
     ...validateCalibration(project),
     ...validateCia402(project),
+    ...validateSignalConsumers(project),
   ];
 }

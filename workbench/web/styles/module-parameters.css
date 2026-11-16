@@ -1,0 +1,12 @@
+#workspace:has(> .module-parameters-page) { max-width: none; width: 100%; }
+.module-parameters-page { display: flex; flex-direction: column; min-height: calc(100dvh - 160px); }
+.module-parameters-page > .guide-layout, .module-parameters-page > .empty-state { flex: 1; }
+.module-parameters-sidebar { min-width: 0; }
+.module-parameters-sidebar .configuration-tree-heading h1 { margin: 0; font: inherit; font-weight: 600; }
+.module-parameter-transfer { display: flex; flex-wrap: wrap; gap: 8px; }
+@media (max-width: 760px) {
+  .module-parameters-toolbar .guide-summary-actions { flex-basis: 100%; }
+}
+@media (min-width: 1800px) {
+  .module-parameters-editor > .profile-form { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}

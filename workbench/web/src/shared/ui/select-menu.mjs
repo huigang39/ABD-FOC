@@ -160,7 +160,13 @@ function enhanceSelect(select) {
     activeIndex = Math.max(0, Math.min(index, list.length - 1));
     for (const [at, item] of list.entries()) item.classList.toggle('active', at === activeIndex);
     if (focus) list[activeIndex].focus({ preventScroll: true });
-    list[activeIndex].scrollIntoView?.({ block: 'nearest' });
+    // Scroll only the popup: scrolling page ancestors immediately closes this menu.
+    const itemRect = list[activeIndex].getBoundingClientRect();
+    const popRect = pop.getBoundingClientRect();
+    const top = popRect.top + pop.clientTop;
+    const bottom = top + pop.clientHeight;
+    if (itemRect.top < top) pop.scrollTop -= top - itemRect.top;
+    else if (itemRect.bottom > bottom) pop.scrollTop += itemRect.bottom - bottom;
   };
 
   const place = () => {

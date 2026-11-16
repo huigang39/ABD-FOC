@@ -30,7 +30,7 @@ function fieldChoices(structure, selected) {
 }
 function interfaceHealth(issues, id) {
   const relevant = issues.filter(issue => ['interfaces', 'layer-interfaces'].includes(issue.designPage) && (!issue.itemId || issue.itemId === id));
-  return `<div class="design-health" data-live="interface-health-${esc(id)}">${issueNoticeButton(relevant, { label: '查看接口检查' })}</div>`;
+  return `<div class="checklist-actions" data-live="interface-health-${esc(id)}">${issueNoticeButton(relevant, { label: '查看接口检查' })}</div>`;
 }
 
 export function renderModuleInterfaces(project, issues, moduleId, interfaceId = '') {
@@ -46,11 +46,10 @@ function renderInterfaceEditor(project, issues, item) {
   const meta = { id: item.id };
   const source = endpoint(project, item.fromModule, 'output');
   const target = endpoint(project, item.toModule, 'input');
-  return `<div class="design-toolbar"><h2 data-live="interface-title-${esc(item.id)}">${esc(item.name || '未命名接口')}</h2>${button('移除接口', 'remove-layer-interface', item.id)}${button('撤销', 'undo')}</div>
+  return `<div class="design-toolbar"><h2 data-live="interface-title-${esc(item.id)}">${esc(item.name || '未命名接口')}</h2>${button('移除接口', 'remove-layer-interface', item.id)}${button('撤销', 'undo')}${interfaceHealth(issues, item.id)}</div>
     <div class="design-meta">${edit('接口名称', item.name, 'layer-interface', 'name', meta)}${edit('接口版本', item.version, 'layer-interface', 'version', meta)}${edit('来源模块', item.fromModule, 'layer-interface', 'fromModule', { ...meta, choices: moduleChoices })}${edit('目标模块', item.toModule, 'layer-interface', 'toModule', { ...meta, choices: moduleChoices })}</div>
     <div class="design-meta interface-endpoints" data-live="interface-endpoints-${esc(item.id)}">${structureLink(source, item.fromModule, '来源 · 输出结构')}${structureLink(target, item.toModule, '目标 · 输入结构')}</div>
-    <div class="design-meta">${edit('更新时序', item.rate, 'layer-interface', 'rate', { ...meta, choices: [['unselected', '待选择'], ['fast', '电流环控制周期'], ['control', '应用控制任务'], ['background', '后台任务'], ['event', '事件触发']] })}${edit('数据交接方式', item.handoff, 'layer-interface', 'handoff', { ...meta, choices: [['unselected', '待选择'], ['snapshot', '一致性快照'], ['queue', '消息队列'], ['call', '同周期直接传递']] })}${edit('接口说明', item.notes, 'layer-interface', 'notes', { ...meta, area: true })}</div>
-    ${interfaceHealth(issues, item.id)}
+    <div class="design-meta">${edit('更新时序', item.rate, 'layer-interface', 'rate', { ...meta, choices: [['unselected', '待选择'], ['fast', '电流环控制周期'], ['control', '控制环'], ['background', '后台任务'], ['event', '事件触发']] })}${edit('数据交接方式', item.handoff, 'layer-interface', 'handoff', { ...meta, choices: [['unselected', '待选择'], ['snapshot', '一致性快照'], ['queue', '消息队列'], ['call', '同周期直接传递']] })}${edit('接口说明', item.notes, 'layer-interface', 'notes', { ...meta, area: true })}</div>
     <div class="design-toolbar"><h3>字段映射</h3>${button('添加映射', 'add-interface-mapping', item.id)}</div>
     <p class="design-note">映射从输出字段指向输入字段。切换任一模块会清空现有映射；状态结构不作为接口端点。</p>
     <div class="contract-table-wrap"><table class="contract-table interface-mapping-table"><thead><tr><th scope="col">来源输出字段</th><th scope="col">目标输入字段</th><th scope="col">操作</th></tr></thead><tbody>${(item.fieldMap || []).map(mapping => `<tr><td>${edit('来源字段', mapping.sourceField, 'interface-mapping', 'sourceField', { id: item.id, child: mapping.id, choices: fieldChoices(source, mapping.sourceField) })}</td><td>${edit('目标字段', mapping.targetField, 'interface-mapping', 'targetField', { id: item.id, child: mapping.id, choices: fieldChoices(target, mapping.targetField) })}</td><td>${button('移除', 'remove-interface-mapping', item.id, mapping.id)}</td></tr>`).join('') || '<tr><td colspan="3" class="muted">尚未添加字段映射。</td></tr>'}</tbody></table></div>`;

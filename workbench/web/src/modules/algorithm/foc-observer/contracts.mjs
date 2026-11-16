@@ -33,6 +33,10 @@ export const CONTRACTS = {
   ['angle_valid','bool','','电角度结果有效'],['speed_valid','bool','','机械速度结果有效'],['torque_valid','bool','','扰动转矩结果有效'],
   ['sample_time_us','u32','μs','电角度、电机侧速度、电机侧角度、出轴侧角度、出轴侧速度、扰动转矩各自的测量时间戳',6],
   ['source_id','u8','','六类发布结果各自的来源，与时间戳顺序一致',6],
+  ['electrical_velocity','f32','rad/s','独立选择的转子电角速度，不是机械角速度'],
+  ['electrical_speed_valid','bool','','电角速度结果有效'],
+  ['electrical_speed_time_us','u32','μs','电角速度结果的独立采样时间戳，不占用六类既有结果的时间戳槽'],
+  ['electrical_speed_source_id','u8','','电角速度结果的独立来源，不占用六类既有结果的来源槽'],
  ]),
  state:schema('state','ObserverState',[
   ['chain_initialized','bool','','各链路初始化状态；内部估算状态由各自子模块持有',6],

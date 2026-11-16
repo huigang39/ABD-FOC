@@ -17,12 +17,12 @@
 .notification-group + .notification-group { margin-top: 22px; padding-top: 22px; border-top: 1px solid var(--line); }
 .notification-group h3 { margin-bottom: 8px; }
 .notification-message { line-height: 1.75; white-space: pre-wrap; overflow-wrap: anywhere; }
+.attribute-tag.issue-reference-tag { display:inline; padding:1px 6px; margin:0 2px; vertical-align:baseline; font:inherit; font-size:.94em; font-weight:500; color:inherit; background:color-mix(in srgb,currentColor 9%,transparent); white-space:normal; overflow-wrap:anywhere; box-decoration-break:clone; -webkit-box-decoration-break:clone; }
 .notification-issues { display: grid; gap: 12px; margin-top: 18px; }
 .notification-issues .issue-card { margin: 0; padding: 16px 18px; overflow-wrap: anywhere; }
 .notification-dialog .dialog-footer { flex: 0 0 auto; justify-content: flex-end; margin-top: 22px; padding-top: 18px; }
 .notification-dialog .dialog-footer .button { min-width: 90px; }
-.issue-notice { gap: 12px; margin-block: 7px; }
-.issue-notice-count { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--soft); color: var(--muted); font: 11px/1 var(--mono); }
+.issue-notice { margin-block: 7px; }
 .validation-summary { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 button.summary-stat { text-align: left; transition: background 150ms, border-color 150ms; }
 button.summary-stat:hover { background: var(--surface-hover); border-color: var(--line-strong); }
@@ -195,7 +195,10 @@ button.summary-stat[data-level="warning"] strong { color: var(--warning); }
   .notification-toast-close { transition: none; }
 }
 
-.notification-history-toggle {
+.notification-history-toggle,
+.notification-action {
+  --notification-indicator-color: #202522;
+  --notification-badge-text: #fff;
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -211,10 +214,20 @@ button.summary-stat[data-level="warning"] strong { color: var(--warning); }
   font-size: 13px;
   line-height: 1.5;
 }
-.notification-history-toggle svg { flex: 0 0 auto; width: 20px; height: 20px; }
+.notification-action { flex: 0 0 auto; width: 40px; height: 38px; padding: 8px; overflow: visible; }
+.notification-history-toggle svg,.notification-action svg { flex: 0 0 auto; width: 20px; height: 20px; color: var(--notification-indicator-color); }
+:is(.notification-history-toggle,.notification-action)[data-level="error"] { --notification-indicator-color: #c43e47; }
+:is(.notification-history-toggle,.notification-action)[data-level="warning"] { --notification-indicator-color: #b8860b; --notification-badge-text: #202522; }
+:root[data-theme="dark"] :is(.notification-history-toggle,.notification-action),
+:root[data-theme="neumorphism"][data-mode="dark"] :is(.notification-history-toggle,.notification-action) { --notification-indicator-color: #e6eae3; --notification-badge-text: #202522; }
+:root[data-theme="dark"] :is(.notification-history-toggle,.notification-action)[data-level="error"],
+:root[data-theme="neumorphism"][data-mode="dark"] :is(.notification-history-toggle,.notification-action)[data-level="error"] { --notification-indicator-color: #f27a83; --notification-badge-text: #202522; }
+:root[data-theme="dark"] :is(.notification-history-toggle,.notification-action)[data-level="warning"],
+:root[data-theme="neumorphism"][data-mode="dark"] :is(.notification-history-toggle,.notification-action)[data-level="warning"] { --notification-indicator-color: #f5cc55; --notification-badge-text: #202522; }
 .notification-history-toggle:hover,
-.notification-history-toggle[aria-expanded="true"] { border-color: var(--line-strong, #bec3b9); background: var(--soft, #f0f1eb); color: var(--ink, #202522); }
-.notification-unread-count {
+.notification-history-toggle[aria-expanded="true"],.notification-action:hover { border-color: var(--line-strong, #bec3b9); background: var(--soft, #f0f1eb); color: var(--ink, #202522); }
+.notification-unread-count,
+.notification-action-count {
   position: absolute;
   top: -5px;
   right: -6px;
@@ -225,8 +238,8 @@ button.summary-stat[data-level="warning"] strong { color: var(--warning); }
   padding: 0 4px;
   border: 2px solid var(--surface, #fffefa);
   border-radius: 12px;
-  background: var(--primary, #34483f);
-  color: #fff;
+  background: var(--notification-indicator-color);
+  color: var(--notification-badge-text);
   font: 10px/1 var(--font, sans-serif);
 }
 .notification-unread-count:empty { top: 3px; right: 3px; min-width: 8px; width: 8px; height: 8px; padding: 0; border-width: 0; }
@@ -358,6 +371,7 @@ button.summary-stat[data-level="warning"] strong { color: var(--warning); }
 .notification-history-empty p { margin: 0; }
 .notification-history-empty strong { color: var(--ink, #202522); font-size: 13px; font-weight: 500; }
 .notification-history-toggle:focus-visible,
+.notification-action:focus-visible,
 .notification-history button:focus-visible { outline: 2px solid var(--primary, #34483f); outline-offset: 3px; }
 body.notification-history-open .notification-center { visibility: hidden; }
 @media (max-width: 600px) {
@@ -368,9 +382,27 @@ body.notification-history-open .notification-center { visibility: hidden; }
   .notification-history-footer { padding: 10px 12px; }
 }
 @media (max-width: 600px), (pointer: coarse) {
-  .notification-history-toggle { min-width: 44px; min-height: 44px; }
+  .notification-history-toggle,.notification-action { min-width: 44px; min-height: 44px; }
   .notification-history-header > button { width: 44px; min-width: 44px; height: 44px; min-height: 44px; }
   .notification-history-tools > button,
   .notification-history-detail,
   .notification-history-footer .button { min-height: 44px; }
 }
+
+/* Checklists share the upper-right action area of their page or section header. */
+#workspace .checklist-actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin: 0 0 0 auto;
+}
+#workspace .checklist-actions .issue-notice { margin: 0; }
+#workspace .design-toolbar:has(> .checklist-actions) { align-items: flex-start; }
+#workspace .design-toolbar:has(> .checklist-actions) > :is(h2, h3) { flex: 1 1 0; }
+#workspace .heading-actions:has(.checklist-actions) { margin-left: auto; justify-content: flex-end; }
+#workspace .guide-summary-actions:has(.guide-summary-check) { margin-left: auto; align-items: flex-end; }
+#workspace .configuration-module-actions { justify-content: flex-end; }
+#workspace .guide-summary-check { margin-left: auto; }

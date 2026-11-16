@@ -7,10 +7,10 @@ const issues = (project, id) => validateProject(project).filter(issue => issue.i
 const has = (project, id, level) => issues(project, id).some(issue => !level || issue.level === level);
 const json = value => JSON.stringify(value);
 
-test('目录定义了三层、十七个模块、元数据及有效依赖', () => {
+test('目录定义了三层、十八个模块、元数据及有效依赖', () => {
   assert.deepEqual(LAYERS.map(layer => layer.id), ['app', 'foc', 'hardware']);
-  assert.equal(MODULES.length, 17);
-  assert.equal(new Set(MODULES.map(module => module.id)).size, 17);
+  assert.equal(MODULES.length, 18);
+  assert.equal(new Set(MODULES.map(module => module.id)).size, 18);
   assert.deepEqual(TARGET_FIELDS.map(field => field.key), ['vendor', 'mcu', 'board']);
   for (const layer of LAYERS) {
     const orders = MODULES.filter(module => module.layer === layer.id).map(module => module.order);
@@ -258,7 +258,7 @@ test('版本 1 自动迁移且保留已有项目资料、参数和来源', () =>
     assert.equal(migrated.instances[id].enabled, instance.enabled);
     assert.equal(migrated.instances[id].runtimeEnabled, instance.enabled);
   }
-  assert.equal(migrated.design.structures.length, 58);
+  assert.equal(migrated.design.structures.length, createProject().design.structures.length);
   assert.deepEqual(migrated.commissioning, { checks: {} });
   assert.deepEqual(migrated.build, { compiler: 'unselected', version: '', optimization: 'unselected', lto: false, encryptFirmware: false, moduleOptimizations: {} });
   assert.ok(migrated.catalog);
@@ -270,7 +270,7 @@ test('编译包含与运行开关独立，关编译开运行作为可保存逻�
   project.instances['foc-observer'].runtimeEnabled = true;
   assert.ok(has(project, 'runtime-without-build-foc-observer', 'error'));
   assert.deepEqual(parseProject(serializeProject(project)), project);
-  assert.equal(MODULES.filter(m => m.runtimeSwitchable).length, 4);
+  assert.equal(MODULES.filter(m => m.runtimeSwitchable).length, 5);
   for (const module of MODULES) assert.equal(module.runtimeSwitchable, !module.required);
 });
 

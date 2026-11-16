@@ -1,4 +1,9 @@
 .configuration-workflow .page-heading { margin-bottom: 20px; }
+.parameter-advanced { grid-column: 1 / -1; min-width: 0; margin-top: 18px; border-top: 1px solid var(--line); padding-top: 16px; }
+.parameter-advanced > summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+.parameter-advanced > .profile-form { margin-top: 18px; }
+.build-options > summary { cursor: pointer; font-weight: 600; }
+.build-options > .design-meta { margin-top: 20px; }
 .configuration-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 18px 28px; padding: 18px 22px; margin-bottom: 26px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
 .configuration-name { flex: 1 1 260px; max-width: 420px; margin: 0; min-width: 0; }
 .configuration-name .field-input { width: 100%; }
@@ -15,7 +20,35 @@
 .configuration-preset > strong { display: block; margin-bottom: 12px; font-size: 13px; }
 .configuration-preset .form-field { margin-bottom: 12px; }
 .configuration-preset > .button { width: 100%; }
+.topbar[data-project="true"]:has(.topbar-project) { grid-template-columns: minmax(530px, 1fr) minmax(180px, 1fr) minmax(530px, 1fr); }
+.topbar .configuration-file-actions { flex-wrap: nowrap; gap: 8px; }
+.topbar .configuration-more-body { z-index: 25; text-align: left; white-space: normal; }
+.topbar .configuration-name { display: block; max-width: none; margin-bottom: 16px; }
+.topbar .configuration-name .field-label { display: block; margin-bottom: 8px; }
+@media (max-width: 1400px) {
+  .topbar[data-project="true"]:has(.topbar-project) { grid-template-columns: minmax(80px, 1fr) auto; }
+  .topbar[data-project="true"] .topbar-project { grid-row: 2; grid-column: 1 / -1; }
+  .topbar[data-project="true"] .workspace-actions { grid-row: 1; grid-column: 2; }
+}
+@media (max-width: 640px) {
+  .topbar[data-project="true"] { position: relative; gap: 8px 12px; }
+  .topbar[data-project="true"] .workspace-identity { grid-column: 1 / -1; }
+  .topbar[data-project="true"] .workspace-actions { grid-row: 3; grid-column: 1 / -1; justify-content: center; gap: 6px; }
+  .topbar[data-project="true"] .topbar-project-actions { justify-content: center; flex-basis: 100%; margin: 0 0 4px; }
+  .topbar .configuration-file-actions { width: auto; gap: 6px; }
+  .topbar[data-project="true"] .workspace-actions .button { padding-inline: 9px; font-size: 12px; }
+  .topbar[data-project="true"] .configuration-more { position: static; }
+  .topbar[data-project="true"] .configuration-more-body { top: calc(100% + 6px); left: 16px; right: 16px; width: auto; max-width: none; }
+}
 .configuration-selection { margin: 6px 0 24px; }
+.configuration-model-selection { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(20px, 2vw, 32px); }
+.configuration-model-selection > .configuration-selection { display: flex; flex-direction: column; min-width: 0; }
+.configuration-model-selection .configuration-selection > .design-toolbar { min-height: 38px; }
+.configuration-model-selection .configuration-selection > .form-field { max-width: none; }
+.configuration-model-selection .configuration-selection .configuration-selected-asset { display: flex; flex-direction: column; flex: 1; border-left-color: var(--line-strong); }
+.configuration-model-selection .configuration-asset-actions { margin-top: auto; padding-top: 20px; flex-wrap: wrap; gap: 8px; }
+.configuration-model-selection .configuration-metrics dd { overflow-wrap: anywhere; }
+@media (max-width: 1199px) { .configuration-model-selection { grid-template-columns: minmax(0, 1fr); } }
 .configuration-selection > .design-toolbar { margin-bottom: 18px; }
 .configuration-selection .design-toolbar h3 { margin: 0; font-size: 16px; }
 .configuration-selection .design-toolbar a { font-size: 12px; }
@@ -28,6 +61,7 @@
 .configuration-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 0; }
 .configuration-metrics dt { color: var(--muted); font-size: 11px; margin-bottom: 5px; }
 .configuration-metrics dd { margin: 0; font-size: 16px; font-variant-numeric: tabular-nums; }
+.configuration-asset-actions { display: flex; justify-content: flex-end; margin-top: 18px; }
 .configuration-empty { padding: 20px 0 0; color: var(--muted); font-size: 13px; line-height: 1.8; }
 .configuration-empty > .button { margin-top: 12px; }
 .configuration-hardware-source { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
@@ -46,6 +80,66 @@
 .configuration-workflow .guide-module > summary .module-toggle { cursor: pointer; }
 .configuration-workflow .guide-module > summary .module-toggle:has(input:disabled) { cursor: default; }
 .configuration-workflow .guide-content > .panel + .guide-next { margin-top: 24px; }
+.configuration-workflow .configuration-module-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.configuration-workflow .guide-module-editor > .profile-form { margin-top: 24px; }
+#workspace .configuration-workflow .guide-summary-check > .notification-action { width: 56px; min-width: 56px; height: 52px; min-height: 52px; padding: 12px; border-radius: 12px; }
+#workspace .configuration-workflow .guide-summary-check > .notification-action svg { width: 28px; height: 28px; }
+#workspace .configuration-workflow .guide-summary-check .notification-action-count { min-width: 20px; height: 20px; font-size: 12px; }
+
+/* Configuration forms use the available desktop width independently of the home canvas. */
+#workspace:has(> .configuration-workflow) { width: 100%; max-width: none; }
+@media (min-width: 1200px) {
+  #workspace:has(> .configuration-workflow) { padding: clamp(28px, 2vw, 52px); }
+  #workspace .configuration-workflow {
+    --configuration-font: clamp(14px, calc(11px + .25vw), 17px);
+    --configuration-control-height: clamp(44px, 2.1vw, 54px);
+    --configuration-gap: clamp(28px, 1.5vw, 40px);
+  }
+  #workspace .configuration-workflow .guide-layout { grid-template-columns: clamp(300px, 18vw, 440px) minmax(0, 1fr); gap: clamp(28px, 1.6vw, 42px); }
+  #workspace .configuration-workflow .guide-content { padding: clamp(26px, 1.4vw, 38px); }
+  #workspace .configuration-workflow .page-heading h1 { font-size: clamp(28px, 1.5vw, 38px); }
+  #workspace .configuration-workflow :is(.page-heading p, .guide-summary, .configuration-empty) { font-size: var(--configuration-font); }
+  #workspace .configuration-workflow .guide-summary h2 { font-size: clamp(23px, 1.15vw, 30px); }
+  #workspace .configuration-workflow .guide-module { padding: clamp(18px, 1vw, 26px); margin-top: 20px; }
+  #workspace .configuration-workflow .guide-module > summary { font-size: clamp(15px, .75vw, 19px); }
+  #workspace .configuration-workflow :is(.hardware-field-group h3, .configuration-selection .design-toolbar h3) { font-size: clamp(16px, .8vw, 20px); }
+  #workspace .configuration-workflow .guide-module > .profile-form { margin-top: var(--configuration-gap); }
+  #workspace .configuration-workflow :is(.profile-form, .design-meta, .sensor-fields) { gap: var(--configuration-gap); }
+  #workspace .configuration-workflow .field-label { min-height: 30px; font-size: var(--configuration-font); }
+  #workspace .configuration-workflow :is(.field-input, .field-select, .select-menu-trigger, .form-field input:not([type="checkbox"]):not([type="radio"]), .form-field select, .form-field textarea) { min-height: var(--configuration-control-height); font-size: var(--configuration-font); padding-block: 10px; }
+  #workspace .configuration-workflow :is(.button, .checkbox-field) { min-height: var(--configuration-control-height); font-size: var(--configuration-font); }
+  #workspace .configuration-workflow :is(.field-description, .design-note, .configuration-save-status, .configuration-metrics dt) { font-size: clamp(12px, .58vw, 15px); }
+  #workspace .configuration-workflow .configuration-toolbar { padding: clamp(20px, 1.1vw, 28px); margin-bottom: var(--configuration-gap); }
+  #workspace .configuration-workflow .configuration-name { max-width: clamp(420px, 28vw, 700px); }
+  #workspace .configuration-workflow .configuration-selection > .form-field { max-width: clamp(520px, 36vw, 900px); }
+}
+@media (min-width: 801px) {
+  #workspace .configuration-workflow .configuration-tree .guide-step { min-height: 68px; gap: 14px; padding: 14px 16px; font-size: clamp(17px, .95vw, 22px); }
+  #workspace .configuration-workflow .configuration-tree .step-copy strong { font-size: inherit; }
+  #workspace .configuration-workflow .configuration-tree > ul > .configuration-tree-item + .configuration-tree-item { margin-top: 8px; }
+  #workspace .configuration-workflow .configuration-tree-module { min-height: 54px; gap: 10px; padding-block: 12px; font-size: clamp(15px, .85vw, 19px); }
+  #workspace .configuration-workflow .configuration-tree-heading { gap: 10px; padding: 10px 16px 20px; font-size: clamp(15px, .8vw, 18px); }
+  #workspace .configuration-workflow .configuration-tree-heading .field-help { width: 28px; height: 28px; }
+  #workspace .configuration-workflow .configuration-tree-heading .field-help svg { width: 18px; height: 18px; }
+  #workspace .configuration-workflow .configuration-tree .tree-progress { font-size: clamp(12px, .7vw, 16px); }
+  #workspace .configuration-workflow .configuration-tree .step-index { width: 36px; height: 36px; font-size: 14px; }
+  #workspace .configuration-workflow .tree-module-number { flex-basis: 28px; width: 28px; height: 28px; font-size: 12px; }
+  #workspace .configuration-workflow .configuration-tree .configuration-status { flex-basis: 26px; width: 26px; height: 26px; }
+  #workspace .configuration-workflow .configuration-tree .configuration-status svg { width: 20px; height: 20px; }
+  #workspace .configuration-workflow .configuration-tree .tree-chevron { flex-basis: 36px; height: 54px; }
+  #workspace .configuration-workflow .configuration-tree .tree-chevron::before { width: 9px; height: 9px; }
+  #workspace .configuration-workflow .configuration-tree .configuration-tree-children { margin: 6px 0 14px 33px; padding-left: 12px; }
+}
+@media (min-width: 801px) and (max-width: 1199px) {
+  #workspace .configuration-workflow .guide-layout { grid-template-columns: 260px minmax(0, 1fr); }
+  #workspace .configuration-workflow .configuration-tree { top: 128px; max-height: calc(100dvh - 148px); }
+}
+@media (min-width: 1800px) {
+  #workspace .configuration-workflow .guide-module > .profile-form,
+  #workspace .configuration-workflow .guide-module-editor > .profile-form,
+  #workspace .configuration-workflow .hardware-field-group > .profile-form,
+  #workspace .configuration-workflow .hardware-resource .profile-form { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
 @media (max-width: 1100px) {
   .configuration-toolbar { align-items: flex-start; flex-wrap: wrap; }
   .configuration-name { max-width: none; }
@@ -69,6 +163,7 @@
 .module-interface-list { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(220px,100%),1fr)); gap: 10px; margin-block: 18px; }
 .module-interface-editor { border-top: 1px solid var(--line); padding-top: 20px; min-width: 0; }
 .module-call-contract, .schedule-editor { margin-top: 22px; min-width: 0; }
+.schedule-editor { grid-column: 1 / -1; }
 .module-call-entry { padding: 14px 0; border-bottom: 1px solid var(--line); }
 .module-call-entry > div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; font-size: 13px; }
 .module-call-entry span { color: var(--muted); font-size: 12px; }

@@ -8,6 +8,7 @@ const extraction = [
  ['validTimeMs','有效确认时间','ms',{min:0,group:'有效性',description:'输入、向量幅值与跟踪状态持续有效达到此时间后发布有效结果。输入失效立即撤销有效标志，不保持旧值冒充新反馈。'}],
 ];
 export const OBSERVER_CHILDREN = [
+ {id:'pll',title:'PLL',repeatable:true,fields:[['bandwidthHz','带宽','Hz',{...hz}]]},
  {id:'encoder_tracking_motor',title:'电机侧编码器跟踪',fields:[
   ['extraction','提取方式','',{type:'select',defaultValue:'pll',choices:[['pll','PLL 跟踪'],['difference','角度差分 + 速度滤波']],group:'角度与速度提取',description:'输入固定为电机侧编码器的单圈机械角度，按 2π 处理回绕；在该机械角度域内跟踪，无需反正切。输出角速度与输入同域；不隐式换算极对数。'}],
   ['pllBandwidthHz','PLL 带宽','Hz',{...hz,group:'角度与速度提取',when:['extraction','pll']}],
@@ -46,6 +47,7 @@ export const OBSERVER_CHILDREN = [
 ];
 export function childParameterVisible(child, field) {
  const [key,,,options] = field;
+ if(options?.hidden)return false;
  if(options?.when && child.parameters[options.when[0]]!==options.when[1])return false;
  if(options?.whenRoute && child.routing[options.whenRoute[0]]!==options.whenRoute[1])return false;
  return key!=='pwmDutyPercent'||child.parameters.pwmEnabled;

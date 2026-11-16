@@ -40,7 +40,7 @@ export function checkDriverCommandShape(commands){
 }
 export function sensorCommandIssues(parameters,role){
   const p=role.prefix,issues=[];
-  if(parameters[role.capability]!=='present'||!SERIAL_INTERFACES.includes(parameters[p+'Interface']))return issues;
+  if(parameters[role.capability]!=='present'||role.id==='gate'&&parameters[p+'Model']==='discrete'||!SERIAL_INTERFACES.includes(parameters[p+'Interface']))return issues;
   const commands=Array.isArray(parameters[p+'Commands'])?parameters[p+'Commands']:[],data=commands.find(command=>command?.purpose==='data');
   const pending=(key,label)=>issues.push({id:`sensor-command-${p}-${key}`,level:'pending',title:`${role.title} · ${label}待填写`,message:'补充当前传感器方案所需的配置。',moduleId:'hw-drivers',paramKey:p+'Commands'});
   if(!data){pending('data','主数据指令');return issues;}

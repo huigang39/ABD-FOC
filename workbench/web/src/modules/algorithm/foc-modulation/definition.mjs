@@ -21,7 +21,7 @@ export default {
   contracts: CONTRACTS,
   params: [
     select('method', '调制方式', choices([unset, ['svpwm', 'SVPWM'], ['spwm', 'SPWM']]), 'compile', '调制与采样拓扑、有效采样窗口必须匹配。'),
-    number('dutyMin', '最小占空比', '', 'init', '归一化范围 0–1，实际可用范围由采样窗口和硬件决定。', { min: 0, max: 1, step: 0.001 }),
-    number('dutyMax', '最大占空比', '', 'init', '必须大于最小占空比；不能仅凭此参数证明采样窗口可用。', { min: 0, max: 1, step: 0.001 }),
+    number('dutyMin', '最小占空比', '', 'init', '保留已有项目的调制下限，由硬件与采样窗口约束。', { hidden: true, required: false, min: 0, max: 1, step: 0.001 }),
+    number('dutyMax', '最大占空比', '', 'init', '归一化范围 0–1，实际可用上限由采样窗口和硬件决定。', { min: 0, max: 1, step: 0.001 }),
   ]
 };

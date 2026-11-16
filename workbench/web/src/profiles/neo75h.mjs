@@ -1,3 +1,4 @@
+import { ensureCommonResources } from '../modules/hardware/hw-board/resource-defaults.mjs';
 import { createCoreConfigs } from '../modules/hardware/hw-platform/cores.mjs';
 import { neo75hProtocols } from './neo75h-protocols.mjs';
 import { neo75hModelName, parseProductModelName } from '../features/equipment/product-model.mjs';
@@ -949,7 +950,8 @@ export function applyNeo75hProfile(project, variant = 'KW') {
   Object.assign(coreConfigs.cm7,{clockHz:400000000,systemTickHz:1000,controlIrqPriority:'realtime',floatAbi:'hard',instructionCache:'enabled',dataCache:'enabled'});
   Object.assign(coreConfigs.cm4,{clockHz:200000000,systemTickHz:1000,floatAbi:'hard'});
   set('hw-platform', { architecture:'arm', clockSource:'external', oscillatorHz:25000000, busClockHz:200000000, timerClockHz:200000000, coreConfigs });
-  set('hw-board', { currentTopology: 'three_shunt', currentGain: num('hw.cur_sample.shunt_res') * num('hw.cur_sample.amp_gain') });
+  set('hw-board', { currentTopology: 'three_shunt' });
+  const currentGain = num('hw.cur_sample.shunt_res') * num('hw.cur_sample.amp_gain');
   set('hw-board', { currentLoopDivider: 1, adcBits: Math.log2(num('hw.cur_sample.adc.full_cnt')) });
   set('hw-platform', { flashKiB: 2048, eraseKiB: 128, firmwareReserveKiB: 896 });
   const sensor = {
@@ -960,16 +962,22 @@ export function applyNeo75hProfile(project, variant = 'KW') {
     torqueCapability: 'present', torqueSensorModel: profile.variant, torqueSensorInterface: 'uart', torqueSensorResource: 'USART3', torqueSensorUnit: 'nm', torqueSensorBitrate: num('hw.tor_sensor.sensor.baudrate'), torqueSensorTiming: 'periodic', torqueSensorRateHz: num('hw.timer.pwm_freq') / num('sw.ctrl.freq_div.tor_sensor'),
   };
   set('hw-drivers', sensor);
-  const resource=(id,name,kind,pins,settings)=>({id,name,kind,instance:kind==='gpio'?'GPIO':id,pins,settings});
+  const resource=(id,name,kind,pins,settings,preset='',instance=kind==='gpio'?'GPIO':id)=>({id,name,kind,instance,pins,settings,...(preset?{preset}:{})});
   set('hw-board',{resources:[
-    resource('HRTIM1','三相功率输出','pwm',{A1:'PC6',A2:'PC7',B1:'PC8',B2:'PA8',C1:'PA9',C2:'PA10'},{mode:'pwm',alignment:'center',polarity:'high'}),
-    resource('ADC1','U 相电流 / W 相电压','adc',{INP0:'PA0_C',INP9:'PB0'},{sampleCycles:1.5,trigger:'HRTIM1'}),
-    resource('ADC2','V 相电流 / V 相电压','adc',{INP1:'PA1_C',INP10:'PC0'},{sampleCycles:1.5,trigger:'HRTIM1'}),
-    resource('ADC3','W 相电流 / U 相及母线电压','adc',{INP1:'PC3_C',INP8:'PF6',INP9:'PF4'},{sampleCycles:1.5,trigger:'HRTIM1'}),
+    resource('HRTIM1','三相功率输出','pwm',{A1:'PC6',A2:'PC7',B1:'PC8',B2:'PA8',C1:'PA9',C2:'PA10'},{mode:'pwm',alignment:'center',polarity:'high'},'pwm'),
+    resource('ADC1','U 相电流采样','adc',{INP0:'PA0_C'},{sampleCycles:1.5,trigger:'HRTIM1',currentGain},'phase-current'),
+    resource('ADC2','V 相电流采样','adc',{INP1:'PA1_C'},{sampleCycles:1.5,trigger:'HRTIM1',currentGain},'phase-current'),
+    resource('ADC3','W 相电流采样','adc',{INP1:'PC3_C'},{sampleCycles:1.5,trigger:'HRTIM1',currentGain},'phase-current'),
+    resource('ADC1-terminal-voltage','W 相端电压采样','adc',{INP9:'PB0'},{sampleCycles:1.5,trigger:'HRTIM1',currentGain:null},'terminal-voltage','ADC1'),
+    resource('ADC2-terminal-voltage','V 相端电压采样','adc',{INP10:'PC0'},{sampleCycles:1.5,trigger:'HRTIM1',currentGain:null},'terminal-voltage','ADC2'),
+    resource('ADC3-terminal-voltage','U 相端电压采样','adc',{INP8:'PF6'},{sampleCycles:1.5,trigger:'HRTIM1',currentGain:null},'terminal-voltage','ADC3'),
+    resource('ADC3-bus-voltage','母线电压采样','adc',{INP9:'PF4'},{sampleCycles:1.5,trigger:'HRTIM1',currentGain:null},'bus-voltage','ADC3'),
     resource('USART2','双编码器接口','uart',{TX:'PD5',RX:'PD6',DE:'PD4'},{bitrate:num('hw.encoder.motor.baudrate'),physical:'rs485',parity:'none',stopBits:'1'}),
     resource('USART3','力矩传感器接口','uart',{TX:'PD8',RX:'PD9',DE:'PD12'},{bitrate:num('hw.tor_sensor.sensor.baudrate'),physical:'rs485',parity:'none',stopBits:'1'}),
     resource('DRV8353_NFAULT','DRV8353 nFAULT','gpio',{IO:'PD1'},{direction:'input',pull:'up',initialLevel:'low'}),
   ]});
+
+  ensureCommonResources(next.instances['hw-board'].parameters);
 
   for (const id of ['app-comms', 'app-calibration']) next.instances[id].enabled = next.instances[id].runtimeEnabled = true;
   // The legacy image compiles the compensation implementation; its runtime flag is off.

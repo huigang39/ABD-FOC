@@ -3,14 +3,28 @@
 .hardware-editor .design-toolbar h3 { margin:0; font-size:15px; }
 .hardware-editor .design-toolbar .design-note { margin:5px 0 0; }
 .hardware-resource { margin:12px 0; border:1px solid var(--line); border-radius:12px; background:var(--surface); overflow:visible; }
-.hardware-resource>summary { display:flex; align-items:center; gap:12px; padding:16px; cursor:pointer; }
-.hardware-resource>summary strong { font-size:13px; font-weight:550; min-width:0; overflow-wrap:anywhere; }
+.hardware-resource>:is(summary,.hardware-resource-heading) { display:flex; align-items:center; gap:12px; padding:16px; }
+.hardware-resource>summary { cursor:pointer; }
+.hardware-resource>:is(summary,.hardware-resource-heading) strong { font-size:13px; font-weight:550; min-width:0; overflow-wrap:anywhere; }
+.hardware-resource-heading { border-bottom:1px solid var(--line); }
+.hardware-resource-heading>.ui-icon { flex:none; }
+.hardware-peripheral-tags { display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:6px; margin-left:auto; min-width:0; }
 .hardware-resource-kind { font:11px ui-monospace,monospace; color:var(--muted); border:1px solid var(--line); padding:3px 6px; border-radius:5px; flex-shrink:0; }
 .hardware-resource-meta { color:var(--subtle); font:11px ui-monospace,monospace; margin-left:auto; text-align:right; max-width:42%; overflow-wrap:anywhere; }
 .hardware-resource-body { padding:0 18px 18px; }
 .hardware-resource .profile-form { margin:0; padding:14px 0; }
 .hardware-pin-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(125px,1fr)); gap:12px; padding:14px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
 .hardware-pin-grid .form-field { min-width:0; }
+.hardware-phase-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
+.hardware-phase-output { min-width:0; }
+.hardware-complementary { display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; margin-top:10px; color:var(--muted); font-size:12px; }
+.hardware-complementary output { color:var(--ink); font-family:ui-monospace,monospace; }
+.hardware-complementary small,.hardware-complementary .field-error { flex-basis:100%; margin:0; }
+.hardware-resource-advanced { margin-top:10px; border-top:1px solid var(--line); }
+.hardware-resource-advanced>summary { display:flex; align-items:center; flex-wrap:wrap; gap:10px; padding:14px 0; cursor:pointer; font-size:13px; color:var(--muted); }
+.hardware-advanced-pending { margin-left:auto; font-size:11px; }
+.hardware-path-toggle { display:flex; align-items:center; gap:8px; margin-left:auto; flex-shrink:0; font-size:12px; }
+@media(max-width:700px) { .hardware-phase-grid { grid-template-columns:1fr; } }
 .hardware-resource-footer { display:flex; justify-content:flex-end; align-items:center; gap:12px; margin-top:12px; }
 .hardware-resource-footer .button { color:var(--muted); }
 .hardware-empty { padding:24px; border:1px dashed var(--line-strong); border-radius:12px; color:var(--muted); font-size:13px; line-height:1.8; }
@@ -41,9 +55,39 @@
 .driver-transport { border-bottom:1px solid var(--line); padding-bottom:20px; margin-bottom:20px; }
 .driver-transport-title { display:flex; gap:8px; align-items:center; margin-bottom:14px; font-size:12px; color:var(--muted); }
 .sensor-config { grid-template-columns:1fr; }
+.sensor-config>.design-toolbar { margin-bottom:0; }
+.sensor-card-head>h3 { flex:1; min-width:0; margin:0; overflow-wrap:anywhere; }
+.sensor-card-head>.ui-icon { flex:none; }
+.sensor-card-head>.button { display:inline-flex; align-items:center; justify-content:center; flex:none; width:36px; height:36px; padding:8px; }
+.sensor-card-head>.driver-resource-tag,.sensor-card-head>.driver-resource-menu { margin-left:auto; flex:none; }
+.driver-resource-menu>summary { gap:5px; }
+.driver-resource-menu>summary>.ui-icon { width:12px; height:12px; transform:rotate(90deg); }
+.driver-resource-tag.is-unbound { color:var(--muted); background:var(--soft); }
+.driver-resource-menu>.configuration-more-body { display:grid; gap:4px; width:max-content; min-width:160px; max-width:min(320px,calc(100vw - 42px)); max-height:min(360px,60vh); overflow:auto; padding:6px; }
+.driver-resource-menu>.configuration-more-body>.button { justify-content:flex-start; text-align:left; white-space:normal; }
+.driver-resource-menu>.configuration-more-body>.button[aria-pressed="true"] { color:var(--accent-info); background:var(--soft); }
 .sensor-fields { grid-template-columns:repeat(2,minmax(0,1fr)); }
 .platform-cooperation .core-module-grid { grid-template-columns:1fr; }
 @media(max-width:700px) { .sensor-fields { grid-template-columns:1fr; } }
 .sensor-communication.platform-cooperation > summary { display:flex; align-items:center; min-height:32px; padding:0; font-size:13px; font-weight:500; }
 .sensor-communication.platform-cooperation[open] > summary { margin-bottom:18px; }
 .sensor-communication.platform-cooperation > .panel { border:0; padding:0; background:transparent; box-shadow:none; }
+
+.hardware-add-divider { grid-column:1/-1; border-top:1px solid var(--line); margin:5px 0; }
+.hardware-add-toggle { display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; padding:8px; }
+
+.current-sampling-channel { border-top:1px solid var(--line); padding-top:16px; }
+.current-sampling-channel h4 { margin:0; font-size:13px; font-weight:550; }
+.current-sampling > :is(summary,.hardware-resource-heading) .ui-icon { color:var(--primary); flex:none; }
+@media(max-width:700px) { .hardware-resource-heading { padding:12px; } }
+
+#workspace .platform-flat { grid-column:1/-1; min-width:0; }
+#workspace .platform-flat-section { margin:0 0 24px; border:0; border-radius:0; box-shadow:none; background:transparent; }
+#workspace .platform-flat-section>.hardware-resource-heading { padding:0 0 12px; border:0; }
+#workspace .platform-flat-section>.hardware-resource-body { padding:0; }
+#workspace .platform-flat-section .profile-form { margin:0; padding:0; }
+
+/* Imported cache settings remain visibly unresolved until the user toggles them. */
+#workspace .platform-cache-switch input[data-cache-state="unconfigured"] ~ .switch-ui::before { content:'—'; left:auto; right:8px; color:var(--muted); }
+#workspace .platform-cache-switch input[data-cache-state="unconfigured"] ~ .switch-ui::after { left:16px; }
+#workspace .platform-cache-switch input[data-cache-state="unconfigured"] ~ .switch-ui { border-style:dashed; background:var(--soft); }

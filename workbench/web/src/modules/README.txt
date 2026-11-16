@@ -31,7 +31,7 @@ validation.mjs 汇总模块校验；presentation.mjs 注册专用视图。
 新 C 实现在 workbench/native/generator/modules/，每个功能一对生成文件；配置映射在 generator/modules.mjs 和 drivers.mjs，结构渲染在 contracts.mjs。
 修改数据结构后必须同步修改 C 实现及配置映射，生成检查核对字段名、类型、数组长度和单位。函数从输入读数据，向输出发布结果，持久的内部状态全部归本模块 state。
 通用串行驱动仅按帧参数解析，不根据器件型号分支。请求应答按触发发送；主动上传仅初始化时发送一次启动命令，之后接收，超时只使反馈失效。
-当前产物是模块库；平台端口、双核装配、Flash 和协议栈未完成前，完整固件构建保持阻止。
+通用生成器产物是模块库；任意配置的完整固件构建仍保持阻止。native/targets/neo-minimal 为独立预驱 NEO 板的专用裸机端口，由 build-neo-minimal.mjs 固定配置构建；不接入通用构建服务、Flash 持久化或通信栈。
 
 ABD：AI-Based Development
 

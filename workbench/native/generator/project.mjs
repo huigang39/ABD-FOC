@@ -1,7 +1,7 @@
 import { interruptPriorityMapping, resolveInterruptPriority } from '../../web/src/modules/hardware/hw-platform/priorities.mjs';
 import { runtimeConfiguration } from '../../web/src/features/configuration/runtime-config.mjs';
 import { moduleEntries } from '../../web/src/modules/entrypoints.mjs';
-import { scheduledTasks, schedulerTasks } from '../../web/src/features/configuration/schedule.mjs';
+import { scheduledTasks, schedulerTasks, periodMicroseconds } from '../../web/src/features/configuration/schedule.mjs';
 import {mkdir,readFile,writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {MODULES} from '../../web/src/core/catalog.mjs';
@@ -22,6 +22,7 @@ function cValue(value,integer=false){
 export function moduleConfig(project,moduleId){const info=MODULE_CODE[moduleId];const values=info.values?.(project)||{};return Object.entries(values).map(([key,value])=>`.${key}=${cValue(value,integerKeys.has(key))}`).join(',');}
 export async function writeNewProject(root,project){
   for(const id of ['foc-observer','foc-compensation'])if(project.instances[id]?.enabled&&project.instances[id].parameters.children?.some(child=>child.compiled))throw Error('独立算法子模块尚未接入生成器。');
+  if(project.instances['foc-filter']?.enabled)throw Error('滤波器独立实例与数据连接尚未接入固件生成。');
   const files=[],units=[],contracts=[];
   for(const module of MODULES){
     const instance=project.instances[module.id];if(!instance.enabled)continue;
@@ -55,7 +56,7 @@ export async function writeNewProject(root,project){
   await mkdir(join(root,'include'),{recursive:true});await mkdir(join(root,'tools'),{recursive:true});
   await writeFile(join(root,'include/math_utils.h'),await readFile(new URL('./modules/math_utils.h',import.meta.url)));
   await writeFile(join(root,'tools/compile.py'),await readFile(new URL('./compile.py',import.meta.url)));
-  await writeFile(join(root,'execution-plan.json'),JSON.stringify({firmwareReady:false,interruptPriorities:{mapping:interruptPriorityMapping(project.target.mcu),cores:Object.fromEntries(Object.entries(project.instances['hw-platform'].parameters.coreConfigs).map(([id,config])=>[id,{control:resolveInterruptPriority(project.target.mcu,config.controlIrqPriority),communication:resolveInterruptPriority(project.target.mcu,config.communicationIrqPriority)}]))},tasks:scheduledTasks(project),scheduler: {moduleId:'app-runtime',tasks:schedulerTasks(project).map((task,index)=>({id:task.id,releaseBit:index,periodUs:1e6/task.frequencyHz}))},interfaces:project.design.layerInterfaces},null,2));
+  await writeFile(join(root,'execution-plan.json'),JSON.stringify({firmwareReady:false,interruptPriorities:{mapping:interruptPriorityMapping(project.target.mcu),cores:Object.fromEntries(Object.entries(project.instances['hw-platform'].parameters.coreConfigs).map(([id,config])=>[id,{control:resolveInterruptPriority(project.target.mcu,config.controlIrqPriority),communication:resolveInterruptPriority(project.target.mcu,config.communicationIrqPriority)}]))},tasks:scheduledTasks(project),scheduler: {moduleId:'app-runtime',tasks:schedulerTasks(project).map((task,index)=>({id:task.id,releaseBit:index,periodUs:periodMicroseconds(task.frequencyHz)}))},interfaces:project.design.layerInterfaces},null,2));
   await writeFile(join(root,'runtime-config.json'),JSON.stringify(runtimeConfiguration(project),null,2));
   await writeFile(join(root,'module-contracts.json'),JSON.stringify(contracts,null,2));
   await writeFile(join(root,'build-manifest.json'),JSON.stringify({schemaVersion:1,artifactKind:'module-library',firmwareReady:false,projectFingerprint:configurationFingerprint(project),mcu:project.target.mcu,modules:units,coreConfigs:project.instances['hw-platform'].parameters.coreConfigs,compiler:project.build.compiler,version:project.build.version,lto:project.build.lto,optimization:project.build.optimization},null,2));

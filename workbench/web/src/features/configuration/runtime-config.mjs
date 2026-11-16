@@ -1,6 +1,10 @@
+import { legacyConsumerBindings } from '../../modules/algorithm/consumers.mjs';
+import { legacyObserverBindings } from '../../modules/algorithm/legacy-bindings.mjs';
+import { fixedFunctionPresentation } from '../../modules/algorithm/fixed-functions.mjs';
 import { CHILD_TYPES, fixedAlgorithmChildren } from '../../modules/algorithm/children.mjs';
 import { childParameterVisible } from '../../modules/algorithm/foc-observer/chains.mjs';
-import { signalChoices, observerOutputOptions } from '../../modules/algorithm/signals.mjs';
+import { OBSERVER_OUTPUTS } from '../../modules/algorithm/signals.mjs';
+import { renderMotionLoops } from '../../modules/application/app-motion/view.mjs';
 import { edit } from './view.mjs';
 import { parameterVisible } from '../../modules/shared/visibility.mjs';
 import { SENSOR_ROLES } from '../../modules/hardware/hw-drivers/sensors.mjs';
@@ -10,7 +14,7 @@ import { esc } from '../../shared/esc.mjs';
 const supported = new Set(['number','integer','boolean','select','multiselect','text','string']);
 /** Stable symbolic keys; configuration defaults, never a claim about live device state. */
 export function runtimeConfiguration(project) {
-  const entries = [];
+  const entries = [], functions = [], legacyAlgorithms = [];
   for (const module of MODULES) {
     const instance = project.instances[module.id];
     if (!instance?.enabled) continue;
@@ -21,16 +25,24 @@ export function runtimeConfiguration(project) {
       description: '在模块调度边界切换，仍需满足依赖与状态条件。'
     });
     if(CHILD_TYPES[module.id])for(const child of fixedAlgorithmChildren(project,module.id).filter(c=>c.compiled)){
-      const base={moduleId:module.id,moduleTitle:module.title,childId:child.type,childTitle:child.name,apply:'control-boundary'};
-      entries.push({...base,id:module.id+'.children.'+child.type+'.enabled',kind:'switch',key:'enabled',label:'启用',type:'boolean',value:child.enabled,slot:'parameter'});
+      const presentation=fixedFunctionPresentation(child),definition=presentation.definition;
+      if(definition)functions.push({
+        moduleId:module.id,childId:child.id,functionId:definition.id,source:definition.source,outputs:structuredClone(definition.outputs),
+        ...(definition.inputs?{inputs:structuredClone(definition.inputs)}:{}),
+        ...(definition.frequencyTracking?{frequencyTracking:structuredClone(definition.frequencyTracking)}:{}),
+        ...(definition.retired?{retired:true}:{}),
+      });
+      if(presentation.legacy)legacyAlgorithms.push({moduleId:module.id,childId:child.id,type:child.type,routing:structuredClone(child.routing),outputNames:structuredClone(child.outputNames||{})});
+      const base={moduleId:module.id,moduleTitle:module.title,childId:child.id,childTitle:definition?.title||child.name,apply:'control-boundary'};
+      entries.push({...base,id:module.id+'.children.'+child.id+'.enabled',kind:'switch',key:'enabled',label:'启用',type:'boolean',value:child.enabled,slot:'parameter'});
       const type=CHILD_TYPES[module.id].find(t=>t.id===child.type);
-      if(child.type!=='friction')for(const field of type.fields.filter(f=>childParameterVisible(child,f))){
+      if(child.type!=='friction')for(const field of (definition?presentation.fields:type.fields).filter(f=>childParameterVisible(child,f))){
         const [key,label,unit,options]=field;
-        entries.push({...base,id:module.id+'.children.'+child.type+'.parameters.'+key,kind:'parameter',key,label,unit,type:options?.type||'number',value:child.parameters[key],min:options?.min,max:options?.max,options:options?.choices?.map(([value,label])=>({value,label})),description:options?.description||'',slot:'parameter'});
+        entries.push({...base,id:module.id+'.children.'+child.id+'.parameters.'+key,kind:'parameter',key,label,unit,type:options?.type||'number',value:child.parameters[key],min:options?.min,max:options?.max,...(options?.optional?{optional:true}:{}),options:options?.choices?.map(([value,label])=>({value,label})),description:options?.description||'',slot:'parameter'});
       }
-      for(const [key,value] of Object.entries(child.routing))entries.push({...base,id:module.id+'.children.'+child.type+'.routing.'+key,kind:'parameter',slot:'routing',key,value,type:'select',label:({source:'输入来源',secondary:'辅助来源',method:'处理方式'})[key],options:(key==='method'?[['weighted','加权融合'],['fallback','主来源优先，失效后切换']]:signalChoices(child.type,project)).map(([value,label])=>({value,label}))});
     }
     for (const field of module.params) {
+      if(module.id==='foc-observer'&&OBSERVER_OUTPUTS.some(([key])=>key===field.key))continue;
       if (!parameterVisible(project, module.id, field) || field.computed || !supported.has(field.type) || !['runtime','init'].includes(field.phase)) continue;
       if (field.architectureOnly && field.architectureOnly !== project.instances['hw-platform'].parameters.architecture) continue;
       entries.push({
@@ -38,13 +50,17 @@ export function runtimeConfiguration(project) {
         kind: 'parameter', key: field.key, label: field.label, type: field.type,
         unit: field.unit || '', value: structuredClone(instance.parameters[field.key] ?? field.defaultValue ?? null),
         min: field.min, max: field.max, step: field.step,
-        options: module.id==='foc-observer'&&observerOutputOptions(field.key,project)|| (field.options ? structuredClone(field.options) : undefined),
+        options: field.options ? structuredClone(field.options) : undefined,
         apply: field.phase === 'init' ? 'reinitialize' : 'control-boundary',
         description: field.description || ''
       });
     }
   }
-  return { schemaVersion: 1, kind: 'runtime-configuration', deviceBinding: 'pending', entries };
+  const motionParameters=project.instances['app-motion']?.parameters||{};
+  const legacyMotion=Object.fromEntries(MODULES.find(module=>module.id==='app-motion').params.filter(field=>field.hidden&&field.type!=='signal-reference'&&Object.hasOwn(motionParameters,field.key)).map(field=>[field.key,structuredClone(motionParameters[field.key])]));
+  return { schemaVersion: 3, kind: 'runtime-configuration', deviceBinding: 'pending', entries, functions,
+    legacyConfiguration:{motion:legacyMotion},
+    legacyBindings: { consumers:legacyConsumerBindings(project),observer:legacyObserverBindings(project),algorithms:legacyAlgorithms } };
 }
 const LAYER_NAMES = { app: '应用层', foc: '算法层', hardware: '硬件层' };
 export function renderRuntimeConfiguration(project, renderField) {
@@ -53,11 +69,16 @@ export function renderRuntimeConfiguration(project, renderField) {
   for (const module of MODULES) {
       const rows = entries.filter(entry => entry.moduleId === module.id);
       if (!rows.length) continue;
+      if(module.id==='app-motion'){
+        const content=renderMotionLoops(project,(field,value,scope,id)=>renderField(field,value,scope,id).replace(/(id|for)="module-/g,'$1="runtime-list-module-'));
+        rendered.set(module.id,`<section class="runtime-motion-loops"><h3>${esc(module.title)}</h3>${content}</section>`);
+        continue;
+      }
       const toggle = rows.find(entry => entry.kind === 'switch'&&!entry.childId);
       const parameters = rows.filter(entry => entry.kind === 'parameter'||entry.childId);
       const switchHtml = toggle ? `<label class="switch-field runtime-config-switch phase-runtime-switch" title="${esc(toggle.description)}"><input type="checkbox" data-action="toggle-runtime" data-module="${esc(module.id)}" aria-label="${esc(module.title)}运行开关" ${toggle.value ? 'checked' : ''}><span class="switch-ui" data-phase-label="运行期" aria-hidden="true"></span></label>` : '';
       const renderParameter = entry => {
-        if(entry.childId)return edit(entry.label,entry.value,entry.slot==='routing'?'algorithm-routing':'algorithm-child',entry.key,{id:entry.childId,section:module.id,type:entry.type,unit:entry.unit,choices:entry.options?.map(o=>[o.value,o.label]),phase:'runtime',min:entry.min,max:entry.max,description:entry.description});
+        if(entry.childId)return edit(entry.label,entry.value,'algorithm-child',entry.key,{id:entry.childId,section:module.id,type:entry.type,unit:entry.unit,choices:entry.options?.map(o=>[o.value,o.label]),phase:'runtime',min:entry.min,max:entry.max,description:entry.description});
         const field = module.params.find(field => field.key === entry.key);
         return renderField({...field, description: [field.description, entry.apply === 'reinitialize' ? '重新初始化后生效。' : '在控制周期边界提交，需通过设备端校验。'].filter(Boolean).join('\n')}, entry.value, 'module', module.id).replace(/(id|for)="module-/g, '$1="runtime-list-module-');
       };

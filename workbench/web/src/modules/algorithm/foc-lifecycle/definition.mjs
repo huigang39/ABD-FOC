@@ -4,7 +4,7 @@ import { CONTRACTS } from './contracts.mjs';
 export default {
   "id": "foc-lifecycle",
   "layer": "foc",
-  "order": 5,
+  "order": 6,
   "title": "异常",
   "summary": "异常汇总 · 故障锁存 · 输出许可",
   "role": "汇总算法故障标志，检查反馈有效性、硬件就绪与校准状态；锁存异常并撤销输出许可，停机且当前故障解除后接受显式复位。",

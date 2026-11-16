@@ -1,15 +1,20 @@
 import { INTERRUPT_LEVELS, interruptPriorityMapping } from './priorities.mjs';
 import { number, integer, select, choices, unset } from '../../shared/fields.mjs';
 import { getMcuCores, identifyMcu } from './targets.mjs';
+import { validateOscillatorClock } from './clocks.mjs';
 
-// ST RM0399 / DS12919, CMSIS stm32h745xx.h. These are ceiling/capability
-// checks, not a PLL, supply-range or Flash latency implementation.
+// ST DS12923 / DS12288 and CMSIS device headers; HPM5300 FSV0.5 / UM1.0.
+// https://www.st.com/resource/en/datasheet/stm32g474mb.pdf
+// https://www.hpmicro.com/Public/Uploads/uploadfile/files/20240822/HPM5300FSV05.pdf
+// These are capability/target checks, not a PLL, supply or Flash-latency implementation.
+export const H745_AHB_DIVIDERS = Object.freeze([1,2,4,8,16,64,128,256,512]);
 export function coreCapabilities(mcu, coreId) {
   const family=identifyMcu(mcu);
   if(!family?.cores.some(core=>core.id===coreId))return null;
   const base={architecture:family.architecture};
-  if(family.prefix==='STM32H745')return {...base,irqPriorityBits:4,maxClockHz:coreId==='cm7'?480000000:240000000,cache:coreId==='cm7',clockFromBus:coreId==='cm4',fpu:coreId==='cm7'?'FPv5 · 单 / 双精度':'FPv4 · 单精度'};
-  if(family.prefix==='STM32G474')return {...base,cache:false};
+  if(family.prefix==='STM32H745')return {...base,irqPriorityBits:4,maxClockHz:coreId==='cm7'?480000000:240000000,defaultClockHz:coreId==='cm7'?400000000:200000000,cache:coreId==='cm7',clockFromBus:coreId==='cm4',busName:'D2 HCLK',fpu:coreId==='cm7'?'FPv5 · 单 / 双精度':'FPv4 · 单精度'};
+  if(family.prefix==='STM32G474')return {...base,irqPriorityBits:4,maxClockHz:170000000,defaultClockHz:150000000,cache:false,clockFromBus:true,busName:'AHB HCLK',fpu:'FPv4 · 单精度'};
+  if(family.vendor==='hpmicro')return {...base,maxClockHz:family.prefix==='HPM5301'?360000000:480000000,defaultClockHz:360000000,cache:true,clockFromBus:false,fpu:'RISC-V · 单 / 双精度'};
   return base;
 }
 
@@ -26,7 +31,9 @@ export const CORE_FIELDS = [
 const plain=value=>value!==null&&typeof value==='object'&&!Array.isArray(value)&&[Object.prototype,null].includes(Object.getPrototypeOf(value));
 export function createCoreSettings(mcu, coreId) {
   const caps=coreCapabilities(mcu,coreId);
-  return Object.fromEntries(CORE_FIELDS.map(field=>[field.key,field.key==='irqPriorityBits'&&caps?.irqPriorityBits?caps.irqPriorityBits:/Cache$/.test(field.key)&&caps?.cache===false?'disabled':field.defaultValue]));
+  const settings=Object.fromEntries(CORE_FIELDS.map(field=>[field.key,field.defaultValue]));
+  if(caps)Object.assign(settings,{clockHz:caps.defaultClockHz??null,systemTickHz:1000,floatAbi:caps.fpu?'hard':settings.floatAbi,irqPriorityBits:caps.irqPriorityBits??null,instructionCache:'disabled',dataCache:'disabled'});
+  return settings;
 }
 export function createCoreConfigs(mcu) {
   return Object.fromEntries(getMcuCores(mcu).map(core=>[core.id,createCoreSettings(mcu,core.id)]));
@@ -60,11 +67,11 @@ export function coreFields(mcu,coreId,project) {
     const priority=field.key.endsWith('IrqPriority');
     const required=field.key==='controlIrqPriority'?coreId===roles.control:field.key==='communicationIrqPriority'?roles.communicationEnabled&&coreId===roles.communication:field.required;
     const options=field.options;
-    return {...field,required,...(priority?{description:field.description+(interruptPriorityMapping(mcu)?' 当前映射：紧急 0、实时 3、高 7、普通 11、后台 15。':' 当前 MCU 的中断映射尚未适配。')}:{}),...(options?{options}:{}),...(field.key==='clockHz'&&caps.maxClockHz?{max:caps.maxClockHz}:{}),...(field.key==='clockHz'&&caps.clockFromBus?{description:'Cortex-M4 使用 D2 HCLK，须与芯片公共配置的总线时钟一致。'}:{})};
+    return {...field,required,...(priority?{description:field.description+(interruptPriorityMapping(mcu)?' 当前映射：紧急 0、实时 3、高 7、普通 11、后台 15。':' 当前 MCU 的中断映射尚未适配。')}:{}),...(options?{options}:{}),...(field.key==='clockHz'&&caps.maxClockHz?{max:caps.maxClockHz}:{}),...(field.key==='clockHz'&&caps.clockFromBus?{description:`Cortex-M4 使用 ${caps.busName}，须与芯片公共配置的总线时钟一致。`}:{})};
   });
 }
 export function validateCoreConfigs(mcu,platform,project) {
-  const issues=[], cores=getMcuCores(mcu), configs=platform?.coreConfigs;
+  const issues=validateOscillatorClock(mcu,platform), cores=getMcuCores(mcu), configs=platform?.coreConfigs;
   const add=(id,level,message,coreId='',coreKey='')=>issues.push({id:`core-${id}`,level,title:level==='error'?'内核配置冲突':'内核配置待完善',message,moduleId:'hw-platform',paramKey:'coreConfigs',coreId,coreKey});
   try{checkCoreConfigShape(configs);}catch(error){add('format','error',error.message);return issues;}
   for(const id of Object.keys(configs))if(!cores.some(core=>core.id===id))add(`${id}-target`,'error',`${id} 不属于当前 MCU，请移除该内核配置。`,id);
@@ -80,9 +87,10 @@ export function validateCoreConfigs(mcu,platform,project) {
     }
     if(caps.cache===false&&['instructionCache','dataCache'].some(key=>!['disabled','unselected',null].includes(params[key])))add(`${core.id}-cache`,'error',`${core.label} 没有独立的指令 / 数据缓存，不能启用这些配置。`,core.id);
     if(params.clockHz&&platform.busClockHz) {
-      if(caps.clockFromBus&&params.clockHz!==platform.busClockHz)add(`${core.id}-clock-link`,'error',`${core.label} 时钟必须等于 D2 HCLK（当前总线时钟）。`,core.id,'clockHz');
+      if(caps.clockFromBus&&params.clockHz!==platform.busClockHz)add(`${core.id}-clock-link`,'error',`${core.label} 时钟必须等于 ${caps.busName}（当前总线时钟）。`,core.id,'clockHz');
       if(caps.clockFromBus===false&&platform.busClockHz>params.clockHz)add(`${core.id}-clock-order`,'error',`${core.label} 时钟低于总线时钟，请核对时钟树。`,core.id,'clockHz');
     }
+    if(core.id==='cm4'&&identifyMcu(mcu)?.prefix==='STM32H745'&&params.clockHz>0&&configs.cm7?.clockHz>0&&!H745_AHB_DIVIDERS.some(divider=>Math.abs(configs.cm7.clockHz/divider-params.clockHz)<=4*Number.EPSILON*Math.max(1,params.clockHz)))add(`${core.id}-clock-divider`,'error','Cortex-M4 时钟须由 Cortex-M7 时钟按有效 AHB 分频得到（1、2、4、8、16、64、128、256、512）。',core.id,'clockHz');
   }
   return issues;
 }

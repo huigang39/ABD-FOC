@@ -18,7 +18,7 @@
 .tree-progress { font: 10px var(--mono); color: var(--subtle); }
 .tree-chevron { flex: 0 0 28px; height: 36px; display: grid; place-items: center; cursor: pointer; }
 .tree-chevron-blank { cursor: default; }
-.tree-chevron-blank::before { content: none; }
+.tree-chevron.tree-chevron-blank::before { content: none; }
 .tree-chevron::before { content: ''; width: 7px; height: 7px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; opacity: .55; transform: rotate(-45deg); transform-origin: 70% 70%; transition: transform var(--motion), opacity var(--motion); }
 .configuration-tree details[open] > summary .tree-chevron::before { opacity: .85; transform: rotate(45deg); }
 .configuration-tree .configuration-tree-children { margin: 4px 0 10px 21px; padding-left: 11px; border-left: 1px solid var(--line); }

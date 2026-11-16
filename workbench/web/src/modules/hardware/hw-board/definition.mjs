@@ -21,9 +21,9 @@ export default {
   contracts: CONTRACTS,
   params: [
     {key:'resources',label:'PCBA 外设资源',type:'resource-list',description:'按 MCU 与封装分配外设实例、信号引脚与参数。',phase:'init',required:false,defaultValue:[],hidden:true},
-    select('currentTopology', '电流采样拓扑', choices([unset, ['three_shunt', '三电阻'], ['two_shunt', '双电阻'], ['single_shunt', '单电阻'], ['inline', '相线采样']]), 'init', '单电阻等方案需要额外的调制与重构时序验证。'),
-    number('busVoltageV', '设计母线电压', 'V', 'init', '设计输入，不能代替运行时母线采样和过欠压检查。', { min: 0 }),
-    number('currentGain', '电流测量链增益', 'V/A', 'init', '由分流电阻和模拟增益确定，偏置另行校准。', { min: 0 }),
+    select('currentTopology', '电流采样拓扑', choices([unset, ['three_shunt', '三电阻'], ['two_shunt', '双电阻'], ['single_shunt', '单电阻'], ['inline', '相线采样']]), 'init', '由相电流采样的 1 / 2 / 3 个通道派生；单电阻等方案需要额外的调制与重构时序验证。', { hidden:true, required:false, defaultValue:'three_shunt' }),
+    number('busVoltageV', '设计母线电压', 'V', 'init', '设计输入，不能代替运行时母线采样和过欠压检查。', { min: 0, hidden:true, required:false }),
+    number('currentGain', '电流测量链增益', 'V/A', 'init', '仅保留旧配置；各 ADC 的电流测量链增益在外设参数中设置。', { hidden:true, required:false }),
     number('pwmHz', 'PWM 频率', 'Hz', 'init', '时序的唯一来源；电流环频率按分频派生。', { min: 0, group:'timing' }),
     integer('currentLoopDivider', '电流环分频', 'init', '每 N 个 PWM 周期执行一次电流环；观测器跟随电流环。', { group:'timing' }),
     integer('adcBits', 'ADC 分辨率', 'init', '按 MCU 支持的转换分辨率选择；更高分辨率会影响转换时间。', { unit:'bit', group:'timing' }),

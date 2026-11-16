@@ -6,7 +6,7 @@ export function selectOptions(choices,value) {
   const selected=String(value??'');
   const known=items.some(item=>String(item.value)===selected);
   const placeholder=!known?`<option value="${escape(selected)}" selected hidden disabled>${isEmptyChoice(value)?'—':escape(selected)}</option>`:'';
-  return placeholder+items.map(item=>`<option value="${escape(item.value)}"${String(item.value)===selected?' selected':''}${item.disabled?' disabled hidden':''}>${escape(item.label)}</option>`).join('');
+  return placeholder+items.map(item=>`<option value="${escape(item.value)}"${String(item.value)===selected?' selected':''}${item.disabled?' disabled':''}${(item.hidden??item.disabled)?' hidden':''}>${escape(item.label)}</option>`).join('');
 }
 export function isBinaryChoice(choices) {
   const items=choiceItems(choices);

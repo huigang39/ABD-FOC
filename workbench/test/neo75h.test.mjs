@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createProject, parseProject, serializeProject, validateProject } from '../web/src/core/model.mjs';
+import { MODULES, createProject, parseProject, serializeProject, validateProject } from '../web/src/core/model.mjs';
 import { createActuator } from '../web/src/features/equipment/model.mjs';
 import { getCurrentLoopDesign } from '../web/src/modules/algorithm/foc-current/design.mjs';
 import { validateCia402 } from '../web/src/modules/application/app-state/cia402.mjs';
@@ -94,7 +94,8 @@ test('source records are detached, cover 780 values, and reject unknown variants
 test('each source field has exactly one module owner and empty groups bind real resources', () => {
   const groups = getNeo75hModuleMap(), source = getNeo75hProfile();
   const paths = groups.flatMap(group => group.parameterPaths);
-  assert.equal(groups.length, 17);
+  assert.equal(groups.length, MODULES.length);
+  assert.deepEqual(groups.find(group => group.moduleId === 'foc-filter').parameterPaths, [], '新滤波器不虚构既有 NEO 源工程参数');
   assert.equal(paths.length, 780);
   assert.equal(new Set(paths).size, 780);
   assert.deepEqual(paths.sort(), Object.keys(source.sourceParameters).sort());
@@ -105,10 +106,12 @@ test('each source field has exactly one module owner and empty groups bind real 
   assert(groups.find(group => group.moduleId === 'hw-platform').resourceBinding.entryPoints.includes('core_step'));
 });
 
-test('all presets round trip without configuration errors and keep unverified items pending', () => {
+test('all presets round trip preserving historical encoder conflicts and unverified pending items', () => {
   for (const variant of NEO75H_VARIANTS) {
     const project = parseProject(serializeProject(createNeo75hProject(variant)));
-    assert.deepEqual(validateProject(project).filter(issue => issue.level === 'error'), []);
+    const errors=validateProject(project).filter(issue=>issue.level==='error');
+    assert.deepEqual(errors.map(issue=>issue.id).sort(),['hardware-motorEncoder-resource-choice','hardware-outputEncoder-resource-choice']);
+    assert(errors.every(issue=>issue.title==='外设重复占用'&&issue.message.includes('USART2')));
     assert.deepEqual(validateCia402(project).filter(issue => issue.level === 'error'), []);
     assert(validateProject(project).some(issue => issue.level === 'pending'));
   }

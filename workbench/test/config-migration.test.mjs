@@ -59,7 +59,7 @@ function assertCompensationOff(project) {
 
 test('已有模块文件补齐关闭的补偿模块及三个结构，不覆盖既有字段与备注', () => {
   const previous = previousProject(), original = structuredClone(previous);
-  assert.equal(Object.keys(previous.instances).length, 17);
+  assert.equal(Object.keys(previous.instances).length, MODULES.length);
   const loaded = parseProject(JSON.stringify(previous));
   assertCompensationOff(loaded);
   assert.deepEqual(previous, original);

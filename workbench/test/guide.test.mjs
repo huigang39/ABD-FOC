@@ -6,8 +6,9 @@ import { neo75hProtocols } from '../web/src/profiles/neo75h-protocols.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createProject, createExampleProject, validateProject } from '../web/src/core/model.mjs';
-import { createActuator } from '../web/src/features/equipment/model.mjs';
+import { createActuator, createAssembly, createDriver, validateEquipment } from '../web/src/features/equipment/model.mjs';
 import { GUIDE_STEPS, getGuide } from '../web/src/features/configuration/guide.mjs';
+import { beginCustomHardware } from '../web/src/features/configuration/workspace.mjs';
 
 function configuredProject() {
   const project = createExampleProject();
@@ -21,7 +22,7 @@ function configuredProject() {
   Object.assign(project.instances['hw-platform'].parameters,{architecture:'arm',clockSource:'external',oscillatorHz:25000000,busClockHz:200000000,timerClockHz:200000000,coreConfigs});
   Object.assign(project.instances['hw-drivers'].parameters,neo75hProtocols('KW'));
   project.instances['hw-safety'].parameters.hardwareTripCapability = 'present';
-  Object.assign(project.instances['hw-drivers'].parameters, { motorEncoderInterface: 'spi', motorEncoderResource: 'SPI2', motorEncoderTiming: 'fast', motorEncoderTimeoutUs: 100 });
+  Object.assign(project.instances['hw-drivers'].parameters, { motorEncoderInterface: 'spi', motorEncoderResource: 'SPI2', motorEncoderBitrate: 1000000, motorEncoderTiming: 'fast', motorEncoderTimeoutUs: 100 });
   project.instances['hw-board'].parameters.resources=[
     {...createResource('spi','SPI2'),instance:'SPI2',pins:{SCK:'PB13',MISO:'PB14',MOSI:'PB15',NSS:'PB12'},settings:{clockHz:1000000,mode:'0',wordBits:8}},
     {...createResource('pwm','PWM'),instance:'HRTIM1',pins:{A1:'PC6',A2:'PC7',B1:'PC8',B2:'PA8',C1:'PA9',C2:'PA10'},settings:{alignment:'center',polarity:'high'}},
@@ -32,16 +33,27 @@ function configuredProject() {
   project.instances['app-comms'].parameters.bus = 'canfd';
   return project;
 }
-test('workflow orders selection, hardware, algorithm, application, build with checks and flash', () => {
-  assert.deepEqual(GUIDE_STEPS.map(step => step.id), ['actuator', 'hardware', 'algorithm', 'application', 'build', 'flash']);
-  assert.deepEqual(GUIDE_STEPS.map(step => step.title), ['选型', '硬件', '算法', '应用', '构建', '烧录']);
+test('workflow combines build checks and flashing after four configuration steps', () => {
+  assert.deepEqual(GUIDE_STEPS.map(step => step.id), ['actuator', 'hardware', 'algorithm', 'application', 'build']);
+  assert.deepEqual(GUIDE_STEPS.map(step => step.title), ['选型', '硬件', '算法', '应用', '构建']);
   const guide = getGuide(createProject());
-  assert.equal(guide.totalSteps, 6);
+  assert.equal(guide.totalSteps, 5);
   assert.equal(guide.nextStepId, 'actuator');
   assert.equal(guide.configuredCount, 0);
   assert.equal(Object.hasOwn(guide, 'checks'), false);
   assert.equal(guide.steps.some(step => step.state === 'verified'), false);
-  assert.equal(guide.summary, '已完成 0/6 个步骤。');
+  assert.equal(guide.summary, '已完成 0/5 个步骤。');
+});
+
+test('algorithm exception configuration is omitted while its issues remain in global build checks', () => {
+  const project=createProject(),before=structuredClone(project);
+  const issue={id:'lifecycle-check',moduleId:'foc-lifecycle',level:'error',message:'保护配置无效'};
+  const guide=getGuide(project,[issue]),algorithm=guide.steps.find(step=>step.id==='algorithm');
+  assert.deepEqual(algorithm.modules,['foc-current','foc-modulation','foc-observer','foc-filter','foc-compensation']);
+  assert.ok(!algorithm.children.some(child=>child.id==='foc-lifecycle'));
+  assert.doesNotMatch(algorithm.summary,/异常/);
+  assert.ok(guide.steps.find(step=>step.id==='build').issues.includes(issue));
+  assert.deepEqual(project,before);
 });
 
 test('field progress ends at dependency checks after the four configuration steps', () => {
@@ -50,7 +62,7 @@ test('field progress ends at dependency checks after the four configuration step
   assert.equal(guide.configuredCount, 4);
   assert.equal(guide.nextStepId, 'build');
   assert.ok(guide.steps.slice(0, 4).every(step => step.state === 'configured' && step.completed === step.total));
-  assert.equal(guide.summary, '已完成 4/6 个步骤。');
+  assert.equal(guide.summary, '已完成 4/5 个步骤。');
   const originalPwm = project.instances['hw-board'].parameters.pwmHz;
   project.instances['hw-board'].parameters.pwmHz = null;
   assert.equal(getGuide(project).nextStepId, 'hardware');
@@ -158,10 +170,69 @@ test('独立执行器选型不要求先创建关节模组，自行配置硬件�
   const project = configuredProject();
   assert.equal(project.catalog.activeAssemblyId, '');
   assert.equal(project.catalog.activeDriverId, '');
-  assert.equal(getGuide(project).steps.find(step => step.id === 'actuator').state, 'configured');
+  const selection = getGuide(project).steps.find(step => step.id === 'actuator');
+  assert.equal(selection.state, 'configured');
+  assert.equal(selection.total, 2);
+  assert.equal(selection.completed, 2);
   assert.equal(getGuide(project).steps.find(step => step.id === 'hardware').state, 'configured');
   project.catalog.activeActuatorId = '';
   assert.equal(getGuide(project).nextStepId, 'actuator');
+  assert.equal(getGuide(createProject()).steps[0].completed, 1, '旧工程与空白工程的空驱动器引用继续表示自行配置');
+});
+
+test('执行器和驱动器独立计入选型，失效驱动器引用不能算自行配置', () => {
+  const project = configuredProject(), driver = createDriver('已选驱动器');
+  project.catalog.drivers.push(driver); project.catalog.activeDriverId = driver.id;
+  const before = structuredClone(project), selection = getGuide(project).steps[0];
+  assert.equal(selection.state, 'configured');
+  assert.equal(selection.completed, 2);
+  assert.deepEqual(project, before, '读取进度不应用货架参数或改变选型');
+  project.catalog.activeDriverId = 'removed-driver';
+  assert.equal(getGuide(project).steps[0].completed, 1);
+  assert.equal(getGuide(project).steps[0].state, 'todo');
+  const guide = getGuide(project, validateEquipment(project));
+  assert.equal(guide.steps[0].state, 'blocked');
+  assert.ok(guide.steps[0].issues.some(issue => issue.id === 'equipment-driver-reference'));
+  assert.ok(!guide.steps[1].issues.some(issue => issue.id === 'equipment-driver-reference'));
+  const custom = beginCustomHardware(project);
+  assert.equal(getGuide(custom).steps[0].state, 'configured');
+  assert.equal(getGuide(custom).steps[0].completed, 2);
+  assert.deepEqual(custom.instances, project.instances, '改为自行配置不会覆盖当前硬件参数');
+});
+
+test('已选驱动器与组合的问题归入选型，项目硬件问题仍归硬件', () => {
+  const project = configuredProject(), driver = createDriver('已选驱动器'), unused = createDriver('未选驱动器');
+  driver.adcBits = -1; unused.adcBits = -2;
+  project.catalog.drivers.push(driver, unused); project.catalog.activeDriverId = driver.id;
+  const assembly = { ...createAssembly(), actuatorId: project.catalog.activeActuatorId, driverId: driver.id };
+  project.catalog.assemblies.push(assembly); project.catalog.activeAssemblyId = assembly.id;
+  project.instances['hw-board'].parameters.pwmHz = null;
+  const hardwareIssue = { id: 'selected-hardware-pwm', level: 'pending', moduleId: 'hw-board', paramKey: 'pwmHz' };
+  const guide = getGuide(project, [...validateEquipment(project), hardwareIssue]);
+  assert.equal(guide.steps[0].state, 'blocked');
+  assert.ok(guide.steps[0].issues.some(issue => issue.id === `equipment-range-${driver.id}-adcBits`));
+  assert.ok(guide.steps[0].issues.some(issue => issue.id === 'equipment-current-unknown' && issue.itemId === assembly.id));
+  assert.ok(!guide.steps[0].issues.some(issue => issue.itemId === unused.id || issue.id === hardwareIssue.id));
+  assert.equal(guide.steps[1].state, 'todo');
+  assert.deepEqual(guide.steps[1].issues, [hardwareIssue]);
+});
+
+test('当前组合引用失效或与独立选型冲突时选型不能完成', () => {
+  const project = configuredProject(), driver = createDriver('驱动器');
+  project.catalog.drivers.push(driver); project.catalog.activeDriverId = driver.id;
+  project.catalog.activeAssemblyId = 'missing-assembly';
+  let guide = getGuide(project, validateEquipment(project));
+  assert.equal(guide.steps[0].completed, 0);
+  assert.equal(guide.steps[0].state, 'blocked');
+  assert.ok(guide.steps[0].issues.some(issue => issue.id === 'equipment-active-reference'));
+  const other = createActuator('其他执行器'); project.catalog.actuators.push(other);
+  const assembly = { ...createAssembly(), actuatorId: other.id, driverId: driver.id };
+  project.catalog.assemblies.push(assembly); project.catalog.activeAssemblyId = assembly.id;
+  guide = getGuide(project, validateEquipment(project));
+  assert.equal(guide.steps[0].completed, 1);
+  assert.equal(guide.steps[0].state, 'blocked');
+  assert.ok(guide.steps[0].issues.some(issue => issue.id === 'equipment-active-selection'));
+  assert.ok(!guide.steps[1].issues.some(issue => issue.designPage === 'equipment'));
 });
 
 test('构建集成检查，只有当前配置检查并编译完成才算完成此步骤', () => {
@@ -172,7 +243,7 @@ test('构建集成检查，只有当前配置检查并编译完成才算完成�
   assert.equal(guide.configuredCount, 4);
   assert.equal(guide.steps[4].statusLabel, '待构建');
   guide = getGuide(project, [], { ...context, buildStatus: 'built' });
-  assert.equal(guide.nextStepId, 'flash');
+  assert.equal(guide.nextStepId, null);
   assert.equal(guide.configuredCount, 5);
   assert.equal(guide.steps[4].statusLabel, '已构建');
   guide = getGuide(project, [], { inspection: { current: false, supported: true }, buildStatus: 'built' });
@@ -180,22 +251,23 @@ test('构建集成检查，只有当前配置检查并编译完成才算完成�
   assert.equal(guide.steps[4].state, 'todo');
   guide = getGuide(project, [], { inspection: { current: true, supported: false } });
   assert.equal(guide.steps[4].state, 'blocked');
-  assert.equal(guide.steps[5].state, 'todo');
+  assert.equal(guide.steps.some(step => step.id === 'flash'), false);
 });
 
 test('烧录状态要求当前构建与真实写入结果，历史结果不算本次已烧录', () => {
   const project = configuredProject();
   const built = { inspection: { current: true, supported: true }, buildStatus: 'built' };
-  const flashStep = context => getGuide(project, [], context).steps.find(step => step.id === 'flash');
-  assert.equal(flashStep({}).statusLabel, '待构建');
-  assert.equal(flashStep(built).statusLabel, '待烧录');
+  const buildStep = context => getGuide(project, [], context).steps.find(step => step.id === 'build');
+  assert.equal(buildStep({}).statusLabel, '待构建');
+  assert.equal(buildStep(built).statusLabel, '已构建');
   for (const flashStatus of [{ programmed: true }, { current: false, programmed: true }, { current: true, programmed: false }]) {
-    assert.equal(flashStep({ ...built, flashStatus }).state, 'todo');
+    assert.equal(buildStep({ ...built, flashStatus }).statusLabel, '已构建');
   }
   const flashStatus = { current: true, programmed: true };
-  assert.equal(flashStep({ flashStatus }).state, 'todo');
+  assert.equal(buildStep({ flashStatus }).state, 'todo');
   const guide = getGuide(project, [], { ...built, flashStatus });
   assert.equal(guide.steps.at(-1).statusLabel, '已烧录');
   assert.equal(guide.nextStepId, null);
-  assert.equal(guide.configuredCount, 6);
+  assert.equal(guide.configuredCount, 5);
+  assert.equal(guide.steps.some(step => step.id === 'flash'), false);
 });

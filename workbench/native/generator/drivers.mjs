@@ -1,5 +1,5 @@
 import {readFileSync} from 'node:fs';
-import {SENSOR_ROLES,SENSOR_PARAMS,sensorFieldRequired,sensorIssues} from '../../web/src/modules/hardware/hw-drivers/sensors.mjs';
+import {SENSOR_ROLES,SENSOR_PARAMS,sensorFieldRequired,sensorIssues,isDiscreteGate} from '../../web/src/modules/hardware/hw-drivers/sensors.mjs';
 import {SERIAL_INTERFACES} from '../../web/src/modules/hardware/hw-drivers/protocol.mjs';
 import {moduleStructures,renderStructure} from './contracts.mjs';
 const bytes=text=>(String(text||'').match(/[\da-f]{2}/gi)||[]).map(v=>parseInt(v,16));
@@ -10,6 +10,7 @@ export function driverConfigurationIssues(parameters){
   for(const role of SENSOR_ROLES){
     if(parameters[role.capability]==='absent')continue;
     if(parameters[role.capability]!=='present'){issues.push({paramKey:role.capability,message:`请选择${role.title}启用状态。`});continue;}
+    if(role.id==='gate'&&isDiscreteGate(parameters)){issues.push({paramKey:'gateDriverModel',message:'分立门极驱动的 GPIO 使能与故障关断适配尚未实现，不能生成此驱动。'});continue;}
     if(!SERIAL_INTERFACES.includes(parameters[role.prefix+'Interface'])){issues.push({paramKey:role.prefix+'Interface',message:`${role.title}所选接口需要独立的采样驱动实现。`});continue;}
     for(const f of SENSOR_PARAMS.filter(f=>f.sensorRole===role.id&&sensorFieldRequired(f,parameters))){
       const v=parameters[f.key];

@@ -103,26 +103,21 @@ function renderRegion(project, plan, region) {
 }
 
 /** Flash geometry and placement only. The containing page owns core deployment. */
-export function renderMemory(project, issues = [], { sectorSizes = {} } = {}) {
+export function renderMemory(project, issues = [], { sectorSizes = {}, embedded = false } = {}) {
   const plan = project.memory || createMemoryPlan();
   const { layout } = plan;
   const ready = Boolean(project.target?.mcu?.trim());
   const mismatch = layout.banks.length > 0 && (layout.mcu.trim().toUpperCase() !== (project.target?.mcu || '').trim().toUpperCase() || layout.board.trim() !== (project.target?.board || '').trim());
   const relevant = issues.filter(issue => issue.id.startsWith('memory-'));
   const target = [project.target?.mcu, project.target?.board].filter(Boolean).join(' · ');
-  return `<section class="memory-workspace" aria-labelledby="memory-heading"><div class="memory-section-heading"><div><h2 id="memory-heading">Flash</h2><p>指定各层固件和备份数据的存储位置，以实际擦除扇区为分配单位。</p></div>${button('新增 Flash 区域', 'memory-add-bank', { symbol: 'plus', disabled: !ready || layout.banks.length >= 64 })}</div>
-    <div class="memory-target${mismatch ? ' mismatch' : ''}"><div>${icon('board')}<span><strong>${esc(target || '尚未选择目标硬件')}</strong><small>${!ready ? '先选择 MCU，再配置 Flash 容量与扇区。' : mismatch ? `当前扇区表绑定：${esc([layout.mcu, layout.board].filter(Boolean).join(' · ') || '尚未绑定')}` : 'Flash 容量与擦除方式按具体板卡配置，MCU 型号不代替扇区表。'}</small></span></div>${!ready ? '<a class="button small" href="#/project/hardware?module=hw-platform&tab=config">选择硬件 →</a>' : mismatch ? button('确认用于当前硬件', 'memory-rebind') : ''}</div>
+  return `<section class="memory-workspace${embedded?' deployment-embedded':''}" ${embedded?'aria-label="Flash"':'aria-labelledby="memory-heading"'}><div class="memory-section-heading">${embedded?'':'<div><h2 id="memory-heading">Flash</h2><p>指定各层固件和备份数据的存储位置，以实际擦除扇区为分配单位。</p></div>'}<div class="checklist-actions">${button('新增 Flash 区域', 'memory-add-bank', { symbol: 'plus', disabled: !ready || layout.banks.length >= 64 })}<div class="checklist-actions" data-live="memory-issues">${issueNoticeButton(relevant, { label: '查看分区检查' })}</div></div></div>
+    <div class="memory-target${mismatch ? ' mismatch' : ''}"><div>${icon('board')}<span><strong>${esc(target || '尚未选择目标硬件')}</strong><small>${!ready ? '先选择 MCU，再配置 Flash 容量与扇区。' : mismatch ? `当前扇区表绑定：${esc([layout.mcu, layout.board].filter(Boolean).join(' · ') || '尚未绑定')}` : 'Flash 容量与擦除方式按具体板卡配置，MCU 型号不代替扇区表。'}</small></span></div>${!ready ? (embedded?'':'<a class="button small" href="#/project/hardware?module=hw-platform&tab=config">选择硬件 →</a>') : mismatch ? button('确认用于当前硬件', 'memory-rebind') : ''}</div>
     <fieldset class="memory-editing"${ready ? '' : ' disabled'}><legend class="visually-hidden">Flash 布局与分配</legend>
     ${layout.banks.length ? `<div class="memory-map-list" data-live="memory-map-list">${layout.banks.map((bank, index) => renderBankMap(plan, bank, index)).join('')}</div><div class="memory-legend" aria-label="扇区用途图例">${[...MEMORY_REGIONS.map(region => [region.id, region.label]), ['reserved', '保留'], ['free', '空闲'], ['conflict', '冲突']].map(([tone, label]) => `<span class="memory-tone-${tone}"><i class="memory-swatch" aria-hidden="true"></i>${label}</span>`).join('')}</div>` : `<div class="memory-empty"><span>${icon('database')}</span><h3>先定义实际 Flash</h3><p>可添加片内 Bank 或板载 Flash，再录入起始地址、容量和擦除扇区。已有驱动器的扇区表可随硬件配置复用。</p></div>`}
     ${layout.banks.length ? `<section class="memory-geometry"><div class="memory-subheading"><h3>硬件扇区表</h3><span>调整硬件布局</span></div>${layout.banks.map((bank, index) => renderBankEditor(bank, index, sectorSizes)).join('')}</section>` : ''}
     <section class="memory-placement-section"><div class="memory-subheading"><h3>固件分配</h3><span>三层独立预留</span></div><p class="design-note">预算用于检查预留容量，实际占用以构建结果为准。选取连续扇区，保留区和其他用途已占用的扇区不能重复分配。</p><div class="memory-region-grid">${MEMORY_REGIONS.filter(region => region.kind === 'firmware').map(region => renderRegion(project, plan, region)).join('')}</div></section>
     <section class="memory-placement-section"><div class="memory-subheading"><h3>备份数据</h3><a href="${storageLink}">配置容量与保存策略 →</a></div><p class="design-note">校准、参数、日志各自使用独立扇区；容量需求包含记录头与冗余空间。</p><div class="memory-region-grid">${MEMORY_REGIONS.filter(region => region.kind === 'data').map(region => renderRegion(project, plan, region)).join('')}</div></section>
     </fieldset>
-    <div class="design-health" data-live="memory-issues">${issueNoticeButton(relevant, { label: '查看分区检查' })}</div>
     <div class="memory-footer"><p>此处保存部署配置，尚未生成链接脚本或实现独立 OTA。Flash 擦写与控制电流环的隔离仍需在固件中落实。</p>${button('撤销', 'undo')}</div>
   </section>`;
-}
-
-export function renderMemorySummary(project) {
-  return `<div class="memory-summary"><div>${icon('database')}<span><strong>内存划分</strong></span></div><a class="button small" href="#/project/memory">配置部署 ${icon('arrow-right')}</a></div>`;
 }

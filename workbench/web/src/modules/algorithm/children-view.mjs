@@ -1,28 +1,36 @@
 import { childParameterVisible } from './foc-observer/chains.mjs';
-import { renderObserverGuide, renderObserverStages, observerStages } from './foc-observer/view.mjs';
-import { CHILD_DESIGNS, signalChoices } from './signals.mjs';
-import { fieldHelp } from '../../shared/ui/field-help.mjs';
-import {edit,esc} from '../../features/configuration/view.mjs';
-import {CHILD_TYPES,fixedAlgorithmChildren} from './children.mjs';
-export function renderAlgorithmChildren(project,module,primary) {
- const list=fixedAlgorithmChildren(project,module.id);
- const isObserver=module.id==='foc-observer';
- const primaryType=module.id==='foc-compensation'?'friction':null;
- return `${isObserver?renderObserverGuide():''}<div class="algorithm-children">${list.map((child,index)=>{
- const type=CHILD_TYPES[module.id].find(type=>type.id===child.type);
- const design=CHILD_DESIGNS[child.type];
- const routing=(key,label,choices)=>edit(label,child.routing[key],'algorithm-routing',key,{id:child.id,section:module.id,choices,phase:'runtime'});
- const sources=(design.quantity||design.quantities)?signalChoices(child.type,project):[];
- const connections=sources.length===1?`<div class="form-field"><span class="field-label">输入来源</span><output class="computed-field">${esc(sources[0][1])}</output></div>`:sources.length?routing('source',design.defaults.secondary?'主来源':'输入来源',sources):'';
- const fusion=design.defaults.secondary?routing('secondary','辅助来源',signalChoices(child.type,project))+routing('method','处理方式',[['weighted','加权融合'],['fallback','主来源优先，失效后切换']]):'';
- const fieldGroups=new Map();
- for(const field of type.fields.filter(field=>childParameterVisible(child,field))){
-  const [key,label,unit,options]=field,group=options?.group||'参数';
-  if(!fieldGroups.has(group))fieldGroups.set(group,[]);
-  fieldGroups.get(group).push(edit(label,child.parameters[key],'algorithm-child',key,{id:child.id,section:module.id,type:'number',unit,phase:'runtime',...options}));
- }
- const parameterHtml=child.type===primaryType?`<div class="profile-form">${primary}</div>`:[...fieldGroups].map(([group,fields])=>`<section class="observer-parameter-group">${isObserver?`<h4>${esc(group)}</h4>`:''}<div class="profile-form">${fields.join('')}</div></section>`).join('');
- const control=(key,label)=>`<label class="switch-field parameter-phase-switch" data-phase="${key==='compiled'?'compile':'runtime'}"><input type="checkbox" data-edit="algorithm-child" data-module="${module.id}" data-id="${esc(child.id)}" data-key="${key}" aria-label="${esc(child.name)}${label}" ${child[key]?'checked':''}><span class="switch-ui" data-phase-label="${label}" aria-hidden="true"></span></label>`;
- return `<details class="resource-disclosure hardware-resource algorithm-path-card" data-state-key="child-${esc(child.id)}"><summary><span class="module-sequence">${String(index+1).padStart(2,'0')}</span><strong>${esc(child.name)}</strong><span class="attribute-tag">${esc(design.group)}</span><span class="algorithm-path-switches">${child.compiled?control('enabled','运行期'):'<span></span>'}${control('compiled','编译期')}</span></summary>${child.compiled?`<div class="hardware-resource-body">${isObserver?renderObserverStages(observerStages(child.type,child.parameters.extraction||child.routing.method,child)):''}${connections||fusion?`<div class="profile-form">${connections}${fusion}</div>`:''}${parameterHtml}<details class="observer-contract-notes" data-state-key="child-contract-${esc(child.id)}"><summary>链路说明</summary><div class="algorithm-contract"><div><span>输入</span><p>${esc(design.input)}</p></div><div><span>输出</span><p>${esc(design.output)}</p></div><div><span>状态</span><p>${esc(design.state)}</p></div><div><span>作用位置</span><p>${esc(design.use)}${fieldHelp('同一周期先读取有效输入快照，再计算输出；下游只在输出有效时使用。来源失效时不继续使用旧值。融合来源须对齐时间、方向与零位。','数据时序')}</p></div>${design.formula&&(!isObserver||child.parameters.extraction==='pll'||child.type==='load_torque')?`<div class="algorithm-equation">${esc(design.formula)}</div>`:''}</div></details></div>`:''}</details>`;
- }).join('')}</div>${isObserver?`<section class="observer-published-results"><div class="design-toolbar"><h3>发布结果</h3>${fieldHelp('先选择链路结果，再由电流环的电角度源或应用接口选择是否使用；此处不直接使能电机。只使用时间、方向、零位一致且有效的结果。','观测结果')}</div><div class="profile-form">${primary}</div></section>`:''}`;
+import { edit, esc } from '../../features/configuration/view.mjs';
+import { CHILD_TYPES, configuredAlgorithmChildren } from './children.mjs';
+import { FIXED_ALGORITHM_FUNCTIONS, fixedFunctionPresentation } from './fixed-functions.mjs';
+import { icon } from '../../shared/ui/icons.mjs';
+
+const moduleLabels={'foc-observer':'观测器','foc-filter':'滤波器','foc-compensation':'补偿器'};
+const moduleIcons={'foc-observer':'eye','foc-filter':'wave','foc-compensation':'settings'};
+const relocatedCompensators=new Set(['current_calibration','angle_delay']);
+const typeTag=type=>type==='load_torque_motor_speed_notch'?'动态陷波':type==='load_torque_notch'?'旧静态陷波':/pll/.test(type)?'PLL':/low_pass/.test(type)?'低通':/notch/.test(type)?'陷波':null;
+
+function parameterFields(module,child,fields) {
+  return `<div class="profile-form">${fields.filter(field=>childParameterVisible(child,field)).map(([key,label,unit,options])=>edit(label,child.parameters[key],'algorithm-child',key,{id:child.id,section:module.id,type:'number',unit,...options,description:''})).join('')}</div>`;
+}
+
+/** Fixed functions own their connections; opening the editor never rewrites old data. */
+export function renderAlgorithmChildren(project,module,primary='') {
+  const list=configuredAlgorithmChildren(project,module.id).filter(child=>module.id!=='foc-compensation'||!relocatedCompensators.has(child.type));
+  const label=moduleLabels[module.id]||module.title,types=CHILD_TYPES[module.id]||[];
+  const added=new Set(list.map(child=>fixedFunctionPresentation(child).definition?.id).filter(Boolean));
+  const offered=module.id==='foc-compensation'?types.filter(type=>!relocatedCompensators.has(type.id)):FIXED_ALGORITHM_FUNCTIONS.filter(type=>type.moduleId===module.id&&!type.retired);
+  const remaining=offered.filter(type=>!added.has(type.id)&&!list.some(child=>child.type===type.id));
+  const addMenu=remaining.length?`<details class="configuration-more algorithm-add-menu" data-native-menu data-state-key="algorithm-add-${esc(module.id)}"><summary class="button small hardware-add-toggle" title="添加${esc(label)}" aria-label="添加${esc(label)}">${icon('plus')}</summary><div class="configuration-more-body">${remaining.map(type=>`<button class="button ghost" type="button" data-action="add-algorithm-child" data-module="${esc(module.id)}" data-type="${esc(type.id)}">${esc(type.title)}</button>`).join('')}</div></details>`:`<button class="button small hardware-add-toggle" type="button" disabled title="已添加全部${esc(label)}" aria-label="添加${esc(label)}">${icon('plus')}</button>`;
+  const cards=list.map(child=>{
+    const type=types.find(type=>type.id===child.type);
+    if(!type)return '';
+    const presentation=fixedFunctionPresentation(child),friction=child.type==='friction';
+    const legacy=!presentation.equivalent&&!friction;
+    const title=presentation.equivalent?presentation.definition.title:child.name||type.title;
+    const fields=friction&&primary?`<div class="profile-form">${primary}</div>`:parameterFields(module,child,presentation.equivalent?presentation.fields:type.fields);
+    const tags=`<span class="algorithm-child-tags">${legacy?'<span class="attribute-tag">待替换</span>':''}<span class="attribute-tag">${esc(typeTag(presentation.definition?.id||child.type)||type.title)}</span></span>`;
+    const notice=legacy?'<p class="design-note algorithm-legacy-note">旧通用配置待替换，原参数和连接已保留。</p>':'';
+    return `<section class="hardware-resource algorithm-child-card" data-algorithm-child="${esc(child.type)}" data-child-id="${esc(child.id)}"><header class="hardware-resource-heading">${icon(moduleIcons[module.id]||'algorithm')}<strong>${esc(title)}</strong><button class="button small ghost algorithm-child-delete" type="button" data-action="remove-algorithm-child" data-module="${esc(module.id)}" data-type="${esc(child.type)}" data-id="${esc(child.id)}" title="移除${esc(title)}" aria-label="移除${esc(title)}">${icon('trash')}</button>${tags}</header><div class="hardware-resource-body">${notice}${fields}</div></section>`;
+  }).join('');
+  return `<div class="algorithm-children"><div class="design-toolbar algorithm-children-toolbar"><h3>${esc(label)}</h3>${addMenu}</div>${cards||`<p class="design-note algorithm-children-empty">尚未添加${esc(label)}。</p>`}</div>`;
 }

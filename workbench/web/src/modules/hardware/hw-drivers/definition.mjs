@@ -20,5 +20,5 @@ export default {
     "hw-board"
   ],
   contracts: DRIVER_CONTRACTS,
-  params: SENSOR_PARAMS
+  params: [...SENSOR_PARAMS, { key: 'customDrivers', label: '其他驱动', type: 'custom-driver-list', phase: 'init', description: '用户添加的器件信息与外设绑定。', required: false, hidden: true, defaultValue: [] }]
 };

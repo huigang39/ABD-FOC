@@ -13,7 +13,8 @@ const sharedHardware = {
 const id = prefix => `${prefix}-${globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`}`;
 const MOTOR_FIELDS = ['polePairs', 'statorSlots', 'resistanceOhm', 'inductanceDH', 'inductanceQH', 'fluxWb', 'torqueConstantNmA', 'ratedCurrentA', 'maxCurrentA', 'maxSpeedRpm'];
 const REDUCER_FIELDS = ['ratio', 'efficiency', 'backlashArcmin', 'ratedOutputTorqueNm', 'maxOutputTorqueNm'];
-const DRIVER_FIELDS = ['busVoltageV', 'maxCurrentA', 'pwmHz', 'adcBits', 'adcClockHz', 'deadtimeNs', 'flashKiB', 'eraseKiB', 'firmwareReserveKiB'];
+const DRIVER_SCALE_FIELDS = ['phaseCurrentScale', 'terminalVoltageScale', 'busVoltageScale'];
+const DRIVER_FIELDS = ['busVoltageV', 'maxCurrentA', 'pwmHz', 'adcBits', 'adcClockHz', 'deadtimeNs', 'flashKiB', 'eraseKiB', 'firmwareReserveKiB', ...DRIVER_SCALE_FIELDS];
 const emptyNumbers = fields => Object.fromEntries(fields.map(key => [key, null]));
 const positive = value => typeof value === 'number' && Number.isFinite(value) && value > 0;
 const plain = value => value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -74,11 +75,11 @@ export function checkCatalogShape(catalog) {
     keys(actuator.reducer, REDUCER_FIELDS, '执行器.reducer', ['ratedOutputTorqueNm']); numbers(actuator.reducer, REDUCER_FIELDS.filter(key=>Object.hasOwn(actuator.reducer,key)), '执行器.reducer');
   }
   for (const driver of catalog.drivers) {
-    keys(driver, ['id', 'name', 'vendor', 'mcu', 'board', ...DRIVER_FIELDS, 'bindings', 'hardware', 'memoryLayout'], '驱动器', ['hardware', 'memoryLayout']);
+    keys(driver, ['id', 'name', 'vendor', 'mcu', 'board', ...DRIVER_FIELDS, 'bindings', 'hardware', 'memoryLayout'], '驱动器', ['hardware', 'memoryLayout', ...DRIVER_SCALE_FIELDS]);
     if(Object.hasOwn(driver,'memoryLayout'))checkMemoryLayoutShape(driver.memoryLayout);
     for (const key of ['name', 'vendor', 'mcu', 'board']) text(driver[key], `驱动器.${key}`);
     if (!['unselected', 'st', 'hpmicro', 'other'].includes(driver.vendor)) throw new Error('驱动器.vendor 不是允许的选项。');
-    numbers(driver, DRIVER_FIELDS, '驱动器'); collection(driver.bindings, '驱动器.bindings');
+    numbers(driver, DRIVER_FIELDS.filter(key => Object.hasOwn(driver, key)), '驱动器'); collection(driver.bindings, '驱动器.bindings');
     if (Object.hasOwn(driver, 'hardware')) {
       keys(driver.hardware, hardwareModules.map(module => module.id), '驱动器.hardware');
       for (const module of hardwareModules) {
@@ -121,7 +122,7 @@ export function normalizeCatalog(catalog) {
   for(const actuator of catalog.actuators){actuator.motor.statorSlots??=null;actuator.reducer.ratedOutputTorqueNm??=null;}
   catalog.activeActuatorId ||= catalog.assemblies.find(item => item.id === catalog.activeAssemblyId)?.actuatorId || '';
   catalog.activeDriverId ??= catalog.assemblies.find(item => item.id === catalog.activeAssemblyId)?.driverId || '';
-  for (const driver of catalog.drivers) { driver.hardware = getDriverHardware(driver); syncMcuArchitecture(driver, driver.hardware); driver.memoryLayout ??= createMemoryLayout(); }
+  for (const driver of catalog.drivers) { for (const key of DRIVER_SCALE_FIELDS) driver[key] ??= null; driver.hardware = getDriverHardware(driver); syncMcuArchitecture(driver, driver.hardware); driver.memoryLayout ??= createMemoryLayout(); }
 }
 export function getActiveActuator(project) {
   const catalog = project?.catalog;
@@ -132,6 +133,25 @@ export function getActiveDriver(project) {
   const catalog = project?.catalog;
   const id = catalog?.activeDriverId || catalog?.assemblies?.find(item => item.id === catalog.activeAssemblyId)?.driverId;
   return catalog?.drivers?.find(driver => driver.id === id) || null;
+}
+/** Keep the selected shelf driver's identity authoritative without reapplying its
+ * saved hardware snapshot over the project's peripheral and module edits. */
+export function syncSelectedDriverTarget(project) {
+  const driver = getActiveDriver(project);
+  if (!driver) return false;
+  const previous = project.target || {};
+  const target = { vendor: driver.vendor, mcu: driver.mcu, board: driver.board };
+  syncMcuArchitecture(target);
+  const canonicalMcu = value => { const name = String(value || '').trim().toUpperCase(); return name === 'STM32H745' ? 'STM32H745IIK6' : name; };
+  const changedMcu = canonicalMcu(previous.mcu) !== canonicalMcu(target.mcu);
+  const changed = ['vendor', 'mcu', 'board'].some(key => previous[key] !== target[key]);
+  project.target ??= {};
+  Object.assign(project.target, target);
+  if (changedMcu) {
+    const hardware = Object.fromEntries(hardwareModules.map(module => [module.id, project.instances?.[module.id]?.parameters]));
+    syncMcuArchitecture(project.target, hardware, { replaceCores: true, applyDefaults: true });
+  }
+  return changed;
 }
 export function hardwareMatchesDriver(project, driver = getActiveDriver(project)) {
   if (!driver) return false;
@@ -156,7 +176,7 @@ export function applyDriver(project, driverId) {
   checkCatalogShape(project.catalog);
   const driver = project.catalog.drivers.find(item => item.id === driverId);
   if (!driver) throw new Error('驱动器不存在。');
-  const errors = validateEquipment(project).filter(issue => issue.level === 'error' && issue.itemId === driver.id && issue.id !== 'equipment-active-current');
+  const errors = validateEquipment(project).filter(issue => issue.level === 'error' && issue.code !== 'driver-resource-conflict' && issue.itemId === driver.id && issue.id !== 'equipment-active-current');
   if (errors.length) throw new Error(errors[0].message);
   const next = structuredClone(project);
   next.target = { vendor: driver.vendor, mcu: driver.mcu, board: driver.board };
@@ -201,7 +221,7 @@ export function getAssemblySummary(project, assemblyId) {
 
 export function validateEquipment(project) {
   const issues = [];
-  const add = (id, level, title, message, itemId) => issues.push({ id: `equipment-${id}`, level, title, message, designPage: 'equipment', ...(itemId ? { itemId } : {}) });
+  const add = (id, level, title, message, itemId, extra = {}) => issues.push({ id: `equipment-${id}`, level, title, message, designPage: 'equipment', ...(itemId ? { itemId } : {}), ...extra });
   const catalog = project.catalog;
   try { checkCatalogShape(catalog); } catch (error) { add('format', 'error', '组件库结构不合法', error.message); return issues; }
   const range = (object, key, owner, min, max = Infinity, integer = false) => {
@@ -223,7 +243,7 @@ export function validateEquipment(project) {
       const memory={layout:driver.memoryLayout,placements:createMemoryPlan().placements};
       for(const issue of validateMemory({...project,target:driver,memory}))if(issue.level==='error'&&!issue.id.startsWith('memory-region-'))add(`flash-${driver.id}-${issue.id}`,issue.id==='memory-target-mismatch'?'warning':'error',issue.title,issue.message,driver.id);
     }
-    for(const issue of validateHardware({target:{mcu:driver.mcu},instances:Object.fromEntries(hardwareModules.map(module=>[module.id,{parameters:hardware[module.id]}]))}))if(issue.level==='error'||driver.id===catalog.activeDriverId)add(`hardware-${driver.id}-${issue.id}`,issue.level,issue.title,issue.message,driver.id);
+    for(const issue of validateHardware({target:{mcu:driver.mcu},instances:Object.fromEntries(hardwareModules.map(module=>[module.id,{parameters:hardware[module.id]}]))}))if(issue.level==='error'||driver.id===catalog.activeDriverId)add(`hardware-${driver.id}-${issue.id}`,issue.level,issue.title,issue.message,driver.id,{...(issue.code?{code:issue.code}:{}),...(issue.messageParts?{messageParts:issue.messageParts}:{})});
     for(const issue of sensorIssues(hardware['hw-drivers']))if(issue.level==='error'||driver.id===catalog.activeDriverId)add(`sensor-${driver.id}-${issue.id}`,issue.level,issue.title,issue.message,driver.id);
     if (!driver.name.trim()) add(`name-${driver.id}`, 'pending', '驱动器名称待填写', '填写可区分的名称。', driver.id);
     for (const key of DRIVER_FIELDS) if(!(detailedFlash&&sharedHardware['hw-platform'].includes(key)))range(driver, key, driver.id, ['deadtimeNs', 'firmwareReserveKiB'].includes(key) ? 0 : Number.MIN_VALUE, Infinity, key === 'adcBits');
@@ -286,7 +306,7 @@ export function applyAssembly(project, assemblyId) {
   checkCatalogShape(project.catalog);
   const { assembly, actuator, driver } = selected(project.catalog, assemblyId);
   if (!assembly || !actuator || !driver) throw new Error('应用前必须选择存在的执行器和驱动器。');
-  const errors = validateEquipment(project).filter(issue => issue.level === 'error' && issue.id !== 'equipment-active-current' && [assembly.id, actuator.id, driver.id].includes(issue.itemId));
+  const errors = validateEquipment(project).filter(issue => issue.level === 'error' && issue.code !== 'driver-resource-conflict' && issue.id !== 'equipment-active-current' && [assembly.id, actuator.id, driver.id].includes(issue.itemId));
   if (errors.length) throw new Error(`组合存在冲突：${errors[0].message}`);
   const next = applyDriver(project, driver.id);
   next.provenance ||= {};
@@ -311,5 +331,6 @@ export function applyAssembly(project, assemblyId) {
 export function validateSelectedEquipment(project) {
   const catalog = project.catalog;
   const selectedIds = new Set([catalog?.activeAssemblyId, getActiveActuator(project)?.id, getActiveDriver(project)?.id]);
-  return validateEquipment(project).filter(issue => !issue.itemId || selectedIds.has(issue.itemId));
+  // Port ownership is validated against active hardware, not its saved shelf snapshot.
+  return validateEquipment(project).filter(issue => issue.code !== 'driver-resource-conflict' && (!issue.itemId || selectedIds.has(issue.itemId)));
 }

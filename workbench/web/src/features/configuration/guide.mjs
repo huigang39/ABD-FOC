@@ -1,3 +1,4 @@
+import { configurationModuleMembers, configurationModule } from './module-aliases.mjs';
 import { validateCoreConfigs } from '../../modules/hardware/hw-platform/cores.mjs';
 import { calibrationEnabled } from '../../modules/application/app-calibration/validation.mjs';
 import { sensorFieldRequired } from '../../modules/hardware/hw-drivers/sensors.mjs';
@@ -5,12 +6,11 @@ import { MODULES, TARGET_FIELDS } from '../../core/model.mjs';
 import { getConfigurationSelection } from './workspace.mjs';
 
 export const GUIDE_STEPS = [
-  { id: 'actuator', title: '选型', summary: '选择电机与减速机组成的执行器，确定机械与电机参数。', modules: [], outcome: '执行器已选定。' },
-  { id: 'hardware', title: '硬件', summary: '依次配置内核、外设、驱动和异常，也可复用货架驱动器。', modules: MODULES.filter(module=>module.layer==='hardware').map(module=>module.id), outcome: '目标硬件与模块配置明确。' },
-  { id: 'algorithm', title: '算法', summary: '配置电流环、调制器与异常处理，按需启用观测器和补偿器。', why: '硬件能力确定后，再选择算法组合；每个子功能各自管理参数和数据结构。', modules: ['foc-current', 'foc-modulation', 'foc-observer', 'foc-compensation', 'foc-lifecycle'], outcome: '算法参数、数据接口和电流环依赖一致。' },
+  { id: 'actuator', title: '选型', summary: '分别选择执行器与驱动器，确定机械、电机和驱动硬件。', modules: [], outcome: '执行器与驱动硬件来源已选定。' },
+  { id: 'hardware', title: '硬件', summary: '依次配置内核、外设和驱动。', modules: MODULES.filter(module=>module.layer==='hardware'&&module.id!=='hw-safety').map(module=>module.id), outcome: '目标硬件与模块配置明确。' },
+  { id: 'algorithm', title: '算法', summary: '配置电流环、调制器、观测器、滤波器和补偿器。', why: '每个算法模块定义固定的功能与接口，只需配置对应参数。', modules: ['foc-current', 'foc-modulation', 'foc-observer', 'foc-filter', 'foc-compensation'], outcome: '算法参数、数据接口和电流环依赖一致。' },
   { id: 'application', title: '应用', summary: '配置调度器、状态机、控制环、通信、校准、异常与备份。', why: '错误码由保护与诊断模块管理，协议与解析由通信协议模块管理；各功能通过数据结构协作。', modules: ['app-runtime', 'app-state', 'app-motion', 'app-comms', 'app-calibration', 'app-safety', 'app-params'], designPages: ['faults', 'protocol'], outcome: '任务、业务策略、错误码与通信消息已定义。' },
   { id: 'build', title: '构建', summary: '检查当前配置，通过后生成模块源码并编译固件。', modules: [], outcome: '当前配置已完成构建。' },
-  { id: 'flash', title: '烧录', summary: '选择已构建的固件与调试探针，写入设备并核对烧录结果。', modules: [], outcome: '当前固件已完成烧录。' },
 ];
 
 const MODULE_MAP = new Map(MODULES.map(module => [module.id, module]));
@@ -33,7 +33,6 @@ function validField(field, value) {
 
 function conditionalField(project, id, key) {
   if(id==='hw-drivers')return sensorFieldRequired(MODULE_MAP.get(id).params.find(field=>field.key===key),project.instances[id].parameters);
-  if(id==='app-motion'&&key==='positionFeedback')return (parameter(project,id,'supportedModes')||[]).some(mode=>['position','impedance'].includes(mode));
   if (id === 'foc-observer' && key === 'startupStrategy') return parameter(project, 'foc-feedback', 'angleSource') === 'observer';
   if (id === 'app-calibration' && key === 'maxCurrentA') return ['electrical_zero', 'hall', 'friction'].some(item => calibrationEnabled(project,item));
   return false;
@@ -42,9 +41,16 @@ function conditionalField(project, id, key) {
 function checksForStep(step, project, relevant, selection) {
   const checks = [];
   const invalid = (moduleId, key) => relevant.some(issue => issue.level === 'error' && issue.moduleId === moduleId && (!issue.paramKey || issue.paramKey === key));
-  if (step.id === 'actuator') checks.push(Boolean(selection.actuator));
+  if (step.id === 'actuator') {
+    const assemblyValid = !project.catalog?.activeAssemblyId || Boolean(selection.assembly);
+    const actuatorMatches = !selection.assembly || selection.assembly.actuatorId === selection.actuator?.id;
+    const driverMatches = !selection.assembly || selection.assembly.driverId === selection.driver?.id;
+    // An empty driver reference has always meant editable custom hardware, including in older projects.
+    const customHardware = selection.hardwareMode === 'custom' && !project.catalog?.activeDriverId && !selection.assembly?.driverId;
+    checks.push(Boolean(selection.actuator) && assemblyValid && actuatorMatches, (Boolean(selection.driver) || customHardware) && assemblyValid && driverMatches);
+  }
   if (step.id === 'hardware') for (const field of TARGET_FIELDS) checks.push(validField(field, project.target?.[field.key]));
-  for (const id of step.modules) {
+  for (const id of new Set(step.modules.flatMap(configurationModuleMembers))) {
     const module = MODULE_MAP.get(id);
     if (!module) continue;
     if (module.required) checks.push(enabled(project, id));
@@ -63,19 +69,19 @@ function checksForStep(step, project, relevant, selection) {
 
 function moduleProgress(step, project, relevant, selection) {
   return step.modules.map(id => {
-    const module = MODULE_MAP.get(id);
+    const module = configurationModule(MODULE_MAP.get(id)), members = configurationModuleMembers(id);
     const moduleIssues = relevant.filter(issue => {
       if (issue.id === 'project-format') return true;
       if (issue.designPage === 'interfaces') {
         const link = project.design.layerInterfaces?.find(item => item.id === issue.itemId);
-        return [link?.fromModule, link?.toModule].includes(id);
+        return [link?.fromModule, link?.toModule].some(moduleId=>members.includes(moduleId));
       }
-      if (issue.moduleId) return issue.moduleId === id;
-      if (issue.designPage === 'structures') return project.design.structures.find(item => item.id === issue.itemId)?.owner === id;
+      if (issue.moduleId) return members.includes(issue.moduleId);
+      if (issue.designPage === 'structures') return members.includes(project.design.structures.find(item => item.id === issue.itemId)?.owner);
       return issue.designPage === 'faults' && id === 'app-safety' || issue.designPage === 'protocol' && id === 'app-comms';
     });
     const errors = moduleIssues.some(issue => issue.level === 'error');
-    if (!enabled(project, id) && !module.required && !errors) return { id, title: module.title, state: 'disabled', statusLabel: '未启用', completed: 0, total: 0, issues: moduleIssues };
+    if (!members.some(moduleId=>enabled(project,moduleId)) && !module.required && !errors) return { id, title: module.title, state: 'disabled', statusLabel: '未启用', completed: 0, total: 0, issues: moduleIssues };
     const criteria = checksForStep({ id: 'module', modules: [id] }, project, moduleIssues, selection);
     if (['hw-platform','hw-board'].includes(id)) for (const field of TARGET_FIELDS.filter(field => (field.key === 'board') === (id === 'hw-board'))) criteria.push(validField(field, project.target[field.key]));
     if (id === 'app-safety') criteria.push(project.design.faults.length > 0);
@@ -93,14 +99,11 @@ export function getGuide(project, issues = [], context = {}) {
   const inspectionPassed = inspectionCurrent && context.inspection?.supported === true;
   const buildReady = inspectionPassed && context.buildStatus === 'built';
   const steps = GUIDE_STEPS.map(step => {
-    if (step.id === 'flash') {
-      const done = buildReady && context.flashStatus?.current === true && context.flashStatus?.programmed === true;
-      return { ...step, state: done ? 'configured' : 'todo', issues: [], completed: Number(done), total: 1, statusLabel: done ? '已烧录' : buildReady ? '待烧录' : '待构建' };
-    }
     if (step.id === 'build') {
       const failed=context.buildStatus==='failed'||inspectionCurrent&&!inspectionPassed;
+      const flashed = buildReady && context.flashStatus?.current === true && context.flashStatus?.programmed === true;
       return {...step,state:buildReady?'configured':failed?'blocked':'todo',issues:sourceIssues,completed:Number(buildReady),total:1,
-        statusLabel:buildReady?'已构建':context.buildStatus==='building'?'构建中':failed?'待处理':'待构建'};
+        statusLabel:flashed?'已烧录':buildReady?'已构建':context.buildStatus==='building'?'构建中':failed?'待处理':'待构建'};
     }
     const skipProtocol = !enabled(project,'app-comms') && !known(project.design?.protocol?.transport);
     const interfaceBelongsToStep = issue => {
@@ -112,11 +115,11 @@ export function getGuide(project, issues = [], context = {}) {
         ||(!endpoints.length&&step.id==='application')
         ||endpoints.some(id=>!GUIDE_STEPS.some(other=>other.modules.includes(id))&&MODULE_MAP.get(id)?.layer===layerOfStep[step.id]);
     };
-    const equipmentBelongsToStep = issue => issue.designPage === 'equipment' && (
-      step.id === 'actuator' && (Boolean(issue.itemId) && issue.itemId === selection.actuator?.id || ['equipment-actuator-selection', 'equipment-actuator-reference'].includes(issue.id)) ||
-      step.id === 'hardware' && (Boolean(issue.itemId) && issue.itemId === selection.driver?.id || ['equipment-driver-reference', 'equipment-format'].includes(issue.id))
+    const equipmentBelongsToStep = issue => issue.designPage === 'equipment' && step.id === 'actuator' && (
+      Boolean(issue.itemId) && [selection.actuator?.id, selection.driver?.id, selection.assembly?.id].includes(issue.itemId) ||
+      ['equipment-actuator-selection', 'equipment-actuator-reference', 'equipment-driver-reference', 'equipment-active-reference', 'equipment-active-selection', 'equipment-format'].includes(issue.id)
     );
-    const relevant = sourceIssues.filter(issue => !(skipProtocol && issue.designPage==='protocol' && issue.level!=='error') && !verificationIssue(issue) && (step.modules.includes(issue.moduleId) || interfaceBelongsToStep(issue) || (issue.designPage === 'structures' && step.modules.includes(project.design?.structures.find(item => item.id === issue.itemId)?.owner)) || equipmentBelongsToStep(issue) || step.designPages?.includes(issue.designPage) || (step.id === 'hardware' && issue.id === 'project-format')));
+    const relevant = sourceIssues.filter(issue => !(skipProtocol && issue.designPage==='protocol' && issue.level!=='error') && !verificationIssue(issue) && (step.modules.flatMap(configurationModuleMembers).includes(issue.moduleId) || interfaceBelongsToStep(issue) || (issue.designPage === 'structures' && step.modules.flatMap(configurationModuleMembers).includes(project.design?.structures.find(item => item.id === issue.itemId)?.owner)) || equipmentBelongsToStep(issue) || step.designPages?.includes(issue.designPage) || (step.id === 'hardware' && issue.id === 'project-format')));
     const criteria = checksForStep(step, project, relevant, selection);
     const completed = criteria.filter(Boolean).length;
     const state = relevant.some(issue => issue.level === 'error') ? 'blocked' : completed === criteria.length && !relevant.some(issue => issue.level === 'pending') ? 'configured' : 'todo';

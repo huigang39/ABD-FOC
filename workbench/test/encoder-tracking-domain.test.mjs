@@ -69,11 +69,14 @@ test('旧的单链路配置迁移为固定双链路，电角度跟踪信号移�
  assert.equal(saved.instances['foc-observer'].parameters.outputAngleOutput,'encoder_tracking_output.angle');
  assert.equal(saved.instances['foc-observer'].parameters.angleOutput,'none');
 });
-test('运行配置随新链路导出，旧角度形式不再出现',()=>{
+test('等价旧PLL按固定功能导出，轴域和原参数保持不变',()=>{
  const {p}=fixture();
  const restored=parseProject(serializeProject(p));
- const entries=runtimeConfiguration(restored).entries;
- assert.ok(entries.some(e=>e.childId==='encoder_tracking_output'&&e.key==='extraction'));
+ const configuration=runtimeConfiguration(restored),entries=configuration.entries;
+ assert.ok(entries.some(e=>e.childId==='encoder_tracking_output'&&e.key==='pllBandwidthHz'));
+ assert.ok(!entries.some(e=>e.childId==='encoder_tracking_output'&&e.key==='extraction'));
+ assert.equal(configuration.functions.find(item=>item.childId==='encoder_tracking_output').functionId,'output_pll');
+ assert.equal(configuration.legacyBindings.algorithms.find(item=>item.childId==='encoder_tracking_output').routing.source,'sensor.output_angle');
  assert.ok(!entries.some(e=>e.key==='angleForm'));
  assert.ok(CHILD_DESIGNS.encoder_tracking_output.use.includes('减速比'));
 });

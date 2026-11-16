@@ -1,4 +1,4 @@
-import { schedulerTasks, validateSchedule } from '../../web/src/features/configuration/schedule.mjs';
+import { schedulerTasks, validateSchedule, periodMicroseconds } from '../../web/src/features/configuration/schedule.mjs';
 import {getActiveActuator} from '../../web/src/features/equipment/model.mjs';
 const at=(p,id,key)=>p.instances[id].parameters[key];
 const positive=(value,label)=>{if(typeof value!=='number'||!Number.isFinite(value)||value<=0||!Number.isFinite(Math.fround(value)))throw Error(`${label}必须为已配置的正数。`);return value;};
@@ -25,6 +25,7 @@ export const MODULE_CODE = {
   }},
   'foc-observer':{name:'observer',base:'Observer',values:()=>{throw Error('观测链路与结果选择尚未接入固件生成，不能用单一 PLL 模板代替。');}},
   'foc-compensation':{name:'friction',base:'Friction',config:'float viscous, coulomb, transition, limit;',values:p=>{
+    if(at(p,'foc-compensation','children')?.some(child=>child.compiled))throw Error('独立补偿功能尚未接入固件生成，不能以旧摩擦模板替代。');
     if(at(p,'foc-compensation','frictionModel')!=='coulomb_viscous')throw Error('请选择库仑与粘性摩擦模型。');
     return {viscous:bounded(at(p,'foc-compensation','viscousNmPerRadS'),'粘性系数',0,1e6),coulomb:bounded(at(p,'foc-compensation','coulombNm'),'库仑摩擦',0,1e6),transition:positive(at(p,'foc-compensation','transitionRadS'),'平滑速度'),limit:positive(at(p,'foc-compensation','maxCompensationNm'),'补偿上限')};
   }},
@@ -32,18 +33,31 @@ export const MODULE_CODE = {
   'app-runtime':{name:'scheduler',base:'Scheduler',config:'uint32_t task_count, period_us[16];',values:p=>{
     if(at(p,'app-runtime','scheduler')!=='cooperative')throw Error('新调度器目前实现协作式周期释放；抢占式调度尚未接入。');
     const errors=validateSchedule(p).filter(issue=>issue.level==='error');if(errors.length)throw Error(errors.map(issue=>issue.message).join(' '));
-    const periods=schedulerTasks(p).map(task=>1e6/positive(task.frequencyHz,'任务频率'));
+    const periods=schedulerTasks(p).map(task=>periodMicroseconds(positive(task.frequencyHz,'任务频率')));
     if(!periods.length || periods.some(period=>!Number.isSafeInteger(period)||period<=0||period>=0x80000000))throw Error('当前调度时基要求控制周期为有效的整微秒。');
     return {task_count:periods.length,period_us:periods};
   }},
-  'app-motion':{name:'motion',base:'Motion',config:'float current_limit;',values:p=>{
-    if(at(p,'app-motion','supportedModes').some(mode=>mode!=='current'))throw Error('新运动模块目前实现电流给定仲裁；速度、位置、PD 和力矩外环尚未接入。');
-    return {current_limit:positive(at(p,'app-motion','currentLimitA'),'应用电流上限')};
+  'app-motion':{name:'motion',base:'Motion',config:'float current_limit, speed_kp, speed_ki, speed_filter_hz, speed_limit, acceleration, ratio; bool speed_supported;',values:p=>{
+    if (['positionFeedbackSignal','speedFeedbackSignal','torqueFeedbackSignal'].some(key => ![undefined,null,'','default'].includes(at(p,'app-motion',key)))) throw Error('旧反馈连接待替换；请在控制环中显式移除旧信号连接，再使用固定功能配置，不能静默忽略旧连接。');
+    const unsupportedGains=[['speedKd','速度微分增益'],['torqueKp','力矩比例增益'],['torqueKi','力矩积分增益'],['torqueKd','力矩微分增益'],['positionKp','位置比例增益'],['positionKi','位置积分增益'],['positionKd','位置微分增益'],['pdKp','PD 比例增益'],['pdKd','PD 微分增益']];
+    const configuredGains=unsupportedGains.filter(([key])=>at(p,'app-motion',key)!=null&&at(p,'app-motion',key)!==0);
+    if(configuredGains.length)throw Error(`${configuredGains.map(([,label])=>label).join('、')}尚未接入固件生成；现有运动实现仅支持速度 PI 与电流给定，不能忽略新增增益。`);
+    const modes=at(p,'app-motion','supportedModes');
+    if(modes.some(mode=>!['current','speed','calibration'].includes(mode)))throw Error('新运动模块目前实现电流、速度和受限校准；位置、PD 和力矩外环尚未接入。');
+    const speed=modes.includes('speed');
+    return {current_limit:positive(at(p,'app-motion','currentLimitA'),'应用电流上限'),speed_supported:speed,
+      speed_kp:speed?positive(at(p,'app-motion','speedKp'),'速度比例增益'):0,speed_ki:speed?positive(at(p,'app-motion','speedKi'),'速度积分增益'):0,
+      speed_filter_hz:speed?positive(at(p,'app-motion','speedFilterHz'),'速度滤波带宽'):0,speed_limit:speed?positive(at(p,'app-motion','profileVelocityRadS'),'速度上限'):0,
+      acceleration:speed?positive(at(p,'app-motion','profileAccelerationRadS2'),'速度斜坡'):0,ratio:speed?positive(getActiveActuator(p)?.reducer.ratio,'减速比'):1};
   }},
   'app-comms':{name:'commands',base:'Commands',config:'uint32_t timeout_us;',values:p=>({timeout_us:positive(at(p,'app-comms','timeoutMs'),'命令超时')*1000})},
   'app-params':{name:'records',base:'Records'},
-  'app-calibration':{name:'zeroing',base:'Zeroing',config:'uint32_t sample_count;',values:()=>{
-    throw Error('编码器校准与摩擦辨识尚未接入；静止标零属于参数管理，不可作为校准实现。');
+  'app-calibration':{name:'zeroing',base:'Zeroing',config:'float current, pole_pairs;',values:p=>{
+    const procedures=at(p,'app-calibration','procedures');
+    if(procedures.length!==1||procedures[0]!=='electrical_zero')throw Error('当前只实现电角度偏置及配套方向校准；非线性、霍尔和摩擦辨识尚未接入。');
+    const current=positive(at(p,'app-calibration','maxCurrentA'),'校准电流');
+    if(current>at(p,'foc-lifecycle','maxCurrentA'))throw Error('校准电流不能超过电流保护限值。');
+    return {current,pole_pairs:positive(getActiveActuator(p)?.motor.polePairs,'电机极对数')};
   }},
   'app-safety':{name:'diagnostics',base:'Diagnostics',values:p=>{if(at(p,'app-safety','faultAction')!=='disable')throw Error('新诊断模块目前仅实现故障锁存停机。');return {};}}
 };

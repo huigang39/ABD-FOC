@@ -9,11 +9,12 @@ const fixture = () => ({ instances: {
 } });
 const has = (project, id, level) => validateCalibration(project).some(issue => issue.id === `calibration-${id}` && (!level || issue.level === level));
 
-test('校准项目分为编译列表与运行许可，默认不允许实际校准项目', () => {
+test('校准项目简化标签，保留运行许可兼容字段且默认不启用项目', () => {
   const module = MODULES.find(item => item.id === 'app-calibration');
   const compile = module.params.find(param => param.key === 'procedures');
   const runtime = module.params.find(param => param.key === 'enabledProcedures');
-  assert.equal(compile.label, '编译包含的校准项目'); assert.equal(compile.phase, 'compile');
+  assert.equal(compile.label, '校准项目'); assert.equal(compile.phase, 'compile');
+  assert.deepEqual(compile.defaultValue, []);
   assert.equal(runtime.label, '运行允许的校准项目'); assert.equal(runtime.phase, 'runtime');
   assert.equal(runtime.required, false); assert.deepEqual(runtime.defaultValue, []);
   assert.deepEqual(runtime.options, compile.options);

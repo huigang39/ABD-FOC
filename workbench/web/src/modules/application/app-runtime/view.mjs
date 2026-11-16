@@ -1,2 +1,2 @@
-import { renderSchedule } from '../../../features/configuration/schedule-view.mjs';
-export function renderExtras({project}) { return renderSchedule(project); }
+// The shared parameter renderer places the task editor in both project and standalone pages.
+export function renderExtras() { return ''; }

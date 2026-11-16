@@ -79,7 +79,7 @@ function renderPlacement(placement, plan, flashBanks, cores) {
 }
 
 /** Editable runtime memory planning; validation feedback uses the shared issue dialog. */
-export function renderRam(project, issues = []) {
+export function renderRam(project, issues = [], { embedded = false } = {}) {
   const plan = project.memory?.ram || createRamPlan();
   const cores = getMcuCores(project.target?.mcu);
   const mcu = project.target?.mcu?.trim() || '';
@@ -89,15 +89,15 @@ export function renderRam(project, issues = []) {
   const preset = identifyMcu(mcu)?.prefix === 'STM32H745' && !occupied;
   const relevant = issues.filter(issue => issue.id.startsWith('ram-'));
   const flashBanks = project.memory?.layout?.banks || [];
-  return `<section class="ram-workspace" aria-labelledby="ram-heading">
-    <div class="ram-section-heading"><div><h2 id="ram-heading">RAM</h2><p>定义 RAM 区域及访问能力，再为代码、数据与运行空间分配位置。</p></div><div class="ram-actions">${preset ? button('使用 STM32H745 区域表', 'ram-preset', { symbol: 'chip' }) : ''}${button('新增 RAM 区域', 'ram-add-bank', { symbol: 'plus', disabled: !ready })}</div></div>
-    ${!ready ? '<p class="design-note">先<a href="#/project/hardware?module=hw-platform&tab=config">选择 MCU</a>，再配置 RAM。</p>' : mismatch ? `<div class="ram-binding"><span>区域表依据：${esc(plan.mcu || '尚未绑定')} · 当前 MCU：${esc(mcu)}</span>${button('确认用于当前 MCU', 'ram-rebind')}</div>` : ''}
+  return `<section class="ram-workspace${embedded?' deployment-embedded':''}" ${embedded?'aria-label="RAM"':'aria-labelledby="ram-heading"'}>
+    <div class="ram-section-heading">${embedded?'':'<div><h2 id="ram-heading">RAM</h2><p>定义 RAM 区域及访问能力，再为代码、数据与运行空间分配位置。</p></div>'}<div class="ram-actions checklist-actions">${preset ? button('使用 STM32H745 区域表', 'ram-preset', { symbol: 'chip' }) : ''}${button('新增 RAM 区域', 'ram-add-bank', { symbol: 'plus', disabled: !ready })}<div data-live="ram-issues">${issueNoticeButton(relevant, { label: '查看 RAM 检查' })}</div></div></div>
+    ${!ready ? `<p class="design-note">先${embedded?'选择 MCU':'<a href="#/project/hardware?module=hw-platform&tab=config">选择 MCU</a>'}，再配置 RAM。</p>` : mismatch ? `<div class="ram-binding"><span>区域表依据：${esc(plan.mcu || '尚未绑定')} · 当前 MCU：${esc(mcu)}</span>${button('确认用于当前 MCU', 'ram-rebind')}</div>` : ''}
     <fieldset class="ram-editing"${ready ? '' : ' disabled'}><legend class="visually-hidden">RAM 配置</legend>
       ${plan.banks.length ? `<div class="ram-capacity-grid" data-live="ram-capacity-list">${plan.banks.map((bank, index) => renderCapacity(bank, index, plan.placements)).join('')}</div><details class="ram-geometry" data-state-key="ram-geometry"${plan.banks.some(bank => bank.baseAddress == null || bank.sizeKiB == null) ? ' open' : ''}><summary><strong>RAM 区域表</strong><span>${plan.banks.length} 个区域</span></summary><div class="ram-geometry-body"><p class="design-note">地址支持十六进制 0x… 或十进制；内核与 DMA 的访问能力按芯片手册和实际通路填写。</p>${renderBankTable(plan, cores)}</div></details>` : `<div class="ram-empty">${icon('database')}<h3>定义可用的 RAM</h3><p>${preset ? '可使用已核实的 STM32H745 区域表，再按用途分配；预设不会自动占用任何区域。' : '按 MCU 手册录入区域名称、起始地址、容量和访问能力。'}</p></div>`}
       <section class="ram-assignments"><div class="ram-section-heading"><div><h3>用途分配</h3><p>偏移从所选运行区域起始地址计算，容量按用途单独预留。</p></div>${button('新增分配', 'ram-add-placement', { symbol: 'plus', disabled: !ready || !plan.banks.length })}</div>
         ${plan.placements.length ? plan.placements.map(item => renderPlacement(item, plan, flashBanks, cores)).join('') : '<p class="ram-empty-assignments">按需要添加代码、数据、栈、堆、共享数据或 DMA 缓冲区。</p>'}
       </section>
     </fieldset>
-    <div class="ram-footer"><p>规划代码和数据的运行地址；实际占用与地址以构建结果为准。当前固件模板使用固定布局，自定义分配尚未映射到链接脚本。进度条表示已规划预算，未分配的容量不代表固件实际空闲空间。</p><div class="ram-actions"><div data-live="ram-issues">${issueNoticeButton(relevant, { label: '查看 RAM 检查' })}</div>${project.memory?.ram ? button('使用默认 RAM 布局', 'ram-reset', { quiet: true }) : ''}</div></div>
+    <div class="ram-footer"><p>规划代码和数据的运行地址；实际占用与地址以构建结果为准。当前固件模板使用固定布局，自定义分配尚未映射到链接脚本。进度条表示已规划预算，未分配的容量不代表固件实际空闲空间。</p><div class="ram-actions">${project.memory?.ram ? button('使用默认 RAM 布局', 'ram-reset', { quiet: true }) : ''}</div></div>
   </section>`;
 }

@@ -1,6 +1,13 @@
+import { migrateMotionLoopParameters } from '../modules/application/app-motion/migration.mjs';
 import { createAlgorithmChild, observerUsesModelAngle } from '../modules/algorithm/children.mjs';
+import { migrateAngleDelayParameters } from '../modules/algorithm/foc-compensation/migration.mjs';
+import { migrateSignalConsumerParameters } from '../modules/algorithm/consumers.mjs';
+export { migrateAngleDelayParameters } from '../modules/algorithm/foc-compensation/migration.mjs';
 import { parameterVisible } from '../modules/shared/visibility.mjs';
 import { coreCapabilities } from '../modules/hardware/hw-platform/cores.mjs';
+import { fillMissingAutomaticSettings } from '../modules/hardware/hw-platform/defaults.mjs';
+import { ensureCommonResources } from '../modules/hardware/hw-board/resource-defaults.mjs';
+import { normalizeProjectName } from './project-name.mjs';
 import { validateSchedule } from '../features/configuration/schedule.mjs';
 import { validateModuleConfiguration } from '../modules/validation.mjs';
 import { createPerformance, checkPerformanceShape } from '../features/performance/model.mjs';
@@ -15,7 +22,7 @@ import { createExecutionPlan, checkExecutionShape, validateExecution } from '../
 import { calibrationEnabled } from '../modules/application/app-calibration/validation.mjs';
 /** Design-time configuration only. No firmware generation or hardware verification. */
 import { createDesign, checkDesignShape, checkCommissioningShape, validateDesign } from './contracts.mjs';
-import { createCatalog, checkCatalogShape, validateSelectedEquipment, normalizeCatalog } from '../features/equipment/model.mjs';
+import { createCatalog, checkCatalogShape, validateSelectedEquipment, normalizeCatalog, syncSelectedDriverTarget } from '../features/equipment/model.mjs';
 
 import { LAYERS, MODULES, MODULE_IDS, TARGET_FIELDS, checkParameter } from './catalog.mjs';
 export { LAYERS, MODULES, TARGET_FIELDS } from './catalog.mjs';
@@ -26,15 +33,18 @@ const positive = (value) => typeof value === 'number' && Number.isFinite(value) 
 const plain = (value) => value !== null && typeof value === 'object' && !Array.isArray(value) && (Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === null);
 
 export function createProject() {
-  return {
+  const now = new Date();
+  const project = {
     schemaVersion: 2,
     id: globalThis.crypto?.randomUUID?.() || `project-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
-    name: '未命名驱动方案', revision: 1, updatedAt: new Date().toISOString(),
+    name: normalizeProjectName('', { date: now }), revision: 1, updatedAt: now.toISOString(),
     target: { vendor: 'unselected', mcu: '', board: '' },
     instances: Object.fromEntries(MODULES.map(module => [module.id, { enabled: module.required, runtimeEnabled: module.required, parameters: Object.fromEntries(module.params.map(param => [param.key, structuredClone(param.defaultValue)])) }])),
     provenance: {}, performance: createPerformance(),
     build: createBuild(), design: createDesign(), commissioning: { checks: {} }, catalog: createCatalog(), layerVersions: createLayerVersions(), operation: createOperation(), memory: createMemoryPlan(), execution: createExecutionPlan(), compatibility: {},
   };
+  ensureCommonResources(project.instances['hw-board'].parameters);
+  return project;
 }
 
 export function createExampleProject(kind = 'encoder') {
@@ -55,7 +65,7 @@ export function createExampleProject(kind = 'encoder') {
     'foc-lifecycle': { referenceTimeoutMs: 5, maxCurrentA: 8 },
     'foc-modulation': { method: 'svpwm', dutyMin: 0.02, dutyMax: 0.98 },
     'hw-platform': { architecture:'unselected', flashKiB:512, eraseKiB:4, firmwareReserveKiB:256 },
-    'hw-board': { currentTopology:'three_shunt', busVoltageV:24, currentGain:0.05, pwmHz:20000, currentLoopDivider:1, adcBits:12, adcClockHz:20000000, deadtimeNs:300 },
+    'hw-board': { currentTopology:'three_shunt', busVoltageV:24, pwmHz:20000, currentLoopDivider:1, adcBits:12, adcClockHz:20000000, deadtimeNs:300 },
     'hw-drivers': { encoderCapability: kind === 'sensorless' ? 'absent' : 'present', encoderBits: kind === 'encoder' ? 16 : null, motorEncoderType: kind === 'hall' ? 'hall' : kind === 'encoder' ? 'absolute' : 'unselected', motorEncoderAngleDomain: kind === 'hall' ? 'electrical' : 'mechanical', outputEncoderCapability: 'absent', torqueCapability: 'absent', gateDriverCapability: 'absent' },
     'hw-safety': { hardwareTripCapability: 'unconfirmed', resetOutputDisabled: true },
   };
@@ -153,6 +163,20 @@ const TRACK_ROUTING_FALLBACK = {
   'encoder_tracking.electrical_angle':{source:'feedback.angle',secondary:'smo.angle'},
   'encoder_tracking.electrical_speed':{source:'feedback.speed',secondary:'feedback.speed'},
 };
+const ELECTRICAL_SPEED_FIELDS = new Set(['electrical_velocity','electrical_speed_valid','electrical_speed_time_us','electrical_speed_source_id']);
+/** Extend only the former default observer output; user-defined layouts stay intact. */
+function migrateObserverOutputContract(design) {
+  const output = design?.structures?.find(structure => structure.id === design.moduleContracts?.['foc-observer']?.output);
+  const defaults = MODULE_MAP.get('foc-observer').contracts.output.fields;
+  const previous = defaults.filter(field => !ELECTRICAL_SPEED_FIELDS.has(field.name));
+  if (!Array.isArray(output?.fields) || output.fields.length !== previous.length) return;
+  if (!previous.every((expected, index) => Object.entries(expected).every(([key, value]) => output.fields[index]?.[key] === value))) return;
+  output.fields.push(...structuredClone(defaults.filter(field => ELECTRICAL_SPEED_FIELDS.has(field.name))));
+}
+function addDisabledFilter(instances, legacy = false) {
+  if (!plain(instances) || Object.hasOwn(instances, 'foc-filter')) return;
+  instances['foc-filter'] = { enabled: false, ...(legacy ? {} : { runtimeEnabled: false }), parameters: { children: [] } };
+}
 function migrateObserverChildren(instances) {
   const children=instances?.['foc-observer']?.parameters?.children;
   if(Array.isArray(children))for(const child of children) {
@@ -286,9 +310,13 @@ function migrateInputs(project) {
   Object.assign(project, migrateLegacySafetyState(project));
   const compensation=MODULE_MAP.get('foc-compensation');
   if(plain(project.instances)&&compensation&&!Object.hasOwn(project.instances,compensation.id))project.instances[compensation.id]={enabled:false,...(project.schemaVersion===2?{runtimeEnabled:false}:{}),parameters:Object.fromEntries(compensation.params.map(param=>[param.key,structuredClone(param.defaultValue)]))};
+  addDisabledFilter(project.instances, project.schemaVersion === 1);
   const migrateCalibration=instances=>{const params=instances?.['app-calibration']?.parameters;if(plain(params)&&!Object.hasOwn(params,'enabledProcedures'))params.enabledProcedures=Array.isArray(params.procedures)?[...params.procedures]:[];};
   migrateCalibration(project.instances);
+  migrateSignalConsumerParameters(project.instances);
+  migrateMotionLoopParameters(project.instances);
   migrateObserverChildren(project.instances);
+  migrateAngleDelayParameters(project.instances);
   migrateLegacyModuleParameters(project);
   if(project.schemaVersion===2) {
     if(!Object.hasOwn(project,'memory'))project.memory=createMemoryPlan();
@@ -296,7 +324,7 @@ function migrateInputs(project) {
     if(!Object.hasOwn(project,'execution'))project.execution=createExecutionPlan();
     else if(plain(project.execution?.assignments)&&!Object.hasOwn(project.execution.assignments,'foc-compensation'))project.execution.assignments['foc-compensation']='';
   }
-  if (plain(project.design)) project.design = ensureModuleContracts(project.design);
+  if (plain(project.design)) { project.design = ensureModuleContracts(project.design); migrateObserverOutputContract(project.design); }
   const sensors=project.instances?.['hw-drivers']?.parameters, feedback=project.instances?.['foc-feedback']?.parameters;
   const hallAngle=feedback?.angleSource==='hall';
   migrateSensorParameters(sensors,{hallAngle});
@@ -313,23 +341,34 @@ function migrateInputs(project) {
   if(Array.isArray(project.layerVersions?.releases))for(const release of project.layerVersions.releases) {
     if (release?.layer === 'foc') release.snapshot = migrateLegacySafetyState(release.snapshot);
     const instances=release?.snapshot?.instances;
+    if (release?.layer === 'foc') addDisabledFilter(instances);
     migrateCalibration(instances);
+    migrateSignalConsumerParameters(instances);
+    migrateMotionLoopParameters(instances);
     migrateObserverChildren(instances);
+    migrateAngleDelayParameters(instances);
     if(plain(instances))migrateLegacyModuleParameters({instances,execution:{}});
     if(instances?.['hw-drivers'])migrateSensorParameters(instances['hw-drivers'].parameters);
     if(instances?.['foc-feedback']?.parameters?.angleSource==='hall')instances['foc-feedback'].parameters.angleSource='encoder';
     migrateMemoryLayoutValues(release?.snapshot?.memoryLayout);
   }
-  if(Array.isArray(project.performance?.records))for(const record of project.performance.records)migrateMemoryLayoutValues(record?.snapshot?.driver?.memoryLayout);
+  if(Array.isArray(project.performance?.records))for(const record of project.performance.records) {
+    migrateMemoryLayoutValues(record?.snapshot?.driver?.memoryLayout);
+    addDisabledFilter(record?.snapshot?.layers?.foc?.configuration);
+    migrateSignalConsumerParameters(record?.snapshot?.layers?.app?.configuration);
+    migrateMotionLoopParameters(record?.snapshot?.layers?.app?.configuration);
+    migrateAngleDelayParameters({ ...record?.snapshot?.layers?.foc?.configuration, 'hw-board': record?.snapshot?.layers?.hardware?.configuration?.['hw-board'] });
+  }
 }
 
-export function parseProject(jsonText) {
+export function parseProject(jsonText, { existingNames = [] } = {}) {
   if (typeof jsonText !== 'string') fail('请提供 JSON 文本。');
   let project;
   try { project = JSON.parse(jsonText); } catch { fail('JSON 解析失败，请检查文件是否为完整的项目 JSON。'); }
   migrateInputs(project);
   checkShape(project, true, true);
   const normalized = structuredClone(project);
+  normalized.name = normalizeProjectName(normalized.name, { existingNames });
   const oldPreset = /^(编码器|观测器|霍尔)示例（教学参数）$/.exec(normalized.name);
   if (oldPreset) normalized.name = `${oldPreset[1]}控制方案`;
   if (normalized.schemaVersion === 1) {
@@ -340,7 +379,10 @@ export function parseProject(jsonText) {
   for (const module of MODULES) for (const parameter of module.params) {
     if (!Object.hasOwn(normalized.instances[module.id].parameters, parameter.key)) normalized.instances[module.id].parameters[parameter.key] = structuredClone(parameter.defaultValue);
   }
+  if (normalized.instances['app-runtime'].parameters.scheduler === 'unselected') normalized.instances['app-runtime'].parameters.scheduler = 'cooperative';
   normalizeCatalog(normalized.catalog);
+  syncSelectedDriverTarget(normalized);
+  ensureCommonResources(normalized.instances['hw-board'].parameters);
   normalized.layerVersions ??= createLayerVersions(); normalized.operation ??= createOperation();
   normalized.memory ??= createMemoryPlan(); normalized.execution ??= createExecutionPlan(); normalized.compatibility ??= {};
   normalized.build.moduleOptimizations ??= {};
@@ -351,6 +393,7 @@ export function parseProject(jsonText) {
     instances['hw-platform'].parameters.architecture = info?.architecture || 'unselected';
     if (info) target.vendor = info.vendor;
     for(const core of info?.cores||[]){const settings=instances['hw-platform'].parameters.coreConfigs?.[core.id];if(settings)settings.irqPriorityBits=coreCapabilities(target.mcu,core.id)?.irqPriorityBits??null;}
+    fillMissingAutomaticSettings(target.mcu,instances['hw-platform'].parameters);
   };
   syncTarget(normalized.target, normalized.instances);
   for (const release of normalized.layerVersions.releases) if (release.layer === 'hardware') syncTarget(release.snapshot.target, release.snapshot.instances);
@@ -404,8 +447,8 @@ export function validateProject(project) {
       if (typeof v === 'number' && ((param.min !== undefined && v < param.min) || (param.max !== undefined && v > param.max))) add(`range-${module.id}-${param.key}`, 'error', `${param.label}超出范围`, `允许范围：${param.min ?? '不限下界'} 至 ${param.max ?? '不限上界'}。`, module.id, param.key);
     }
   }
-  const mustBePositive = [['app-motion', 'outerHz'], ['app-motion', 'currentLimitA'], ['app-comms', 'timeoutMs'], ['foc-lifecycle', 'referenceTimeoutMs'], ['foc-lifecycle', 'maxCurrentA'], ['hw-board', 'pwmHz'], ['hw-board', 'adcClockHz'], ['hw-board', 'busVoltageV'], ['hw-board', 'currentGain'], ['hw-platform', 'flashKiB'], ['hw-platform', 'eraseKiB'], ['app-params', 'motionCalibrationKiB'], ['app-params', 'parametersKiB'], ['app-params', 'runtimeRecordsKiB']];
-  for (const [id, key] of mustBePositive) if (!(project.memory?.layout.banks.length&&['hw-platform','app-params'].includes(id)) && enabled(id) && typeof value(id, key) === 'number' && value(id, key) <= 0) add(`positive-${id}-${key}`, 'error', '参数必须大于零', `${MODULE_MAP.get(id).params.find(p => p.key === key).label}不能为零或负数。`, id, key);
+  const mustBePositive = [['app-motion', 'outerHz'], ['app-motion', 'currentLimitA'], ['app-comms', 'timeoutMs'], ['foc-lifecycle', 'referenceTimeoutMs'], ['foc-lifecycle', 'maxCurrentA'], ['hw-board', 'pwmHz'], ['hw-board', 'adcClockHz'], ['hw-platform', 'flashKiB'], ['hw-platform', 'eraseKiB'], ['app-params', 'motionCalibrationKiB'], ['app-params', 'parametersKiB'], ['app-params', 'runtimeRecordsKiB']];
+  for (const [id, key] of mustBePositive) if (!(project.memory?.layout.banks.length&&['hw-platform','app-params'].includes(id)) && enabled(id) && typeof value(id, key) === 'number' && value(id, key) <= 0) add(`positive-${id}-${key}`, 'error', '参数必须大于零', `${MODULE_MAP.get(id).params.find(p => p.key === key).label}不能为零或负数。`, id==='app-motion'&&key==='outerHz'?'app-runtime':id, id==='app-motion'&&key==='outerHz'?undefined:key);
 
   const supported = value('app-motion', 'supportedModes') || [];
   const active = value('app-motion', 'activeMode');
@@ -415,8 +458,9 @@ export function validateProject(project) {
   else if (value('app-motion', 'commandSource') === 'communication' && !running('app-comms')) add('communication-runtime-required', 'error', '通信命令需要运行通信模块', '通信模块虽已编译包含，但其运行开关关闭。', 'app-comms');
   const requireCapability = (key, label, owner, paramKey) => {
     const cap = value('hw-drivers', key);
-    if (cap === 'absent') add(`capability-${key}-${owner}`, 'error', `${label}依赖未满足`, `当前配置声明不具备${label}，请更改相关功能或硬件能力。`, owner, paramKey);
-    else if (cap !== 'present') add(`capability-${key}-${owner}`, 'pending', `${label}能力待确认`, `相关功能需要${label}；目前没有确认其存在。`, owner, paramKey);
+    const issueOwner=owner==='app-motion'?'hw-drivers':owner,issueKey=owner==='app-motion'?key:paramKey;
+    if (cap === 'absent') add(`capability-${key}-${owner}`, 'error', `${label}依赖未满足`, `当前配置声明不具备${label}，请更改相关功能或硬件能力。`, issueOwner, issueKey);
+    else if (cap !== 'present') add(`capability-${key}-${owner}`, 'pending', `${label}能力待确认`, `相关功能需要${label}；目前没有确认其存在。`, issueOwner, issueKey);
   };
   const angle = value('foc-feedback', 'angleSource');
   if (angle === 'encoder') requireCapability('encoderCapability', '电机侧编码器', 'foc-feedback', 'angleSource');
@@ -437,8 +481,8 @@ export function validateProject(project) {
   const derived = getDerived(project);
   const outer = value('app-motion', 'outerHz');
   if (positive(outer) && positive(derived.fastHz)) {
-    if (outer >= derived.fastHz) add('outer-rate', 'error', '应用控制频率必须低于电流环', `应用控制为 ${outer} Hz，电流环为 ${derived.fastHz} Hz。`, 'app-motion', 'outerHz');
-    else if (Math.abs(derived.fastHz / outer - Math.round(derived.fastHz / outer)) > 1e-8) add('outer-noninteger-ratio', 'warning', '外环不是电流环的整数分频', '需要明确独立时基、相位和抖动处理。', 'app-motion', 'outerHz');
+    if (outer >= derived.fastHz) add('outer-rate', 'error', '应用控制频率必须低于电流环', `应用控制为 ${outer} Hz，电流环为 ${derived.fastHz} Hz。`, 'app-runtime');
+    else if (Math.abs(derived.fastHz / outer - Math.round(derived.fastHz / outer)) > 1e-8) add('outer-noninteger-ratio', 'warning', '外环不是电流环的整数分频', '需要明确独立时基、相位和抖动处理。', 'app-runtime');
     const timeout = value('foc-lifecycle', 'referenceTimeoutMs');
     if (positive(timeout) && timeout < 1000 / outer) add('reference-timeout', 'error', '给定有效期短于更新周期', '电流环可能在正常的下一次外环更新前把给定判为过期。', 'foc-lifecycle', 'referenceTimeoutMs');
   }
@@ -471,7 +515,6 @@ export function validateProject(project) {
   } else add('storage-layout-incomplete', 'pending', '存储布局待补齐', '只有三个数据区、代码升级预留及 Flash 总量都已知，才能检查容量关系。', 'hw-platform');
   if (Object.values(project.provenance).includes('example')) add('example-values', 'info', '包含预置参数', '预置参数需按实际电机与硬件确认，并完成整定。');
   const position=value('app-motion','positionFeedback');
-  if(supported.some(mode=>['position','impedance'].includes(mode))&&!known(position))add('position-source','pending','位置反馈来源待选择','分别选择电机换算或出轴编码器反馈。','app-motion','positionFeedback');
   if(position==='output_encoder')requireCapability('outputEncoderCapability','出轴侧编码器','app-motion','positionFeedback');
   issues.push(...validateModuleConfiguration(project), ...validateDesign(project), ...validateModuleContracts(project), ...validateSelectedEquipment(project), ...validateLayerVersions(project), ...validateMemory(project), ...validateExecution(project), ...validateSchedule(project));
   return issues;

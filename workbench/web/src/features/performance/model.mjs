@@ -1,3 +1,4 @@
+import { migrateMotionLoopParameters } from '../../modules/application/app-motion/migration.mjs';
 /** Measured performance belongs to an actuator + driver assembly.
  * No device access, inferred ratings, interpolation or automatic current conversion.
  * Save creates detached history; callers supply the measurement date and firmware ID.
@@ -5,6 +6,8 @@
 import { MODULES, TARGET_FIELDS, checkParameter } from '../../core/catalog.mjs';
 import { checkCatalogShape, createCatalog, isAssemblyComplete } from '../equipment/model.mjs';
 import { checkModuleOptimizations } from '../build/options.mjs';
+import { migrateAngleDelayParameters } from '../../modules/algorithm/foc-compensation/migration.mjs';
+import { migrateSignalConsumerParameters } from '../../modules/algorithm/consumers.mjs';
 
 export const PERFORMANCE_KINDS = Object.freeze(['kt', 'tn_curve']);
 export const PERFORMANCE_LIMITS = Object.freeze({ records: 100, samplesPerRecord: 2000, totalSamples: 20000, csvCharacters: 500000, jsonCharacters: 8000000 });
@@ -15,6 +18,19 @@ const plain = value => value !== null && typeof value === 'object' && !Array.isA
 const stable = value => Array.isArray(value) ? value.map(stable) : plain(value) ? Object.fromEntries(Object.keys(value).sort().map(key => [key, stable(value[key])])) : value;
 const canonical = value => JSON.stringify(stable(value));
 const clone = value => structuredClone(value);
+const withOptionalFilter = configuration => plain(configuration) && !Object.hasOwn(configuration, 'foc-filter')
+  ? { ...configuration, 'foc-filter': { enabled: false, runtimeEnabled: false, parameters: { children: [] } } } : configuration;
+function compatibleFocConfiguration(snapshot) {
+  const configuration = withOptionalFilter(clone(snapshot.layers.foc.configuration));
+  migrateAngleDelayParameters({ ...configuration, 'hw-board': snapshot.layers.hardware?.configuration?.['hw-board'] });
+  return configuration;
+}
+function compatibleAppConfiguration(snapshot) {
+  const configuration = clone(snapshot.layers.app.configuration);
+  migrateSignalConsumerParameters(configuration);
+  migrateMotionLoopParameters(configuration);
+  return configuration;
+}
 function fail(message) { throw new Error(message); }
 function keys(value, allowed, location) {
   if (!plain(value)) fail(`${location} 必须是对象。`);
@@ -131,9 +147,10 @@ function checkSnapshot(snapshot, record) {
     keys(entry, ['releaseId', 'version', 'interfaceVersion', 'configuration'], `快照层版本.${layer}`);
     for (const key of ['releaseId', 'version', 'interfaceVersion']) text(entry[key], `快照层版本.${layer}.${key}`);
     const modules = MODULES.filter(module => module.layer === layer);
-    keys(entry.configuration, modules.map(module => module.id), `快照模块.${layer}`);
+    const configuration = layer === 'foc' ? compatibleFocConfiguration(snapshot) : layer === 'app' ? compatibleAppConfiguration(snapshot) : entry.configuration;
+    keys(configuration, modules.map(module => module.id), `快照模块.${layer}`);
     for (const module of modules) {
-      const instance = entry.configuration[module.id];
+      const instance = configuration[module.id];
       keys(instance, ['enabled', 'runtimeEnabled', 'parameters'], `快照模块.${module.id}`);
       if (typeof instance.enabled !== 'boolean' || typeof instance.runtimeEnabled !== 'boolean') fail(`快照模块.${module.id} 的开关必须是布尔值。`);
       keys(instance.parameters, module.params.map(param => param.key), `快照模块.${module.id}.parameters`);
@@ -219,7 +236,7 @@ export function getPerformanceHistory(project, record) {
   // Renaming an assembly or a component does not alter its measured physical identity.
   const configuration = snapshot => ({
     actuator: { ...snapshot.actuator, name: '' }, driver: { ...snapshot.driver, name: '' },
-    layers: snapshot.layers, build: snapshot.build, target: snapshot.target,
+    layers: { ...snapshot.layers, foc: { ...snapshot.layers.foc, configuration: compatibleFocConfiguration(snapshot) }, app: { ...snapshot.layers.app, configuration: compatibleAppConfiguration(snapshot) } }, build: snapshot.build, target: snapshot.target,
   });
   if (canonical(configuration(current)) !== canonical(configuration(saved))) return { historical: true, historyReason: '组件参数、层配置或构建配置已变更。' };
   return { historical: false, historyReason: '' };

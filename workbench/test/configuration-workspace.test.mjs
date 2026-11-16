@@ -1,3 +1,4 @@
+import { newModuleProject } from './support/new-project.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createProject, parseProject, serializeProject, validateProject } from '../web/src/core/model.mjs';
@@ -194,11 +195,12 @@ test('the selected asset footprint ignores global shelf additions, removals, edi
 
 test('unselected shelf mistakes remain visible to the shelf but do not block active configuration validation', () => {
   const current = createNeo75hProject('KW'), driver = createDriver('未完成的其他驱动器');
+  const existingValidation=inspectFirmwareSupport(current).sourceIssues.filter(issue=>issue.code==='validation');
   driver.adcBits = -1; driver.bindings.push({ ...createBinding(), signal: 'x', pin: 'PA0', peripheral: 'ADC1' }, { ...createBinding(), signal: 'x', pin: 'PA0', peripheral: 'ADC1' });
   current.catalog.drivers.push(driver);
   assert.ok(validateEquipment(current).some(issue => issue.itemId === driver.id && issue.level === 'error'));
   assert.equal(validateProject(current).some(issue => issue.itemId === driver.id && issue.level === 'error'), false);
-  assert.equal(inspectFirmwareSupport(current).sourceIssues.some(issue => issue.code==='validation'),false);
+  assert.deepEqual(inspectFirmwareSupport(current).sourceIssues.filter(issue=>issue.code==='validation'),existingValidation);
   getActiveDriver(current).adcBits = -1;
   assert.ok(validateProject(current).some(issue => issue.itemId === current.catalog.activeDriverId && issue.level === 'error'));
 });
@@ -213,7 +215,7 @@ test('native motor parameters use independent actuator selection even without a 
   assert.equal(report.issues.some(issue=>issue.code==='assembly'),false);
 });
 
-test('NEO custom hardware followed by driver reuse retains its explicit source limit and native support', () => {
+test('NEO driver reuse retains its explicit source limit and surfaces preserved shared-port conflicts', () => {
   const current = createNeo75hProject('KW'), driverId = current.catalog.activeDriverId;
   const configuredLimit = current.instances['app-motion'].parameters.currentLimitA;
   assert.ok(configuredLimit > 0); assert.equal(getActiveDriver(current).maxCurrentA, null);
@@ -222,7 +224,9 @@ test('NEO custom hardware followed by driver reuse retains its explicit source l
   assert.equal(next.instances['app-motion'].parameters.currentLimitA, configuredLimit);
   assert.equal(next.catalog.activeActuatorId, current.catalog.activeActuatorId);
   assert.ok(validateProject(next).some(issue => issue.id === 'equipment-current-unknown' && issue.level === 'pending'));
-  assert.equal(inspectFirmwareSupport(next).sourceIssues.some(issue=>issue.code==='validation'),false);
+  const conflicts=validateProject(next).filter(issue=>issue.code==='driver-resource-conflict');
+  assert.deepEqual(conflicts.map(issue=>issue.paramKey).sort(),['motorEncoderResource','outputEncoderResource']);
+  assert.equal(inspectFirmwareSupport(next).sourceIssues.some(issue=>issue.code==='validation'),true);
 });
 
 test('unknown actuator and driver current boundaries preserve user values while known bounds only tighten', () => {
@@ -245,4 +249,18 @@ test('unknown actuator and driver current boundaries preserve user values while 
   assert.equal(selectConfigurationActuator(selectConfigurationDriver(current, driver.id), actuator.id).instances['app-motion'].parameters.currentLimitA, 2);
   current.instances['app-motion'].parameters.currentLimitA = null;
   assert.equal(selectConfigurationActuator(selectConfigurationDriver(current, driver.id), actuator.id).instances['app-motion'].parameters.currentLimitA, null);
+});
+
+
+test('active port conflicts block source readiness while a corrected live configuration ignores the stale shelf snapshot', () => {
+  const project=newModuleProject();
+  const stored=getActiveDriver(project).hardware['hw-drivers'];
+  assert.equal(stored.motorEncoderResource,stored.outputEncoderResource,'historical shelf wiring remains intact');
+  assert(validateEquipment(project).some(issue=>issue.code==='driver-resource-conflict'&&issue.itemId===project.catalog.activeDriverId));
+  assert(!validateProject(project).some(issue=>issue.code==='driver-resource-conflict'));
+  assert.equal(inspectFirmwareSupport(project).sourceReady,true);
+  const live=project.instances['hw-drivers'].parameters;
+  live.outputEncoderResource=live.motorEncoderResource;
+  assert.deepEqual(validateProject(project).filter(issue=>issue.code==='driver-resource-conflict').map(issue=>issue.paramKey).sort(),['motorEncoderResource','outputEncoderResource']);
+  assert.equal(inspectFirmwareSupport(project).sourceReady,false);
 });

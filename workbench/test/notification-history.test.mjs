@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createNotificationHistory } from '../web/src/shared/notifications/history.mjs';
+import { createNotificationHistory, notificationIndicator } from '../web/src/shared/notifications/history.mjs';
+import { renderIssueMessage } from '../web/src/shared/ui/issue-message.mjs';
 
 const KEY = 'actuator-console.notifications.v1';
 function memoryStorage() {
@@ -8,6 +9,25 @@ function memoryStorage() {
   return { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value), values };
 }
 const notification = (message = '配置已保存', projectId = 'project-a') => ({ level: 'success', title: '保存项目', message, projectId, projectName: 'NEO 75' });
+
+test('bell follows the highest unread severity and resets as notifications are read', () => {
+  const history = createNotificationHistory();
+  assert.deepEqual(notificationIndicator(history.entries), {count:0,level:'normal'});
+  history.add({...notification('普通通知'),level:'info'});
+  history.add(notification('保存完成'));
+  assert.deepEqual(notificationIndicator(history.entries), {count:2,level:'normal'});
+  const warning = history.add({...notification('配置警告'),level:'warning'});
+  const error = history.add({...notification('操作错误'),level:'error'});
+  assert.deepEqual(notificationIndicator(history.entries), {count:4,level:'error'});
+  history.markRead(error.id);
+  assert.deepEqual(notificationIndicator(history.entries), {count:3,level:'warning'});
+  history.markRead(warning.id);
+  assert.deepEqual(notificationIndicator(history.entries), {count:2,level:'normal'});
+  history.add({...notification('待确认配置'),level:'pending'});
+  assert.deepEqual(notificationIndicator(history.entries), {count:3,level:'warning'});
+  history.markAllRead();
+  assert.deepEqual(notificationIndicator(history.entries), {count:0,level:'normal'});
+});
 
 test('persists newest-first history and unread state across reloads', () => {
   const storage = memoryStorage(), history = createNotificationHistory({ storage });
@@ -67,6 +87,34 @@ test('returned records, issue arrays and callback snapshots cannot mutate the hi
   assert.equal(stored.message, '配置已保存');
   assert.equal(stored.issues[0].title, '输入无效');
   assert.deepEqual(Object.keys(stored.issues[0]), ['id', 'title', 'message', 'level', 'moduleId', 'paramKey', 'designPage', 'itemId', 'path']);
+});
+
+test('history preserves reference annotations across reloads and deeply isolates every snapshot', () => {
+  const storage=memoryStorage(); let snapshot;
+  const history=createNotificationHistory({storage,onChange:entries=>{snapshot=entries;}});
+  const issue={id:'conflict',message:'UART4 被编码器使用。',messageParts:[{type:'reference',label:'UART4',kind:'peripheral',html:'discard'},' 被',{type:'reference',label:'编码器',kind:'driver'},'使用。']};
+  const entry=history.add({...notification(),issues:[issue]});
+  issue.messageParts[0].label='changed input';
+  entry.issues[0].messageParts[0].label='changed returned entry';
+  snapshot[0].issues[0].messageParts[0].label='changed callback';
+  history.entries[0].issues[0].messageParts[0].label='changed getter';
+  const restored=createNotificationHistory({storage}).entries[0].issues[0];
+  assert.equal(restored.message,'UART4 被编码器使用。');
+  assert.deepEqual(restored.messageParts[0],{type:'reference',label:'UART4',kind:'peripheral'});
+  assert.equal(restored.messageParts[2].label,'编码器');
+  assert.match(renderIssueMessage(restored),/<span class="attribute-tag issue-reference-tag">UART4<\/span>/);
+});
+
+test('invalid reference annotations are discarded without losing the plain history issue', () => {
+  const storage=memoryStorage(),history=createNotificationHistory({storage});
+  const entry=history.add({...notification(),issues:[{id:'a',message:'保留消息',messageParts:[{type:'html',label:'bad'}]}]});
+  assert.equal(Object.hasOwn(entry.issues[0],'messageParts'),false);
+  const payload=JSON.parse(storage.getItem(KEY));
+  payload.entries[0].issues[0].messageParts=Array(257).fill('too many parts');
+  storage.setItem(KEY,JSON.stringify(payload));
+  const restored=createNotificationHistory({storage}).entries[0].issues[0];
+  assert.deepEqual(restored,{id:'a',message:'保留消息'});
+  assert.equal(renderIssueMessage(restored),'保留消息');
 });
 
 test('read and clear emit only on changes, and clearing survives a reload', () => {

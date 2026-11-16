@@ -80,8 +80,8 @@ export function validateCia402(project) {
   if (profiles.length) profiles.push('profileTargetTimeMs');
   for (const key of new Set(profiles)) {
     const value = motion?.parameters?.[key];
-    if (value === null || value === undefined) add(`profile-missing-${key}`, 'pending', '轮廓参数待填写', '当前包含的轮廓模式需要速度、斜率或到达判据。', 'app-motion', key);
-    else if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) add(`profile-range-${key}`, 'error', '轮廓参数必须大于零', '有限的正数才可作为轨迹斜率、窗口或稳定时间。', 'app-motion', key);
+    if (value === null || value === undefined) add(`profile-missing-${key}`, 'pending', '轮廓参数待填写', '当前选择的轮廓模式需要由协议配置提供速度、斜率或到达判据。', 'app-state', 'cia402Modes');
+    else if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) add(`profile-range-${key}`, 'error', '轮廓参数必须大于零', '有限的正数才可作为轨迹斜率、窗口或稳定时间。', 'app-state', 'cia402Modes');
   }
   add('mapping-unverified', 'pending', 'CiA 402 联调待完成', '状态字、控制字、模式显示、对象单位与 PDO / ESI 映射需与主站核对；EtherCAT OP 状态本身不表示驱动已使能。');
   return issues;

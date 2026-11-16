@@ -8,6 +8,7 @@ import app_safety from './application/app-safety/definition.mjs';
 import foc_lifecycle from './algorithm/foc-lifecycle/definition.mjs';
 import foc_feedback from './algorithm/foc-feedback/definition.mjs';
 import foc_observer from './algorithm/foc-observer/definition.mjs';
+import foc_filter from './algorithm/foc-filter/definition.mjs';
 import foc_current from './algorithm/foc-current/definition.mjs';
 import foc_modulation from './algorithm/foc-modulation/definition.mjs';
 import foc_compensation from './algorithm/foc-compensation/definition.mjs';
@@ -33,6 +34,7 @@ export const MODULES = freezeDeep([
   foc_feedback,
   foc_modulation,
   foc_observer,
+  foc_filter,
   foc_compensation,
   foc_lifecycle,
   hw_platform,

@@ -5,7 +5,7 @@ import { choices, unset, number, select } from '../../shared/fields.mjs';
 export default {
   "id": "foc-compensation",
   "layer": "foc",
-  "order": 4,
+  "order": 5,
   "title": "补偿器",
   "summary": "角度修正 · 电流修正 · 摩擦补偿",
   "role": "按补偿对象启用角度、电流或摩擦子模块；明确反馈修正与给定叠加位置，并保留有效性与限幅状态。",

@@ -46,7 +46,7 @@ test('chain data and UI describe rotor quantities rather than a generic stand-al
  const p=fixture(),s=child(p,'smo');s.compiled=true;s.parameters.extraction='atan2';
  const data=observerChainContracts(s);assert.ok(data.output.some(f=>f.name==='back_emf_alpha_beta'&&f.unit==='V'));assert.ok(data.output.some(f=>f.name==='motor_velocity'));assert.ok(data.input.some(f=>f.name==='applied_voltage_alpha_beta'));
  const html=renderAlgorithmChildren(p,MODULES.find(m=>m.id==='foc-observer'),'<span>发布来源</span>');
- assert.match(html,/反电动势估算/);assert.match(html,/反正切与滤波/);assert.doesNotMatch(html,/PLL 观测器/);
+ assert.match(html,/data-key="gain"/);assert.match(html,/data-key="emfFilterHz"/);assert.match(html,/反正切 \+ 速度滤波/);assert.match(html,/待替换/);assert.doesNotMatch(html,/PLL 观测器|observer-guide|observer-stages|observer-contract-notes|data-edit="algorithm-routing"|发布来源/);
  assert.throws(()=>MODULE_CODE['foc-observer'].values(p),/不能用单一 PLL 模板代替/);
 });
 

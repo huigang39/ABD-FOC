@@ -9,6 +9,7 @@ import { createDesign } from '../web/src/core/contracts.mjs';
 import { ensureModuleContracts, getModuleContract, CONTRACT_ROLES } from '../web/src/core/module-contracts.mjs';
 import { validateModuleConfiguration } from '../web/src/modules/validation.mjs';
 import { renderModuleExtras } from '../web/src/modules/presentation.mjs';
+import { renderSchedule } from '../web/src/features/configuration/schedule-view.mjs';
 import { renderSensorConfig } from '../web/src/modules/hardware/hw-drivers/view.mjs';
 import { SENSOR_ROLES } from '../web/src/modules/hardware/hw-drivers/sensors.mjs';
 
@@ -132,11 +133,13 @@ test('模块附加页面可以无 DOM 渲染，重复输出一致且不更改项
   const project = createNeo75hProject('KW');
   assert.match(renderModuleExtras('app-state', context(project)), /CiA 402/);
   project.instances['app-state'].parameters.stateMachine = 'unselected';
-  assert.match(renderModuleExtras('app-runtime', context(project)), /任务与时序/);
+  const schedule = renderSchedule(project), extras = renderModuleExtras('app-runtime', context(project));
+  assert.equal(extras, '', '任务调度由共享参数主区域渲染，附加区域不再重复');
+  assert.equal((`${schedule}${extras}`.match(/id="task-schedule"/g) || []).length, 1);
   assert.doesNotMatch(renderModuleExtras('app-state', context(project)), /CiA 402 驱动状态机/);
 });
 
-test('传感器页面沿用三个角色，并按当前配置筛选字段而不修改参数和定义', () => {
+test('驱动页面显示型号与外设下拉框，并保留参数和定义', () => {
   const parameters = createProject().instances['hw-drivers'].parameters;
   for (const role of SENSOR_ROLES) parameters[role.capability] = 'absent';
   const before = structuredClone(parameters), fields = [];
@@ -145,12 +148,14 @@ test('传感器页面沿用三个角色，并按当前配置筛选字段而不�
     return `<input data-field="${escape(field.key)}">`;
   });
   assert.deepEqual(parameters, before);
-  for (const role of SENSOR_ROLES) assert.match(html, new RegExp(`data-sensor-role="${role.id}"`));
-  assert.deepEqual(fields.map(field => field.key), SENSOR_ROLES.map(role => role.capability));
-  for (const field of fields) {
-    assert.equal(field.label, `${SENSOR_ROLES.find(role => role.capability === field.key).title}启用`);
-    assert.equal(field.binarySwitch, true, '启用状态以 on/off 开关渲染');
+  for (const id of ['motor','torque','gate']) assert.match(html, new RegExp(`data-sensor-role="${id}"`));
+  assert.doesNotMatch(html, /data-sensor-role="output"/);
+  assert.deepEqual(fields.map(field => field.key), ['motorEncoderModel','motorEncoderResource','torqueSensorModel','torqueSensorResource','gateDriverModel','gateDriverResource','gateDriverEnablePin']);
+  for (const field of fields.filter(field => field.key.endsWith('Resource'))) {
+    assert.equal(field.type, 'select');
+    assert.equal(field.label, '外设');
+    assert.deepEqual(field.options, [{ value: '', label: '选择外设' }]);
   }
-  assert.doesNotMatch(html, /配置此传感器|不使用/);
-  assert.doesNotMatch(html, /data-field="motorEncoderType"|data-field="motorEncoderInterface"|data-field="torqueSensorModel"/);
+  assert.ok(fields.every(field => !field.binarySwitch));
+  assert.doesNotMatch(html, /配置此传感器|不使用|data-field="motorEncoderType"|data-field="motorEncoderInterface"|data-field="encoderCapability"|bind-driver-resource|data-instance=/);
 });

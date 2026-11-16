@@ -68,9 +68,69 @@ test('core editor shares controls for project and shelf; removed hardware shortc
   assert.doesNotMatch(renderArchitectureLayer('hardware'),/architecture-hardware-stages/);
   assert.deepEqual(Object.keys(createCoreConfigs('STM32G474RE')),['cm4']);
 });
+
+test('core editor lays out both cores with all supported controls and no folding or divider classes',()=>{
+  const p=createNeo75hProject(), before=structuredClone(p), fields=MODULES.find(m=>m.id==='hw-platform').params.filter(f=>!f.hidden);
+  const html=renderPlatformConfiguration(p.target.mcu,platform(p),fields,field=>`<input data-key="${field.key}">`,{project:p});
+  for(const id of ['cm7','cm4'])assert.match(html,new RegExp(`<section[^>]*data-core="${id}">`));
+  assert.match(html,/<div class="platform-flat">/);
+  assert.match(html,/<strong>主核<\/strong>/);
+  assert.match(html,/<strong>副核<\/strong>/);
+  assert.doesNotMatch(html,/<strong>Cortex-M[47]<\/strong>/);
+  assert.match(html,/Arm Cortex-M7/);
+  assert.match(html,/Arm Cortex-M4/);
+  assert.doesNotMatch(html,/<details|<summary|parameter-advanced|resource-disclosure|hardware-field-group|高级设置/);
+  for(const key of ['clockSource','oscillatorHz','clockHz'])assert.match(html,new RegExp(`data-key="${key}"`));
+  const m7 = html.split('data-core="cm7"')[1].split('data-core="cm4"')[0];
+  for(const key of ['instructionCache','dataCache','controlIrqPriority'])assert.match(m7,new RegExp(`data-key="${key}"`));
+  assert.match(html,/data-key="communicationIrqPriority"/);
+  for(const key of ['floatAbi','systemTickHz','busClockHz','timerClockHz','flashKiB','eraseKiB','firmwareReserveKiB'])assert.doesNotMatch(html,new RegExp(`data-key="${key}"`));
+  assert.doesNotMatch(html,/系统时基|浮点约定|总线与定时器时钟|存储容量/);
+  assert.deepEqual(p,before);
+});
 test('core edits remain blocked for image builds until the new platform port exists',()=>{
   const p=createNeo75hProject();assert.equal(inspectFirmwareSupport(p).supported,false);
   platform(p).coreConfigs.cm4.systemTickHz=2000;
   const support=inspectFirmwareSupport(p);assert.equal(support.supported,false);
   assert(support.issues.some(issue=>issue.code==='platform-port'));
+});
+
+
+test('cache controls are switches with explicit saved enum states and unavailable M4 caches stay absent',()=>{
+  const p=createNeo75hProject(), params=platform(p);
+  params.coreConfigs.cm7.instructionCache='enabled';
+  params.coreConfigs.cm7.dataCache='disabled';
+  const before=structuredClone(p);
+  const html=renderPlatformConfiguration(p.target.mcu,params,[],()=>'',{project:p,owner:'shelf-driver'});
+  const input=key=>html.match(new RegExp(`<input[^>]*data-key="${key}"[^>]*>`))?.[0];
+  assert.match(input('instructionCache'),/type="checkbox"/);
+  assert.match(input('instructionCache'),/data-id="shelf-driver"[^>]*data-child="cm7"/);
+  assert.match(input('instructionCache'),/data-value-type="cache-state" data-cache-state="enabled" aria-checked="true"/);
+  assert.match(input('instructionCache'),/\schecked(?:\s|>)/);
+  assert.match(input('dataCache'),/data-cache-state="disabled" aria-checked="false"/);
+  assert.doesNotMatch(input('dataCache'),/\schecked(?:\s|>)/);
+  const m4=html.split('data-core="cm4"')[1];
+  assert.doesNotMatch(m4,/data-key="(?:instructionCache|dataCache)"/);
+  const loaded=parseProject(serializeProject(p));
+  assert.equal(platform(loaded).coreConfigs.cm7.instructionCache,'enabled');
+  assert.equal(platform(loaded).coreConfigs.cm7.dataCache,'disabled');
+  assert.deepEqual(p,before);
+});
+
+test('unknown imported cache states render mixed switches without being stored as disabled',()=>{
+  const p=createNeo75hProject(), params=platform(p);
+  params.coreConfigs.cm7.instructionCache=null;
+  params.coreConfigs.cm7.dataCache='unselected';
+  const before=structuredClone(params);
+  const html=renderPlatformConfiguration(p.target.mcu,params,[],()=>'',{project:p});
+  const cacheInputs=[...html.matchAll(/<input[^>]*data-key="(?:instructionCache|dataCache)"[^>]*>/g)].map(match=>match[0]);
+  assert.equal(cacheInputs.length,2);
+  for(const input of cacheInputs){
+    assert.match(input,/data-cache-state="unconfigured" aria-checked="mixed"/);
+    assert.doesNotMatch(input,/\schecked(?:\s|>)/);
+  }
+  assert.deepEqual(params,before);
+  const loaded=parseProject(serializeProject(p));
+  assert.equal(platform(loaded).coreConfigs.cm7.instructionCache,null);
+  assert.equal(platform(loaded).coreConfigs.cm7.dataCache,'unselected');
 });

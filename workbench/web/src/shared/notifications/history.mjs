@@ -1,11 +1,16 @@
+import { sanitizeIssueMessageParts } from '../ui/issue-message.mjs';
+
 const STORAGE_KEY = 'actuator-console.notifications.v1';
 const ISSUE_FIELDS = ['id', 'title', 'message', 'level', 'moduleId', 'paramKey', 'designPage', 'itemId', 'path'];
 const LEVELS = new Set(['info', 'success', 'warning', 'error', 'pending']);
 const text = value => typeof value === 'string' ? value : '';
 const plain = value => value !== null && typeof value === 'object' && !Array.isArray(value);
-const copyIssues = issues => (Array.isArray(issues) ? issues : []).filter(plain).map(issue => Object.fromEntries(
-  ISSUE_FIELDS.filter(key => typeof issue[key] === 'string').map(key => [key, issue[key]]),
-));
+const copyIssues = issues => (Array.isArray(issues) ? issues : []).filter(plain).map(issue => {
+  const result = Object.fromEntries(ISSUE_FIELDS.filter(key => typeof issue[key] === 'string').map(key => [key, issue[key]]));
+  const messageParts = sanitizeIssueMessageParts(issue.messageParts);
+  if (messageParts) result.messageParts = messageParts;
+  return result;
+});
 const copyEntry = entry => ({ ...entry, issues: copyIssues(entry.issues) });
 const date = value => typeof value === 'string' && Number.isFinite(Date.parse(value));
 const projectKey = entry => entry.projectId ? `id:${entry.projectId}` : `name:${entry.projectName}`;
@@ -18,6 +23,16 @@ function validEntry(entry) {
     && date(entry.createdAt) && date(entry.updatedAt) && Date.parse(entry.updatedAt) >= Date.parse(entry.createdAt)
     && Number.isSafeInteger(entry.count) && entry.count > 0 && typeof entry.read === 'boolean'
     && Array.isArray(entry.issues) && entry.issues.every(plain);
+}
+
+/** The bell summarizes unread notifications, independently of the history filter. */
+export function notificationIndicator(entries) {
+  const unread = entries.filter(entry => !entry.read);
+  return {
+    count: unread.length,
+    level: unread.some(entry => entry.level === 'error') ? 'error'
+      : unread.some(entry => entry.level === 'warning' || entry.level === 'pending') ? 'warning' : 'normal',
+  };
 }
 
 /** Independent local history; storage failures never interrupt notification delivery. */

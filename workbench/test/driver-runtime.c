@@ -131,7 +131,7 @@ int main(void){
     assert(output.device_status[3]==0x81&&(output.error[3]&DRIVER_ERROR_STATUS)&&!output.valid[3]);
     assert(output.value[3]==0&&output.raw[3]==0&&output.sequence[3]==0&&output.sample_time_us[3]==0); /* 无主数据：测量输出永不写入 */
     feed(3,gate_ok,4,53);
-    assert(output.device_status[3]==0x01&&!(output.error[3]&DRIVER_ERROR_STATUS)&&!output.valid[3]&&output.value[3]==0); /* 故障位解除，仍无测量值 */
+    assert(output.device_status[3]==0x81&&(output.error[3]&DRIVER_ERROR_STATUS)&&!output.valid[3]&&output.value[3]==0); /* 请求应答空闲期的非请求帧不得解除故障；下次轮询才更新。 */
     input=(DriversInput){.channel=3,.now_us=103};step();assert(output.tx_request&&output.tx_data[0]==0x02); /* 到期再次轮询 */
     input=(DriversInput){.channel=3,.tx_complete=true,.transport_status=0,.now_us=104};step();
     feed(3,gate_ok,4,105);assert(output.device_status[3]==0x01&&!(output.error[3]&DRIVER_ERROR_STATUS));

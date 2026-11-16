@@ -26,17 +26,16 @@ function savedPreferences(storage) {
   } catch { return { theme: 'default', mode: 'light' }; }
 }
 
-export function renderAppearanceSettings({ theme = 'default', mode = 'light', motionEnabled = false, motionAvailable = true } = {}) {
+export function renderAppearanceSettings({ theme = 'default', mode = 'light' } = {}) {
   const preference = validTheme(theme) ? theme : 'default';
   const modePreference = validMode(mode) ? mode : 'light';
-  const moving = motionAvailable && motionEnabled;
   const pills = (name, attribute, current, entries) => entries.map(([value, label]) => `<label class="appearance-option"><input type="radio" name="${name}" value="${value}" ${attribute}${value === current ? ' checked' : ''}><span class="appearance-pill">${label}</span></label>`).join('');
   const themeOptions = pills('appearance-theme', 'data-appearance-theme', preference, [['default', '默认'], ['neumorphism', '新拟物']]);
   const modeOptions = pills('appearance-mode', 'data-appearance-mode', modePreference, [['light', '浅色'], ['dark', '深色'], ['system', '跟随系统']]);
-  return `<details class="appearance-settings" data-native-menu data-state-key="appearance-settings"><summary class="button appearance-settings-toggle" aria-label="设置" title="设置">${icon('settings')}<span>设置</span></summary><div class="appearance-settings-panel"><h2>外观</h2><div class="form-field"><span class="field-label" id="appearance-theme-label">主题</span><div class="appearance-segment" role="radiogroup" aria-labelledby="appearance-theme-label">${themeOptions}</div><p class="appearance-hint">新拟物同时提供浅色与深色材质，两种主题都可自由选择深浅模式。</p></div><div class="form-field"><span class="field-label" id="appearance-mode-label">深浅模式</span><div class="appearance-segment is-triple" role="radiogroup" aria-labelledby="appearance-mode-label">${modeOptions}</div></div><div class="appearance-motion-row"><div><strong>竖线动效</strong><span>三层架构中的图形动画</span></div><button class="button small motion-toggle" type="button" data-action="toggle-visual-motion" aria-pressed="${Boolean(moving)}" aria-label="${moving ? '关闭' : '开启'}竖线动效" ${motionAvailable ? '' : 'disabled'}>${icon(moving ? 'play' : 'pause')}<span>${!motionAvailable ? '动效不可用' : moving ? '动效 · 开' : '动效 · 关'}</span></button></div><div class="appearance-data"><strong>数据</strong><p>货架、当前配置与已保存的测试记录。</p><button class="button small" type="button" data-action="export-workspace">导出全部数据</button></div></div></details>`;
+  return `<details class="appearance-settings" data-native-menu data-state-key="appearance-settings"><summary class="button appearance-settings-toggle" aria-label="设置" title="设置">${icon('settings')}<span>设置</span></summary><div class="appearance-settings-panel"><h2>外观</h2><div class="form-field"><span class="field-label" id="appearance-theme-label">主题</span><div class="appearance-segment" role="radiogroup" aria-labelledby="appearance-theme-label">${themeOptions}</div><p class="appearance-hint">新拟物同时提供浅色与深色材质，两种主题都可自由选择深浅模式。</p></div><div class="form-field"><span class="field-label" id="appearance-mode-label">深浅模式</span><div class="appearance-segment is-triple" role="radiogroup" aria-labelledby="appearance-mode-label">${modeOptions}</div></div><div class="appearance-data"><strong>数据</strong><p>货架、当前配置与已保存的测试记录。</p><button class="button small" type="button" data-action="export-workspace">导出全部数据</button></div></div></details>`;
 }
 
-/** The shell continues to own motion preferences and reduced-motion behavior. */
+/** Theme and color scheme preferences; motion has no user-facing setting. */
 export function installAppearanceSettings(options = {}) {
   const doc = options.document ?? globalThis.document;
   if (!doc?.documentElement || !doc.addEventListener) return { theme: 'default', mode: 'light', resolvedTheme: 'light', setTheme: () => false, setMode: () => false, destroy() {} };

@@ -48,7 +48,19 @@ int main(void){
     FrictionInput fci={.joint_velocity=1,.valid=true,.enable=true};FrictionOutput fco={0};FrictionState fcs={0};
     friction_step(&fci,&fco,&fcs);float positive=fco.torque;fci.joint_velocity=-1;friction_step(&fci,&fco,&fcs);assert(positive>0&&fabsf(fco.torque+positive)<1e-6f);fci.enable=false;friction_step(&fci,&fco,&fcs);assert(fco.torque==0);
     SchedulerInput si={.now_us=0};SchedulerOutput so={0};SchedulerState ss={0};
-    scheduler_step(&si,&so,&ss);assert(so.release_mask==((1u<<scheduler_config.task_count)-1u));si.now_us=100;scheduler_step(&si,&so,&ss);assert(!so.release_mask);si.now_us=600;scheduler_step(&si,&so,&ss);assert(so.release_mask==1&&ss.missed_deadlines[0]==2);
+    /* Default application slots: diagnostics, control, then maintenance. */
+    const unsigned diagnostic_task=0, control_task=1, maintenance_task=2;
+    assert(scheduler_config.task_count==3);
+    assert(scheduler_config.period_us[diagnostic_task]==200&&scheduler_config.period_us[control_task]==200&&scheduler_config.period_us[maintenance_task]==10000);
+    scheduler_step(&si,&so,&ss);assert(so.release_mask==((1u<<scheduler_config.task_count)-1u));
+    si.now_us=100;scheduler_step(&si,&so,&ss);assert(!so.release_mask);
+    si.now_us=600;scheduler_step(&si,&so,&ss);
+    assert(so.release_mask==((1u<<diagnostic_task)|(1u<<control_task)));
+    assert(ss.missed_deadlines[diagnostic_task]==2&&ss.missed_deadlines[control_task]==2&&ss.missed_deadlines[maintenance_task]==0);
+    /* The two equal-period tasks still own independent release deadlines. */
+    ss.next_release_us[diagnostic_task]=1000;
+    si.now_us=800;scheduler_step(&si,&so,&ss);
+    assert(so.release_mask==(1u<<control_task)&&ss.next_release_us[diagnostic_task]==1000&&ss.next_release_us[control_task]==1000);
     MotionInput mpi={.requested_iq=10,.dynamic_limit=2,.enabled=true,.command_valid=true};MotionOutput mpo={0};MotionState mps={0};motion_step(&mpi,&mpo,&mps);assert(mpo.valid&&mpo.reference_dq[1]==2);mpi.command_valid=false;motion_step(&mpi,&mpo,&mps);assert(!mpo.valid&&mpo.reference_dq[1]==0);
     CommandsInput qi={.sequence=0xffffffffu,.received=true,.frame_valid=true,.iq=2};CommandsOutput qo={0};CommandsState qs={0};
     commands_step(&qi,&qo,&qs);assert(qo.valid);qi.sequence=0;qi.iq=3;commands_step(&qi,&qo,&qs);assert(qo.valid&&qo.iq==3);qi.iq=4;commands_step(&qi,&qo,&qs);assert(qo.iq==3&&qs.rejected_count==1);qi.received=false;qi.now_us=100000;commands_step(&qi,&qo,&qs);assert(!qo.valid);

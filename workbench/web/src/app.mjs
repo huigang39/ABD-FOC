@@ -1,18 +1,24 @@
-import { observerOutputOptions } from './modules/algorithm/signals.mjs';
+import { configurationModuleId } from './features/configuration/module-aliases.mjs';
+import { legacyConsumerBindings, resetLegacyConsumerBindings } from './modules/algorithm/consumers.mjs';
+import { legacyObserverBindings, resetLegacyObserverBindings } from './modules/algorithm/legacy-bindings.mjs';
+import { renderMotionLoops } from './modules/application/app-motion/view.mjs';
+import { renderAngleDelay } from './modules/algorithm/foc-current/corrections-view.mjs';
+import { updateAlgorithmChild } from './modules/algorithm/editing.mjs';
 import { renderMath } from './shared/ui/math.mjs';
-import { fixedAlgorithmChildren } from './modules/algorithm/children.mjs';
+import { fixedAlgorithmChildren, addAlgorithmChild, removeAlgorithmChild } from './modules/algorithm/children.mjs';
 import { renderAlgorithmChildren } from './modules/algorithm/children-view.mjs';
 import { createAlgorithmPath } from './modules/algorithm/foc-lifecycle/paths.mjs';
-import { renderAlgorithmPaths } from './modules/algorithm/foc-lifecycle/view.mjs';
-import { renderCoreExceptions } from './modules/hardware/hw-safety/core-exceptions.mjs';
 import { parameterVisible } from './modules/shared/visibility.mjs';
-import { runtimeConfiguration, renderRuntimeConfiguration } from './features/configuration/runtime-config.mjs';
+import { runtimeConfiguration } from './features/configuration/runtime-config.mjs';
 import { installSourceView } from './shared/ui/source-view.mjs';
 import { navigationContext } from './shared/scroll/navigation.mjs';
 import { createFirmwareLibrary } from './features/attachments/controller.mjs';
-import { phaseTag } from './shared/ui/phase-tag.mjs';
+import { renderSchedule } from './features/configuration/schedule-view.mjs';
+import { renderBackupStorage } from './features/configuration/backup-view.mjs';
+import { numericDraftIssues } from './features/configuration/draft-issues.mjs';
+import { normalizeProjectName } from './core/project-name.mjs';
 import './shared/ui/switch-motion.mjs';
-import { moveScheduleEntry } from './features/configuration/schedule.mjs';
+import { updateUserSchedulePeriod } from './features/configuration/schedule.mjs';
 import { numericInputAttributes, readNumericInput, installNumericInputs } from './shared/forms/numeric-input.mjs';
 import { renderPlatformConfiguration } from './features/configuration/platform-view.mjs';
 import { CORE_FIELDS, createCoreSettings } from './modules/hardware/hw-platform/cores.mjs';
@@ -21,47 +27,53 @@ import { createConfigurationTreeState } from './features/configuration/tree-stat
 import { bindHardwareField } from './modules/hardware/hw-platform/options.mjs';
 import { fieldHelp, installFieldHelp } from './shared/ui/field-help.mjs';
 import { syncSensorResource } from './modules/hardware/hw-board/validation.mjs';
-import { bindSensorField, renderResourceEditor, renderTripEditor, renderSensorTransport, renderCommandEditor } from './features/configuration/hardware-view.mjs';
-import { createResource, selectResourceInstance } from './modules/hardware/hw-board/resources.mjs';
+import { bindSensorField, renderResourceEditor } from './features/configuration/hardware-view.mjs';
+import { ensureCommonResources, resizeCurrentChannels } from './modules/hardware/hw-board/resource-defaults.mjs';
+import { createResource, createPresetResource, selectAdcChannel, selectResourceInstance, selectResourcePin, sensorResources } from './modules/hardware/hw-board/resources.mjs';
+import { createCustomDriver, syncCustomDriverResource, customDriverRateKey, syncCustomDriverRates, bindCustomDriverResource } from './modules/hardware/hw-drivers/custom-drivers.mjs';
 import { createTripPath } from './modules/hardware/hw-safety/paths.mjs';
 import { renderArchitectureOverview, renderArchitectureLayer } from './features/architecture/view.mjs';
+import { renderHomeLinkDetails } from './features/architecture/link-inspector.mjs';
+import { installHomeNavigation, installHomeSourceSelection } from './features/architecture/interactions.mjs';
 import { getBuildInspectionState } from './features/build/gate.mjs';
 import { renderAppearanceSettings, installAppearanceSettings } from './shared/settings/appearance.mjs';
-import { applyImportedConfiguration, exportConfiguration, selectConfigurationActuator, selectConfigurationDriver, beginCustomHardware } from './features/configuration/workspace.mjs';
+import { applyImportedConfiguration, exportConfiguration, getConfigurationSelection, selectConfigurationActuator, selectConfigurationDriver, beginCustomHardware } from './features/configuration/workspace.mjs';
+import { createProjectLibrary, PROJECT_BACKUP_FORMAT } from './features/configuration/project-library.mjs';
 import { renderPerformance } from './features/performance/view.mjs';
 import { createPerformanceController } from './features/performance/controller.mjs';
 import { renderModuleExtras } from './modules/presentation.mjs';
 import { installNumberWheelGuard } from './shared/forms/number-wheel.mjs';
 import { issueNoticeButton } from './shared/ui/issue-notices.mjs';
+import { renderIssueMessage } from './shared/ui/issue-message.mjs';
 import { createNotificationCenter, noticeOptions } from './shared/notifications/center.mjs';
-import { createNotificationHistory } from './shared/notifications/history.mjs';
+import { createNotificationHistory, notificationIndicator } from './shared/notifications/history.mjs';
 import { modelSelect, optionGroupFor } from './shared/forms/model-options.mjs';
 import { selectOptions, isEmptyChoice, isBinaryChoice, binaryChoice } from './shared/forms/select-control.mjs';
 import { neo75hModelName } from './features/equipment/product-model.mjs';
 import { createNativeClient } from './features/device/client.mjs';
 import { captureLogScroll, restoreLogScroll } from './shared/scroll/log-scroll.mjs';
 import { createNeo75hProject } from './profiles/neo75h.mjs';
-import { MODULES, TARGET_FIELDS, createProject, validateProject, getDerived, parseProject, serializeProject } from './core/model.mjs';
+import { MODULES, TARGET_FIELDS, createProject, validateProject, parseProject, migrateAngleDelayParameters } from './core/model.mjs';
 import { configurationFingerprint, createStructure, createField, createFault, createMessage } from './core/contracts.mjs';
-import { createActuator, createDriver, createJointModule, createBinding, applyAssembly, applyDriver, captureDriverHardware, getDriverHardware, setDriverHardwareParameter, validateEquipment } from './features/equipment/model.mjs';
-import { renderGuide, renderStructures, renderFaults, renderProtocol } from './features/configuration/view.mjs';
+import { createActuator, createDriver, createJointModule, createBinding, applyAssembly, applyDriver, captureDriverHardware, getDriverHardware, setDriverHardwareParameter, syncSelectedDriverTarget, validateEquipment } from './features/equipment/model.mjs';
+import { renderGuide, renderConfigurationActions, renderStructures, renderFaults, renderProtocol } from './features/configuration/view.mjs';
+import { renderModuleParameters } from './features/configuration/parameters-view.mjs';
 import { renderEquipment } from './features/equipment/view.mjs';
 import { renderSensorConfig } from './modules/hardware/hw-drivers/view.mjs';
-import { SENSOR_ROLES } from './modules/hardware/hw-drivers/sensors.mjs';
+import { driverIssuePresentation } from './modules/hardware/hw-drivers/issue-view.mjs';
+import { driverResourceOccupants } from './modules/hardware/hw-drivers/resource-usage.mjs';
+import { SENSOR_ROLES, applyBuiltinDriverModel, setDriverCommunicationRate, builtinDriverInterfaceForModel, bindBuiltinDriverResource } from './modules/hardware/hw-drivers/sensors.mjs';
 import { createDriverCommand, COMMAND_PURPOSES, DRIVER_COMMANDS_MAX } from './modules/hardware/hw-drivers/protocol.mjs';
 import { syncMcuArchitecture } from './features/deployment/mcu.mjs';
-import { renderBuild, renderDebug, renderFlash } from './features/build/view.mjs';
+import { syncDerivedClocks } from './modules/hardware/hw-platform/defaults.mjs';
+import { renderBuild, renderDebug } from './features/build/view.mjs';
 import { renderOperation } from './features/operation/view.mjs';
 import { renderVersions } from './features/configuration/versions-view.mjs';
-import { renderModuleInterfaces } from './features/configuration/interfaces-view.mjs';
 import { createLineFields } from './shared/effects/line-field.mjs';
 import { pageHeading } from './shared/ui/page-heading.mjs';
 import { enhanceSelectMenus } from './shared/ui/select-menu.mjs';
 import { icon } from './shared/ui/icons.mjs';
-import { renderMemory, renderMemorySummary } from './features/deployment/flash-view.mjs';
-import { renderRam } from './features/deployment/ram-view.mjs';
 import { ramAction, ramEdit } from './features/deployment/ram.mjs';
-import { renderExecution } from './features/deployment/execution-view.mjs';
 import { deploymentAction, deploymentEdit, parseAddress } from './features/deployment/actions.mjs';
 import { createLayerInterface, createInterfaceMapping, getModuleContractRole } from './core/module-contracts.mjs';
 import { saveLayerVersion, selectLayerVersion, applyLayerVersion, applySelectedLayerVersions, getLayerVersionState } from './features/configuration/versions.mjs';
@@ -80,6 +92,7 @@ const layerNames = { app: '应用层', foc: '算法层', hardware: '硬件层' }
 const severityNames = { error: '错误', warning: '警告', pending: '待确认', info: '信息' };
 let project = createProject();
 let issues = [];
+let draftRefreshQueued = false;
 let saveState = '新草案 · 尚未保存';
 let autosaveTimer;
 const displayedNotices = new Set();
@@ -104,10 +117,18 @@ const navigationPositions = new Map();
 let pendingNavigationScroll = null;
 history.scrollRestoration = 'manual';
 window.addEventListener('scroll',()=>{if(renderedRoute===location.hash)navigationPositions.set(location.hash,{left:scrollX,top:scrollY});},{passive:true});
-document.addEventListener('click',event=>{const link=event.target.closest('a[href^="#"]');if(link&&!event.ctrlKey&&!event.metaKey&&!event.shiftKey&&event.button===0){pendingNavigationScroll={from:location.hash,to:link.hash,reveal:link.dataset.revealTarget==='true',key:link.dataset.targetKey,resource:link.dataset.targetResource,left:scrollX,top:scrollY};navigationPositions.set(location.hash,{left:scrollX,top:scrollY});if(link.dataset.revealTarget==='true'&&link.hash===location.hash){event.preventDefault();pendingNavigationScroll=null;queueMicrotask(()=>{render();requestAnimationFrame(()=>revealConfigurationTarget({key:link.dataset.targetKey,resource:link.dataset.targetResource}));});}}},true);
+document.addEventListener('click',event=>{const link=event.target.closest('a[href^="#"]');if(link&&!event.ctrlKey&&!event.metaKey&&!event.shiftKey&&event.button===0){pendingNavigationScroll={from:location.hash,to:link.hash,reveal:link.dataset.revealTarget==='true',key:link.dataset.targetKey,child:link.dataset.targetChild,resource:link.dataset.targetResource,left:scrollX,top:scrollY};navigationPositions.set(location.hash,{left:scrollX,top:scrollY});if(link.dataset.revealTarget==='true'&&link.hash===location.hash){event.preventDefault();pendingNavigationScroll=null;queueMicrotask(()=>{render(numericInputs.getDraftErrors($('#workspace')).length>0);requestAnimationFrame(()=>revealConfigurationTarget({key:link.dataset.targetKey,child:link.dataset.targetChild,resource:link.dataset.targetResource}));});}}},true);
 let renderedProjectId = '';
+document.addEventListener('numeric-draft-change', event => {
+  if (!$('#workspace').contains(event.target) || draftRefreshQueued) return;
+  draftRefreshQueued = true;
+  queueMicrotask(() => {
+    draftRefreshQueued = false;
+    if (renderedRoute === location.hash && renderedProjectId === project.id) render(true);
+  });
+});
 let lineFields = null;
-let visualAvailable = true;
+let homeSource = 'can';
 const nativeClient=createNativeClient({getProject:()=>project,onUpdate:full=>{if(['project','debug'].includes(route().page))render(!full);},onError:message=>showNotice(message,{level:'error'}),onNotice:showNotice});
 const performanceController = createPerformanceController({
   getProject: () => project,
@@ -115,12 +136,11 @@ const performanceController = createPerformanceController({
   render, navigate, notify: showNotice,
 });
 const motionPreference=matchMedia('(prefers-reduced-motion: reduce)');
-let motionEnabled=!motionPreference.matches;
-try { const stored=localStorage.getItem('actuator-console.motion'); if(stored!==null&&!motionPreference.matches)motionEnabled=stored==='on'; } catch {}
+document.documentElement.dataset.iconMotion='on';
 const appearance = installAppearanceSettings({ onChange: () => lineFields?.refreshAppearance() });
-$('#appearance-settings').innerHTML = renderAppearanceSettings({ theme: appearance.theme, mode: appearance.mode, motionEnabled, motionAvailable: visualAvailable });
-function updateMotionToggle() {document.documentElement.dataset.iconMotion=motionEnabled?'on':'off';const button=$('[data-action="toggle-visual-motion"]');if(button){button.disabled=!visualAvailable;button.title=visualAvailable?'竖线动效':'此浏览器不支持 Canvas 2D 或 Path2D';button.setAttribute('aria-pressed',String(visualAvailable&&motionEnabled));button.innerHTML=icon(visualAvailable&&motionEnabled?'play':'pause')+`<span>${!visualAvailable?'动效不可用':motionEnabled?'动效 · 开':'动效 · 关'}</span>`;button.setAttribute('aria-label',motionEnabled?'关闭竖线动效':'开启竖线动效');}}
-motionPreference.addEventListener('change',event=>{if(event.matches){motionEnabled=false;lineFields?.setEnabled(false);updateMotionToggle();}});
+$('#appearance-settings').innerHTML = renderAppearanceSettings({ theme: appearance.theme, mode: appearance.mode });
+// Motion is always enabled in the app; only the operating system may reduce it.
+motionPreference.addEventListener('change',event=>lineFields?.setEnabled(!event.matches));
 try {
   const saved = localStorage.getItem(DRAFT_KEY);
   if (saved) {
@@ -136,6 +156,38 @@ try {
     }
   }
 } catch { draftWriteBlocked = true; recoveryNotice = '已有草稿未能读取，已打开新草案；原始浏览器记录未删除。你也可以重新导入 JSON。'; }
+const projectLibrary = createProjectLibrary({ storage: notificationStorage, current: project });
+if (projectLibrary.restored) { project = projectLibrary.current; saveState = ''; draftWriteBlocked = false; recoveryNotice = ''; }
+if (projectLibrary.error) { draftWriteBlocked = true; recoveryNotice = [recoveryNotice, projectLibrary.error].filter(Boolean).join('\n'); }
+
+function renderProjectPicker() {
+  const host = $('#home-project-name');
+  const items = projectLibrary.list(project);
+  const signature = JSON.stringify([projectLibrary.activeId, items.map(item => [item.id, item.name])]);
+  if (host.dataset.options === signature) return;
+  host.dataset.options = signature;
+  host.innerHTML = `<select id="home-project-select" class="field-select" data-edit="saved-project" aria-label="选择工程">${items.map(item => `<option value="${escape(item.id)}"${item.id === projectLibrary.activeId ? ' selected' : ''}>${escape(item.name || '未命名工程')}</option>`).join('')}</select>`;
+  enhanceSelectMenus(host);
+  host.querySelector('.select-menu-trigger')?.setAttribute('aria-label', `选择工程，当前 ${project.name || '未命名工程'}`);
+}
+
+function renderProjectActions(visible) {
+  const host = $('#project-file-actions');
+  host.hidden = !visible;
+  if (!visible) { const menu = host.querySelector('details'); if (menu) menu.open = false; return; }
+  const configurationLocked = nativeClient.state.busy || nativeClient.state.pendingAction || nativeClient.state.debug.connected;
+  if (!host.childElementCount) {
+    host.innerHTML = renderConfigurationActions(project, { profileVariant: nativeClient.state.profileVariant, saveStatus: saveState, configurationLocked });
+    enhanceSelectMenus(host);
+  }
+  const name = host.querySelector('[data-scope="project"][data-key="name"]');
+  if (document.activeElement !== name) name.value = project.name;
+  host.querySelector('[data-live="configuration-save-status"]').textContent = saveState;
+  const variant = host.querySelector('#neo75h-variant');
+  variant.value = ['KW', 'LD', 'SMH', 'XH'].includes(nativeClient.state.profileVariant) ? nativeClient.state.profileVariant : 'KW';
+  variant.closest('[data-select-menu]')?.updateTrigger?.();
+  host.querySelector('[data-action="new-neo75h"]').disabled = configurationLocked;
+}
 
 function moduleById(id) { return MODULES.find(module => module.id === id); }
 function enabled(id) { return project.instances[id]?.enabled === true; }
@@ -147,18 +199,20 @@ function route() {
   const [path, query = ''] = location.hash.replace(/^#\/?/, '').split('?');
   const parts = path.split('/').filter(Boolean).map(part=>{try{return decodeURIComponent(part);}catch{return part;}});
   const params = new URLSearchParams(query);
+  const legacyDeployment=parts[0]==='project'&&['execution','memory'].includes(parts[1])?parts[1]:['execution','memory'].includes(parts[0])?parts[0]:null;
+  if(legacyDeployment)return {page:'project',id:'hardware',section:'project',moduleId:'hw-platform',tab:'config',advancedSection:legacyDeployment};
   const nested = parts[0] === 'project' && configurationPages.has(parts[1]);
-  return { page: nested ? parts[1] : parts[0] || 'architecture', id: parts[nested ? 2 : 1], itemId: parts[nested ? 3 : 2], section: parts[0] === 'project' ? 'project' : parts[0] || 'architecture', moduleId: params.get('module'), assemblyId: params.get('assembly'), tab: params.get('tab') || 'config', interfaceId: params.get('interface') };
+  return { page: nested ? parts[1] : parts[0] || 'architecture', id: parts[0] === 'project' && parts[1] === 'flash' ? 'build' : parts[nested ? 2 : 1], itemId: parts[nested ? 3 : 2], section: parts[0] === 'project' ? 'project' : parts[0] || 'architecture', moduleId: !nested&&['project','parameters'].includes(parts[0])?configurationModuleId(params.get('module')):params.get('module'), assemblyId: params.get('assembly'), tab: params.get('tab') || 'config', interfaceId: params.get('interface'), advancedSection:params.get('section') };
 }
 function moduleRoute(moduleId, tab = 'config') {
   const module = moduleById(moduleId);
-  return module ? `#/project/${layerStep[module.layer]}?module=${encodeURIComponent(moduleId)}&tab=${tab}` : '#/project';
+  return module ? `#/project/${layerStep[module.layer]}?module=${encodeURIComponent(configurationModuleId(moduleId))}&tab=${tab}` : '#/project';
 }
-function revealConfigurationTarget({key,resource}={}) {
+function revealConfigurationTarget({key,child,resource}={}) {
   const moduleId=route().moduleId;
   let target=moduleId?document.querySelector(`[data-guide-module="${CSS.escape(moduleId)}"]`):document.querySelector('.design-editor')||$('#workspace');
   if(!target)return;
-  const field=resource?target.querySelector(`[data-edit="pcba-resource"][data-id="${CSS.escape(resource)}"]`):key?target.querySelector(`[data-key="${CSS.escape(key)}"]`):null;
+  const field=resource?target.querySelector(`[data-edit="pcba-resource"][data-id="${CSS.escape(resource)}"]`):key?target.querySelector(`[data-key="${CSS.escape(key)}"]${child?`[data-child="${CSS.escape(child)}"]`:''}`):null;
   target=field?.closest(resource?'.hardware-resource':'.form-field')||(key==='resources'?target.querySelector('.hardware-editor'):null)||target;
   for(let node=target;node;node=node.parentElement)if(node.tagName==='DETAILS')node.open=true;
   target.scrollIntoView({block:'start',behavior:'instant'});
@@ -166,6 +220,8 @@ function revealConfigurationTarget({key,resource}={}) {
   setTimeout(()=>target.classList.remove('configuration-navigation-target'),1800);
 }
 function navigate(to) { if (location.hash === to) render(); else location.hash = to; }
+installHomeNavigation(document, navigate);
+installHomeSourceSelection(document, { getSource: () => homeSource, onChange: value => { homeSource = value; } });
 function showNotice(message, options = {}) {
   const resolved = noticeOptions(message, options);
   const entry=notificationHistory.add({ ...resolved, message, projectId:project.id, projectName:project.name });
@@ -215,10 +271,12 @@ function showIssueResults(selected=issues,title='检查结果') {
 }
 function renderNotificationHistory() {
   const entries=notificationHistory.entries;
-  const unread=entries.filter(entry=>!entry.read).length;
+  const {count:unread,level}=notificationIndicator(entries);
   const toggle=$('#notification-history-toggle'), badge=$('#notification-unread-count');
   badge.hidden=!unread;badge.textContent=unread>99?'99+':String(unread);
-  toggle.setAttribute('aria-label',unread?`通知，${unread} 条未读`:'通知');
+  toggle.dataset.level=level;
+  const severity=level==='error'?'，有未读错误':level==='warning'?'，有未读警告或待确认事项':'';
+  toggle.setAttribute('aria-label',unread?`通知，${unread} 条未读${severity}`:'通知');
   $('#notification-history-retention').textContent=notificationHistory.persistent?'当前浏览器 · 最近 100 条':'本次会话 · 最近 100 条';
   document.querySelectorAll('[data-action="filter-notifications"]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.filter===notificationFilter)));
   $('#notification-mark-read').disabled=!unread;
@@ -248,20 +306,73 @@ function toggleNotificationHistory() {
 }
 function saveDraft() {
   if (draftWriteBlocked) throw new Error('无法备份原始草稿，已暂停覆盖。');
-  localStorage.setItem(DRAFT_KEY, serializeProject(project));
+  projectLibrary.save(project);
 }
+function saveConfiguration() {
+  const input = document.activeElement;
+  const editing = input?.matches('input, textarea, select');
+  const selection = editing && typeof input.selectionStart === 'number' ? [input.selectionStart, input.selectionEnd] : null;
+  if (editing) {
+    input.blur();
+    if (!input.checkValidity()) { input.focus({ preventScroll: true }); input.reportValidity(); return; }
+  }
+  const invalidDraft = numericInputs.getDraftErrors($('#workspace'))[0];
+  if (invalidDraft) { invalidDraft.input.focus({preventScroll:true}); invalidDraft.input.reportValidity(); return; }
+  clearTimeout(autosaveTimer);
+  try {
+    saveDraft();
+    saveState = '配置已保存到此浏览器';
+    showSuccess(performanceController.hasUnsavedDraft() ? '配置已保存。测量表还有未提交的修改，请在测试页点击“保存记录”。' : '配置已保存。');
+  } catch (error) {
+    saveState = '有修改 · 尚未保存';
+    showError(`${error.message}\n请在设置中“导出全部数据”保存当前工程、货架和测试记录。`);
+  }
+  $('#save-status').textContent = saveState;
+  document.querySelectorAll('[data-live="configuration-save-status"]').forEach(node => { node.textContent = saveState; });
+  if (editing && input.isConnected) {
+    input.focus({ preventScroll: true });
+    if (selection) input.setSelectionRange(...selection);
+  }
+}
+document.addEventListener('keydown', event => {
+  if (!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey || event.key.toLowerCase() !== 's') return;
+  event.preventDefault();
+  if (!event.repeat && !event.isComposing) saveConfiguration();
+}, true);
 function autosave() {
   clearTimeout(autosaveTimer);
   autosaveTimer = setTimeout(() => {
     try { saveDraft(); saveState = '已保存'; }
-    catch { saveState = '有修改 · 尚未保存'; showError('浏览器存储不可用或空间不足。当前修改仍在本页，请在设置中“导出全部数据”保存到文件。'); }
-    $('#save-status').textContent = saveState;
+    catch (error) { saveState = '有修改 · 尚未保存'; showError(`${error.message}\n当前修改仍在本页，请在设置中“导出全部数据”保存到文件。`); }
+    $('#save-status').textContent = numericInputs.getDraftErrors($('#workspace')).length ? '有输入错误 · 尚未保存' : saveState;
     document.querySelectorAll('[data-live="configuration-save-status"]').forEach(node=>{node.textContent=saveState;});
   }, 350);
+}
+function refreshDriverRateInputs(editedInput) {
+  const parameters=project.instances['hw-drivers'].parameters;
+  for(const peer of document.querySelectorAll('[data-scope="module"][data-module="hw-drivers"][data-key$="Bitrate"]'))if(peer!==editedInput)numericInputs.setValue(peer,parameters[peer.dataset.key]??null);
+  for(const peer of document.querySelectorAll('[data-edit="custom-driver"][data-key="bitrate"]')) {
+    if(peer===editedInput)continue;
+    const driver=parameters.customDrivers?.find(driver=>driver.id===peer.dataset.id);
+    if(driver)numericInputs.setValue(peer,driver.bitrate??null);
+  }
+}
+function syncHardwareDriverBindings(hardware) {
+  const parameters=hardware['hw-drivers'], resources=hardware['hw-board']?.resources||[];
+  if(!parameters)return;
+  for(const role of SENSOR_ROLES)if(parameters[role.capability]==='present'&&parameters[role.prefix+'Model'])applyBuiltinDriverModel(parameters,role.prefix,parameters[role.prefix+'Model'],resources);
+  syncSensorResource(parameters,resources);
+  for(const driver of parameters.customDrivers||[]) {
+    const resource=syncCustomDriverResource(driver,resources,{parameters}), rateKey=customDriverRateKey(driver.interface);
+    if(resource&&rateKey)driver.bitrate=resource.settings?.[rateKey]??null;
+  }
 }
 function change(mutator, formOnly = false) {
   const next = structuredClone(project);
   mutator(next);
+  syncSelectedDriverTarget(next);
+  ensureCommonResources(next.instances['hw-board'].parameters);
+  migrateAngleDelayParameters(next.instances);
   undoProject = structuredClone(project);
   next.revision = (Number(next.revision) || 0) + 1;
   next.updatedAt = new Date().toISOString();
@@ -270,7 +381,7 @@ function change(mutator, formOnly = false) {
   render(formOnly);
   autosave();
 }
-function applyConfiguration(incoming) {
+function applyConfiguration(incoming, { savedId = '', destination = '#/project/actuator' } = {}) {
   if (nativeClient.state.busy || nativeClient.state.pendingAction || nativeClient.state.debug.connected) { showError('请等待当前操作完成并断开调试连接，再载入配置。'); return false; }
   if (performanceController.hasUnsavedDraft()) { showError('测试页还有未保存的测量表，请先保存记录，再载入配置。'); return false; }
   try {
@@ -278,27 +389,39 @@ function applyConfiguration(incoming) {
     const next = applyImportedConfiguration(project, incoming);
     next.revision = (Number(project.revision) || 0) + 1;
     next.updatedAt = new Date().toISOString();
-    localStorage.setItem(DRAFT_KEY, serializeProject(next));
+    projectLibrary.replace(project, next, { savedId });
     clearTimeout(autosaveTimer);
-    undoProject = structuredClone(project);
+    undoProject = null;
     project = next;
     versionDrafts = {}; sectorSizes = {};
     nativeClient.state.inspection = null;
     saveState = '配置已载入';
-    navigate('#/project/actuator'); render(); nativeClient.refresh();
+    navigate(destination); render(); nativeClient.refresh();
     return true;
   } catch (error) { showError(`配置未更改：${error.message}`); return false; }
+}
+function restoreProjectBackup(backup) {
+  if (nativeClient.state.busy || nativeClient.state.pendingAction || nativeClient.state.debug.connected) { showError('请等待当前操作完成并断开调试连接，再恢复数据。'); return false; }
+  if (performanceController.hasUnsavedDraft()) { showError('测试页还有未保存的测量表，请先保存记录，再恢复数据。'); return false; }
+  const restored = projectLibrary.restoreBackup(backup, project);
+  clearTimeout(autosaveTimer);
+  project = restored.project;
+  undoProject = null; versionDrafts = {}; sectorSizes = {};
+  nativeClient.state.inspection = null;
+  saveState = '完整数据已恢复';
+  navigate('#/architecture'); render(); nativeClient.refresh();
+  return true;
 }
 function pill(text, kind = 'neutral') { return `<span class="status-pill ${kind}">${escape(text)}</span>`; }
 const heading = (title, description = '', crumbs = []) => pageHeading({ title, description, crumbs });
 
 function fieldHtml(field, value, scope, moduleId = '') {
-  if(moduleId==='foc-observer'){const options=observerOutputOptions(field.key,project);if(options)field={...field,options};}
   const key = field.key;
+  if(moduleId==='hw-drivers'&&key.endsWith('Resource')&&field.type==='select'&&!field.options?.some(option=>option.value===value))value='';
   const name = `${scope}-${moduleId}-${key}`;
   const attrs = `id="${escape(name)}" data-scope="${scope}" data-module="${escape(moduleId)}" data-key="${escape(key)}"`;
 
-  const related = issues.filter(issue => issue.moduleId === moduleId && issue.paramKey === key && issue.level === 'error' && /^(range-|positive-)|^current-loop-bandwidth-range$|^hardware-.+-choice$|^sensor-frame-/.test(issue.id));
+  const related = issues.filter(issue => issue.moduleId === moduleId && issue.paramKey === key && issue.level === 'error' && /^(range-|positive-)|^current-loop-bandwidth-range$|^hardware-.+-choice$|^sensor-frame-|^signal-consumer-/.test(issue.id));
   const example = moduleId && project.provenance?.[`${moduleId}.${key}`] === 'example';
   const help = [field.description, example ? '预置值 · 待设备确认' : ''].filter(Boolean).join('\n');
   let input;
@@ -307,9 +430,9 @@ function fieldHtml(field, value, scope, moduleId = '') {
   } else if (optionGroupFor(scope,key)) {
     input=modelSelect(optionGroupFor(scope,key),value,attrs);
   } else if (field.type === 'boolean') {
-    input = `<label class="checkbox-field switch-field parameter-phase-switch" data-phase="${field.phase === 'compile' ? 'compile' : 'runtime'}" title="${field.phase === 'compile' ? '编译期：构建固件时生效。' : '运行期：设备加载参数后生效；初始化参数需重新初始化。'}"><input type="checkbox" ${attrs} aria-label="${escape(field.label)}" ${value === true ? 'checked' : ''}><span class="switch-ui" data-phase-label="${field.phase === 'compile' ? '编译期' : '运行期'}" aria-hidden="true"></span></label>`;
+    input = `<label class="checkbox-field switch-field"><input type="checkbox" ${attrs} aria-label="${escape(field.label)}" ${value === true ? 'checked' : ''}><span class="switch-ui" aria-hidden="true"></span></label>`;
   } else if (field.type === 'select' || ['integer','number'].includes(field.type) && field.options) {
-    input = field.binarySwitch ? `<label class="checkbox-field switch-field parameter-phase-switch" data-phase="${field.phase === 'compile' ? 'compile' : 'runtime'}" title="${field.phase === 'compile' ? '编译期：构建固件时生效。' : '运行期：设备加载参数后生效；初始化参数需重新初始化。'}"><input type="checkbox" ${attrs} aria-label="${escape(field.label)}" data-presence="1" ${value === 'present' ? 'checked' : ''}><span class="switch-ui" data-phase-label="${field.phase === 'compile' ? '编译期' : '运行期'}" aria-hidden="true"></span></label>` : isBinaryChoice(field.options||[])?binaryChoice(field.options,value,attrs,{name,label:field.label}):`<select class="field-select" ${attrs} data-empty="${isEmptyChoice(value)}">${selectOptions(field.options||[],value)}</select>`;
+    input = field.binarySwitch ? `<label class="checkbox-field switch-field"><input type="checkbox" ${attrs} aria-label="${escape(field.label)}" data-presence="1" ${value === 'present' ? 'checked' : ''}><span class="switch-ui" aria-hidden="true"></span></label>` : isBinaryChoice(field.options||[])?binaryChoice(field.options,value,attrs,{name,label:field.label}):`<select class="field-select" ${attrs} data-empty="${isEmptyChoice(value)}">${selectOptions(field.options||[],value)}</select>`;
   } else if (field.type === 'multiselect' && key === 'cia402Modes') {
     const selected = Array.isArray(value) ? value : [];
     const choice = option => `<label class="choice cia402-mode-choice"><input type="checkbox" data-scope="${scope}" data-module="${escape(moduleId)}" data-key="${escape(key)}" data-multiple="true" value="${escape(option.value)}" ${selected.includes(option.value)?'checked':''}><span class="attribute-tag">${escape(option.label.split(' · ')[0])}</span><span>${escape(option.label.split(' · ').slice(1).join(' '))}</span></label>`;
@@ -320,30 +443,33 @@ function fieldHtml(field, value, scope, moduleId = '') {
     const numeric = ['number', 'integer'].includes(field.type);
     input = `<div class="field-input-wrap"><input class="field-input" ${attrs} ${numeric ? numericInputAttributes(value) : `type="text" value="${escape(value)}"`} placeholder="—" ${numeric ? `step="${field.type === 'integer' ? '1' : (field.step || 'any')}"` : 'maxlength="120"'} ${field.min !== undefined ? `min="${field.min}"` : ''} ${field.max !== undefined ? `max="${field.max}"` : ''}>${field.unit ? `<span class="field-unit">${escape(field.unit)}</span>` : ''}</div>`;
   }
-  return `<div class="form-field"><div class="field-label"><label for="${escape(name)}">${escape(field.label)}</label>${fieldHelp(help,field.label)}${phaseTag(field.phase)}</div>${input}${related.map(issue => `<p class="field-error">${escape(issue.message)}</p>`).join('')}</div>`;
+  return `<div class="form-field"><div class="field-label"><label for="${escape(name)}">${escape(field.label)}</label>${fieldHelp(help,field.label)}</div>${input}${related.map(issue => `<p class="field-error">${renderIssueMessage(issue)}</p>`).join('')}</div>`;
 }
-function targetForm() { return TARGET_FIELDS.filter(field=>!['board','vendor'].includes(field.key)).map(field => fieldHtml(field, project.target[field.key], 'target')).join(''); }
-function moduleParameters(module) {
+function moduleParameters(module, { standalone = false } = {}) {
+  if (['hw-safety','foc-lifecycle'].includes(module.id)) return '';
+  if (module.id === 'app-runtime') return renderSchedule(project);
   const params = project.instances[module.id]?.parameters || {};
-  const d = getDerived(project);
   const resources=project.instances['hw-board'].parameters.resources||[];
-  const fields=(module.params||[]).filter(field=>parameterVisible(project,module.id,field)&&!(module.id==='hw-platform'&&field.group==='memory'&&project.memory.layout.banks.length));
-  const renderField=field=>fieldHtml(bindHardwareField(field,project.target.mcu,module.id),params[field.key],'module',module.id);
+  const fields=(module.params||[]).filter(field=>parameterVisible(project,module.id,field)&&!(module.id==='hw-platform'&&field.group==='memory'&&project.memory.layout.banks.length)&&!(module.id==='app-calibration'&&field.key==='enabledProcedures'));
+  const renderField=field=>fieldHtml(bindHardwareField(field,project.target.mcu,module.id,params),params[field.key],'module',module.id);
   let config=fields.map(renderField).join('');
-  if(['foc-observer','foc-compensation'].includes(module.id))config=renderAlgorithmChildren(project,module,config);
-  if(module.id==='foc-current') {
-    const feedback=moduleById('foc-feedback');
-    config += `<details class="resource-disclosure hardware-resource current-feedback-config" data-state-key="current-feedback"><summary><strong>电角度源</strong></summary><div class="hardware-resource-body"><div class="profile-form">${feedback.params.filter(field=>parameterVisible(project,feedback.id,field)).map(field=>fieldHtml(field,project.instances[feedback.id].parameters[field.key],'module',feedback.id)).join('')}</div></div></details>`;
+  if(module.id==='app-motion')config=renderMotionLoops(project,renderField);
+  if(module.id==='app-params') {
+    const needsSettings=fields.some(field=>field.required&&(params[field.key]==null||params[field.key]===''||params[field.key]==='unselected')||issues.some(issue=>issue.moduleId===module.id&&issue.paramKey===field.key&&issue.level==='error'));
+    config=renderBackupStorage(project,{issues})+`<details class="parameter-advanced" data-state-key="backup-settings" ${needsSettings?'open data-force-open':''}><summary>备份设置</summary><div class="profile-form">${fields.map(renderField).join('')}</div></details>`;
   }
-  if(module.id==='hw-platform')config=targetForm()+renderPlatformConfiguration(project.target.mcu,params,fields,renderField,{project})+`<div class="memory-summary"><div>${icon('chip')}<span><strong>双核协作</strong></span></div><a class="button small" href="#/project/execution">配置分工 ${icon('arrow-right')}</a></div>`;
-  if(module.id==='hw-board')config=fieldHtml(TARGET_FIELDS.find(field=>field.key==='board'),project.target.board,'target')+fields.filter(field=>!field.group).map(renderField).join('')+renderResourceEditor(project.target.mcu,resources)+`<section class="hardware-field-group" id="peripheral-timing"><h3>采样与 PWM</h3><div class="profile-form">${fields.filter(field=>field.group==='timing').map(renderField).join('')}</div></section>`;
-  if(module.id==='hw-drivers')config=renderSensorConfig(params,field=>renderField(bindSensorField(field,params,resources)),{renderTransport:role=>renderSensorTransport(params,role,resources,{mcu:project.target.mcu}),renderCommands:role=>renderCommandEditor(role,params[role.prefix+'Commands']||[])});
-  if(module.id==='foc-lifecycle')config+=renderAlgorithmPaths(project);
-  if(module.id==='hw-safety')config=renderCoreExceptions(project,renderField)+renderTripEditor(params.tripPaths||[],resources,{mcu:project.target.mcu});
-  return `${config}
-    ${['hw-platform','app-params'].includes(module.id)?`<div class="deployment-module-link">${renderMemorySummary(project)}</div>`:''}
-    ${['hw-board', 'foc-observer', 'foc-lifecycle'].includes(module.id) ? `<div class="derived-value"><div class="derived-value-label"><span>电流环频率</span>${fieldHelp('PWM 频率 ÷ 电流环分频；观测器启用时沿用此周期。','电流环频率')}<span class="attribute-tag">推导值</span></div><strong>${number(d.fastHz, ' Hz')}</strong></div>` : ''}
-    `;
+  if(['foc-observer','foc-filter','foc-compensation'].includes(module.id))config=renderAlgorithmChildren(project,module,config);
+  if(module.id==='foc-observer'){
+    const bindings=legacyObserverBindings(project);
+    if(bindings.length)config+=`<div class="design-toolbar legacy-consumer-bindings"><span class="design-note">旧连接待替换</span>${bindings.map(binding=>`<span class="attribute-tag" title="${escape(binding.label)}">${escape(binding.signalLabel)}</span>`).join('')}<button class="button small ghost" type="button" data-action="clear-legacy-bindings" data-module="${module.id}" title="移除旧连接" aria-label="移除旧连接">${icon('trash')}</button></div>`;
+  }
+  if(module.id==='foc-current')config+=renderAngleDelay(project);
+  if(module.id==='hw-platform') {
+    config=renderPlatformConfiguration(project.target.mcu,params,fields.filter(field=>field.group!=='memory'),renderField,{project});
+  }
+  if(module.id==='hw-board') config=renderResourceEditor(project.target.mcu,resources,{currentTopology:params.currentTopology,currentCalibration:fixedAlgorithmChildren(project,'foc-compensation').find(child=>child.type==='current_calibration')});
+  if(module.id==='hw-drivers')config=renderSensorConfig(params,field=>renderField(bindSensorField(field,params,resources,{mcu:project.target.mcu})),{resources});
+  return config;
 }
 
 function moduleExtras(module) {
@@ -354,19 +480,21 @@ function issueCard(issue) {
   const pageNames={structures:'数据结构',faults:'错误码',protocol:'通信协议',equipment:'货架',build:'构建配置',versions:'版本组合',interfaces:'模块接口',memory:'部署配置',execution:'双核协作'};
   const designPage=Object.hasOwn(pageNames,issue.designPage)?issue.designPage:null;
   const connection=project.design.layerInterfaces.find(item=>item.id===issue.itemId);
-  const link=designPage==='interfaces'?moduleRoute(connection?.toModule||issue.moduleId||'foc-current','interfaces')+(connection?`&interface=${encodeURIComponent(connection.id)}`:''):designPage==='equipment'?equipmentIssueRoute(issue.itemId):`#/project/${designPage}/${encodeURIComponent(issue.itemId||'')}`;
+  const link=['execution','memory'].includes(designPage)?`#/project/hardware?module=hw-platform&section=${designPage}`:designPage==='interfaces'?moduleRoute(connection?.toModule||issue.moduleId||'foc-current','interfaces')+(connection?`&interface=${encodeURIComponent(connection.id)}`:''):designPage==='equipment'?equipmentIssueRoute(issue.itemId):`#/project/${designPage}/${encodeURIComponent(issue.itemId||'')}`;
   const resource=(project.instances['hw-board']?.parameters.resources||[]).find(item=>issue.id?.includes(item.id));
-  const targetAttrs=`data-target-key="${escape(issue.paramKey||'')}" data-target-resource="${escape(resource?.id||'')}"`;
-  return `<article class="issue-card ${escape(issue.level)}"><div class="issue-heading">${pill(severityNames[issue.level] || '说明', issue.level === 'error' ? 'danger' : issue.level === 'pending' || issue.level === 'warning' ? 'warning' : 'neutral')}${issue.title?`<strong>${escape(issue.title)}</strong>`:''}</div><p class="issue-copy">${escape(issue.message)}</p>${designPage?`<a class="button small navigation-action issue-action" data-reveal-target="true" ${targetAttrs} href="${escape(link)}">${pageNames[issue.designPage]||'查看配置'} →</a>`:module ? `<a class="button small navigation-action issue-action" data-reveal-target="true" ${targetAttrs} href="${moduleRoute(module.id, 'config')}">${layerNames[module.layer]} / ${escape(module.title)} →</a>` : ''}</article>`;
+  const targetAttrs=`data-target-key="${escape(issue.coreKey||issue.paramKey||'')}" data-target-child="${escape(issue.coreId||'')}" data-target-resource="${escape(resource?.id||'')}"`;
+  const legacyAction=issue.code==='legacy-consumer-binding'&&legacyConsumerBindings(project).some(binding=>binding.paramKey===issue.paramKey)
+    ? `<button class="button small ghost issue-action" type="button" data-action="clear-legacy-bindings" data-module="app-motion" data-key="${escape(issue.paramKey)}" title="移除旧连接" aria-label="移除旧连接">${icon('trash')}</button>` : '';
+  return `<article class="issue-card ${escape(issue.level)}"><div class="issue-heading">${pill(severityNames[issue.level] || '说明', issue.level === 'error' ? 'danger' : issue.level === 'pending' || issue.level === 'warning' ? 'warning' : 'neutral')}${issue.title?`<strong>${escape(issue.title)}</strong>`:''}</div><p class="issue-copy">${renderIssueMessage(issue)}</p>${legacyAction|| (designPage?`<a class="button small navigation-action issue-action" data-reveal-target="true" ${targetAttrs} href="${escape(link)}">${pageNames[issue.designPage]||'查看配置'} →</a>`:module ? `<a class="button small navigation-action issue-action" data-reveal-target="true" ${targetAttrs} href="${moduleRoute(module.id, 'config')}">${layerNames[module.layer]} / ${escape(module.title)} →</a>` : '')}</article>`;
 }
 function equipmentIssueRoute(id) { for(const group of ['actuators','drivers','assemblies']) if(project.catalog[group].some(x=>x.id===id))return `#/equipment/${group}/${encodeURIComponent(id)}`;return '#/equipment/assemblies'; }
 function renderValidation() {
   const c = counts();
   const gate = getBuildInspectionState(project, nativeClient.state);
   const labels = {unchecked:'尚未检查',checking:'正在检查',stale:'配置已调整',failed:'尚未通过',passed:'构建依赖通过'};
-  return `<section class="panel" data-live="configuration-validation"><div class="design-toolbar"><h3>当前配置</h3>${pill(labels[gate.status],gate.supported?'success':'neutral')}</div>
+  return `<section class="panel" data-live="configuration-validation"><div class="design-toolbar"><h3>当前配置</h3>${pill(labels[gate.status],gate.supported?'success':'neutral')}<div class="checklist-actions"><button class="button" data-action="show-issues">查看配置检查项</button>${nativeClient.state.inspection?'<button class="button" data-native-action="review-inspection">查看构建检查结果</button>':''}</div></div>
     <div class="validation-summary"><button class="summary-stat" data-action="show-issue-level" data-level="error"><strong>${c.error}</strong><span>错误</span></button><button class="summary-stat" data-action="show-issue-level" data-level="warning"><strong>${c.warning}</strong><span>警告</span></button><button class="summary-stat" data-action="show-issue-level" data-level="pending"><strong>${c.pending}</strong><span>待确认</span></button><button class="summary-stat" data-action="show-issue-level" data-level="info"><strong>${issues.filter(issue=>issue.level==='info').length}</strong><span>信息</span></button></div>
-    <div class="validation-toolbar"><button class="button" data-action="show-issues">查看配置检查项</button>${nativeClient.state.inspection?'<button class="button" data-native-action="review-inspection">查看构建检查结果</button>':''}</div><p class="design-note">构建时自动检查模块依赖、参数、数据结构和目标适配；检查通过后继续生成与编译。</p></section>`;
+    <p class="design-note">构建时自动检查模块依赖、参数、数据结构和目标适配；检查通过后继续生成与编译。</p></section>`;
 }
 
 function render(formOnly = false) {
@@ -383,21 +511,28 @@ function render(formOnly = false) {
   const focused = sameView && workspace.contains(active) && (!formOnly || active.matches('[data-log-key]')) ? active : null;
   const focusKey = focused ? { id: focused.id, tag: focused.tagName, type: focused.type, value: focused.value, data: JSON.stringify(focused.dataset) } : null;
   const priority = { error: 0, pending: 1, warning: 2, info: 3 };
-  issues = validateProject(project).sort((a,b) => priority[a.level] - priority[b.level]);
   const current = route();
-  $('#workspace-title').textContent = current.section === 'project' ? '工程' : current.page === 'architecture' && !current.id ? '主页' : ({architecture:'架构',equipment:'货架',debug:'调试',operation:'运行',performance:'测试'}[current.page] || 'ABD-FOC');
+  const draftErrors = sameView ? numericInputs.getDraftErrors(workspace) : [];
+  issues = [...numericDraftIssues(draftErrors, {moduleId:current.moduleId, page:current.page, itemId:current.itemId}), ...driverIssuePresentation(project.instances['hw-drivers'].parameters,validateProject(project))].sort((a,b) => priority[a.level] - priority[b.level]);
+  const isHome = current.page === 'architecture' && !current.id;
+  const isProject = current.section === 'project';
+  $('#workspace-title').textContent = 'ABD-FOC';
+  $('.workspace-icon').dataset.home = 'true';
   $('.workspace-icon use').setAttribute('href', `/assets/icons.svg#${({architecture:'overview',project:'settings',equipment:'shelf',debug:'wave',operation:'play',performance:'notebook'})[current.section] || 'overview'}`);
-  $('#save-status').textContent = saveState;
+  renderProjectPicker();
+  $('#home-project-name').hidden = !isHome && !isProject && current.page !== 'parameters';
+  $('.topbar').dataset.project = String(isProject);
+  renderProjectActions(isProject);
+  $('#save-status').textContent = draftErrors.length ? '有输入错误 · 尚未保存' : saveState;
   document.querySelectorAll('[data-nav]').forEach(a => a.classList.toggle('active', a.dataset.nav === current.section));
   document.querySelectorAll('[data-layer-nav]').forEach(a => a.classList.toggle('active', current.page === 'architecture' && a.dataset.layerNav === current.id));
   const gate = getBuildInspectionState(project, nativeClient.state);
   const inspection = { ...nativeClient.state.inspection, current: gate.current, supported: gate.supported };
   let content;
   switch (current.page) {
-    case 'execution': content = `${heading('双核协作','分配模块执行内核，配置跨核数据交换。',[{href:'#/project/hardware',label:'硬件'},{href:'#/project/hardware?module=hw-platform&tab=config',label:'内核'},{label:'双核协作'}])}${renderExecution(project)}<div data-live="execution-issues">${issueNoticeButton(issues.filter(issue=>issue.id.startsWith('execution-')),{label:'内核配置检查'})}</div>`; break;
-    case 'memory': content = `${heading('部署配置','按目标硬件分配 Flash 和 RAM。',[{href:'#/project/hardware',label:'硬件'},{href:'#/project/hardware?module=hw-platform&tab=config',label:'内核'},{label:'部署配置'}])}${renderMemory(project,issues,{sectorSizes})}${renderRam(project,issues)}`; break;
-    case 'architecture': content = current.id ? renderArchitectureLayer(current.id,current.moduleId) : renderArchitectureOverview(project); break;
-    case 'project': content = renderGuide(project,issues,current.id,{parameters:moduleParameters,moduleRoute,moduleExtras,interfaces:module=>renderModuleInterfaces(project,issues,module.id,current.interfaceId),selectedModuleId:current.moduleId,tab:current.tab,inspection,buildStatus:nativeClient.state.delivery?.projectId === project.id && nativeClient.state.delivery.fingerprint === configurationFingerprint(project) ? 'built' : nativeClient.state.job?.fingerprint === configurationFingerprint(project) ? nativeClient.state.job.status : '',flashStatus:{current:nativeClient.state.flashResult?.fingerprint===configurationFingerprint(project),programmed:nativeClient.state.flashResult?.programmed===true},profileVariant:nativeClient.state.profileVariant,saveStatus:saveState,configurationLocked:nativeClient.state.busy || nativeClient.state.debug.connected,buildHtml:current.id==='build'?renderValidation()+renderBuild(project,nativeClient.state)+renderRuntimeConfiguration(project, fieldHtml):'',flashHtml:current.id==='flash'?renderFlash(project,nativeClient.state):''}); break;
+    case 'architecture': content = current.id ? renderArchitectureLayer(current.id,current.moduleId) : renderArchitectureOverview(project,{source:homeSource,issues}); break;
+    case 'project': content = renderGuide(project,issues,current.id,{parameters:moduleParameters,moduleRoute,moduleExtras,selectedModuleId:current.moduleId,tab:current.tab,inspection,buildStatus:nativeClient.state.delivery?.projectId === project.id && nativeClient.state.delivery.fingerprint === configurationFingerprint(project) ? 'built' : nativeClient.state.job?.fingerprint === configurationFingerprint(project) ? nativeClient.state.job.status : '',flashStatus:{current:nativeClient.state.flashResult?.fingerprint===configurationFingerprint(project),programmed:nativeClient.state.flashResult?.programmed===true},profileVariant:nativeClient.state.profileVariant,saveStatus:saveState,configurationLocked:nativeClient.state.busy || nativeClient.state.debug.connected,buildHtml:current.id==='build'?renderValidation()+renderBuild(project,nativeClient.state):''}); break;
+    case 'parameters': content = renderModuleParameters(project,current.id,current.moduleId,{parameters:module=>moduleParameters(module,{standalone:true})}); break;
     case 'structures': content = renderStructures(project,issues,current.id,current.moduleId); break;
     case 'faults': content = renderFaults(project,issues,current.id); break;
     case 'protocol': content = renderProtocol(project,issues,current.id); break;
@@ -406,7 +541,7 @@ function render(formOnly = false) {
     case 'operation': content = renderOperation(project); break;
     case 'performance': content = renderPerformance(project, performanceController.state(current), current.id); break;
     case 'versions': content = renderVersions(project,versionDrafts); break;
-    default: content = renderArchitectureOverview();
+    default: content = renderArchitectureOverview(project,{source:homeSource,issues});
   }
   if (formOnly) {
     const template = document.createElement('template');
@@ -416,7 +551,7 @@ function render(formOnly = false) {
     template.content.querySelectorAll('.form-field').forEach((fresh, index) => {
       const current = fields[index];
       if (!current) return;
-      current.querySelectorAll('.field-description, .field-error').forEach(node => node.remove());
+      current.querySelectorAll('.field-description, .field-error:not([data-live-input-error])').forEach(node => node.remove());
       const oldHelp = current.querySelector('[data-help]'), newHelp = fresh.querySelector('[data-help]');
       if (oldHelp && newHelp) oldHelp.dataset.help = newHelp.dataset.help;
       fresh.querySelectorAll('.field-description, .field-error').forEach(node => current.append(node.cloneNode(true)));
@@ -431,24 +566,45 @@ function render(formOnly = false) {
     lineFields?.destroy();
     $('#workspace').innerHTML=content;
   }
-  workspace.querySelectorAll('details').forEach(d=>{const previous=openStates.find(item=>item.key===(d.dataset.stateKey||d.querySelector('summary')?.textContent));if(previous)d.open=previous.open;});
+  workspace.querySelectorAll('details').forEach(d=>{const previous=openStates.find(item=>item.key===(d.dataset.stateKey||d.querySelector('summary')?.textContent));if(d.hasAttribute('data-force-open'))d.open=true;else if(previous)d.open=previous.open;});
   configurationTree.restore(workspace,{stepId:current.id,moduleId:current.moduleId,reveal:renderedRoute!==null&&renderedRoute!==location.hash&&!relatedView});
   renderMath(workspace);
   numericInputs.refresh(workspace);
+  workspace.querySelectorAll('input[data-value-type="cache-state"]').forEach(input=>{input.indeterminate=input.dataset.cacheState==='unconfigured';});
   enhanceSelectMenus(workspace);
   restoreLogScroll(workspace, logScroll);
   if(treeScroll!=null && workspace.querySelector('.configuration-tree'))workspace.querySelector('.configuration-tree').scrollTop=treeScroll;
   if(focusKey && !focused.isConnected){const replacement=[...workspace.querySelectorAll('input,select,textarea,button,[data-log-key]')].find(el=>focusKey.id?el.id===focusKey.id:el.tagName===focusKey.tag&&el.type===focusKey.type&&JSON.stringify(el.dataset)===focusKey.data&&(el.type!=='checkbox'||el.value===focusKey.value));replacement?.focus({preventScroll:true});}
   if(pageScroll && (window.scrollX !== pageScroll.left || window.scrollY !== pageScroll.top))window.scrollTo({...pageScroll, behavior:'instant'});
-  if(!formOnly)lineFields=createLineFields($('#workspace'),{enabled:motionEnabled,onAvailability:available=>{visualAvailable=available;updateMotionToggle();}});
-  updateMotionToggle();
+  if(!formOnly)lineFields=createLineFields($('#workspace'),{enabled:!motionPreference.matches});
   renderedRoute=location.hash;
   renderedProjectId=project.id;
-  document.title = `${$('#workspace-title').textContent} · ABD-FOC`;
+  document.title = 'ABD-FOC';
   nativeClient.draw($('#workspace'));
 }
 
 function handleDesignAction(action,data) {
+  if (action === 'add-module' || action === 'remove-module') {
+    const module = moduleById(data.module);
+    if (!module || module.required) return true;
+    change(next => {
+      next.instances[module.id].enabled = action === 'add-module';
+      next.instances[module.id].runtimeEnabled = action === 'add-module';
+    });
+    return true;
+  }
+
+  if(action==='clear-legacy-bindings') {
+    change(next=>data.module==='app-motion'?resetLegacyConsumerBindings(next,data.key):resetLegacyObserverBindings(next));
+    if($('#notification-dialog').open)$('#notification-dialog').close();
+    return true;
+  }
+
+  if(action==='add-algorithm-child'||action==='remove-algorithm-child') {
+    try { change(next=>Object.assign(next,(action==='add-algorithm-child'?addAlgorithmChild:removeAlgorithmChild)(next,data.module,action==='add-algorithm-child'?data.type:data.id||data.type))); }
+    catch(error) { showError(error.message); }
+    return true;
+  }
 
   if(action==='add-algorithm-path'){change(next=>{const p=next.instances['foc-lifecycle'].parameters;p.protectionPaths??=[];if(p.protectionPaths.length<32)p.protectionPaths.push(createAlgorithmPath());});return true;}
   if(action==='remove-algorithm-path'){change(next=>{const p=next.instances['foc-lifecycle'].parameters;p.protectionPaths=p.protectionPaths.filter(path=>path.id!==data.id);});return true;}
@@ -459,20 +615,6 @@ function handleDesignAction(action,data) {
   if(action==='configure-custom-hardware'){try{change(next=>Object.assign(next,beginCustomHardware(project)));showSuccess('已转为自行配置硬件，当前硬件参数已保留。');}catch(error){showError(error.message);}return true;}
   if(action==='new-neo75h'){try{const variant=$('#neo75h-variant')?.value||'KW';if(applyConfiguration(createNeo75hProject(variant))){navigate('#/project/actuator');showSuccess(`已载入 ${neo75hModelName(variant)} 配置`);}}catch(error){showError(error.message);}return true;}
   const {id,child}=data;
-  if(action.startsWith('schedule-')) {
-    try { change(next=>{
-      const schedule=next.design.schedule;
-      if(action==='schedule-add') {
-        if(schedule.tasks.length>=16)throw Error('最多配置 16 个任务。');
-        const priority=Array.from({length:15},(_,i)=>i+1).find(p=>!schedule.tasks.some(t=>t.priority===p));
-        schedule.tasks.push({id:`task-${crypto.randomUUID()}`,name:'新任务',trigger:'periodic',frequencyHz:100,priority:priority||15,budgetUs:null,entries:[]});
-      } else if(action==='schedule-remove') {
-        const task=schedule.tasks.find(t=>t.id===id);if(!task||task.trigger!=='periodic'||task.entries.length)throw Error('仅可移除没有调用入口的普通任务。');
-        schedule.tasks=schedule.tasks.filter(t=>t.id!==id);
-      } else moveScheduleEntry(schedule,id,data.task,action==='schedule-up'?-1:1);
-    }); } catch(error) { showError(error.message); }
-    return true;
-  }
   if(action.startsWith('ram-')){try{const updated=ramAction(project,action,data);change(next=>Object.assign(next,updated));}catch(error){showError(error.message);}return true;}
   if(action.startsWith('memory-')||action.startsWith('execution-')) {
     try {const updated=deploymentAction(project,action,{...data,value:sectorSizes[id]??null});change(next=>Object.assign(next,updated));}
@@ -535,6 +677,22 @@ function handleDesignAction(action,data) {
   if(adds[action]) { const [factory,array,link]=adds[action]; const item=factory(); change(next=>array(next).push(item));navigate(link(item));return true; }
   if(action==='add-interface-mapping'){change(next=>next.design.layerInterfaces.find(x=>x.id===id)?.fieldMap.push(createInterfaceMapping()));return true;}
   if(action==='add-field') { change(next=>next.design.structures.find(x=>x.id===id)?.fields.push(createField()));return true; }
+  if(['add-custom-driver','remove-custom-driver','add-output-encoder'].includes(action)) {
+    try {
+      change(next=>{
+        const params=next.instances['hw-drivers'].parameters;
+        params.customDrivers??=[];
+        if(action==='add-output-encoder'){params.outputEncoderCapability='present';return;}
+        if(action==='add-custom-driver'){
+          if(params.customDrivers.length>=64)throw new Error('最多添加 64 个其他驱动。');
+          const driver=createCustomDriver(undefined,data.interface==='spi'?'spi':'uart');
+          syncCustomDriverResource(driver,next.instances['hw-board'].parameters.resources||[],{parameters:params});
+          params.customDrivers.push(driver);
+        } else params.customDrivers=params.customDrivers.filter(driver=>driver.id!==id);
+      });
+    } catch(error) { showError(error.message); }
+    return true;
+  }
   if(['add-pcba-resource','remove-pcba-resource','add-trip-path','remove-trip-path'].includes(action)) {
     const owner=data.owner||'';
     change(next=>{
@@ -542,7 +700,11 @@ function handleDesignAction(action,data) {
       if(!hardware)throw new Error('驱动器不存在。');
       const resourceAction=action.includes('pcba-resource'), key=resourceAction?'resources':'tripPaths', moduleId=resourceAction?'hw-board':'hw-safety';
       const list=hardware[moduleId][key]??=[];
-      if(action.startsWith('add-'))list.push(resourceAction?createResource(data.kind):createTripPath());
+      if(action.startsWith('add-')) {
+        const item=resourceAction?(data.preset?createPresetResource(data.preset):createResource(data.kind)):createTripPath();
+        if(resourceAction&&data.preset==='temperature'&&['逆变器温度','电机温度 UV 相','电机温度 VW 相'].includes(data.name))item.name=data.name;
+        list.push(item);
+      }
       else {const index=list.findIndex(item=>item.id===id);if(index>=0)list.splice(index,1);}
     });return true;
   }
@@ -592,17 +754,32 @@ function handleDesignAction(action,data) {
 }
 
 function handleDesignEdit(input) {
-  if(input.dataset.edit==='algorithm-routing'){change(next=>{const moduleId=input.dataset.section;next.instances[moduleId].parameters.children=fixedAlgorithmChildren(next,moduleId);const child=next.instances[moduleId].parameters.children.find(c=>c.id===input.dataset.id);if(child&&Object.hasOwn(child.routing,input.dataset.key))child.routing[input.dataset.key]=input.value;});return;}
-  if(input.dataset.edit==='algorithm-child'){change(next=>{const moduleId=input.dataset.module||input.dataset.section;next.instances[moduleId].parameters.children=fixedAlgorithmChildren(next,moduleId);const child=next.instances[moduleId].parameters.children.find(c=>c.id===input.dataset.id);if(!child)return;const key=input.dataset.key;if(['compiled','enabled'].includes(key)){child[key]=input.checked;if(key==='compiled'&&!input.checked)child.enabled=false;}else if(key==='name')child.name=input.value;else if(Object.hasOwn(child.parameters,key))child.parameters[key]=input.type==='checkbox'?input.checked:input.dataset.valueType==='select'?input.value:readNumericInput(input);},input.type!=='checkbox'&&input.dataset.valueType!=='select');return;}
+  if (input.dataset.edit === 'saved-project') {
+    if (input.value === projectLibrary.activeId) return;
+    try {
+      const incoming = projectLibrary.load(input.value);
+      if (applyConfiguration(incoming, { savedId: input.value, destination: route().section === 'project' ? location.hash : '#/architecture' })) showSuccess(`已切换到 ${incoming.name || '未命名工程'}`);
+    } catch (error) { showError(`工程未切换：${error.message}`); }
+    input.value = projectLibrary.activeId;
+    input.dataset.empty = 'false';
+    input.closest('[data-select-menu]')?.updateTrigger?.();
+    return;
+  }
+  if(input.dataset.edit==='algorithm-child'){
+    const moduleId=input.dataset.module||input.dataset.section,key=input.dataset.key;
+    const value=input.type==='checkbox'?input.checked:key==='name'||input.dataset.valueType==='select'?input.value:readNumericInput(input);
+    change(next=>Object.assign(next,updateAlgorithmChild(next,moduleId,input.dataset.id,key,value)),input.type!=='checkbox'&&input.dataset.valueType!=='select'&&key!=='name');return;
+  }
 
   if(input.dataset.edit==='algorithm-path'){
-    change(next=>{const path=next.instances['foc-lifecycle'].parameters.protectionPaths.find(path=>path.id===input.dataset.id);if(!path)return;const key=input.dataset.key;if(!['threshold','action','enabled','compiled','name','field','operator','triggerDurationMs','recoveryDurationMs','comparisonSource','comparisonField'].includes(key))return;path[key]=['enabled','compiled'].includes(key)?input.checked:['threshold','triggerDurationMs','recoveryDurationMs'].includes(key)?readNumericInput(input):input.value;if(key==='field')path.threshold=null;if(key==='compiled'&&!path.compiled)path.enabled=false;},['threshold','name','triggerDurationMs','recoveryDurationMs'].includes(input.dataset.key));return;
+    change(next=>{const path=next.instances['foc-lifecycle'].parameters.protectionPaths.find(path=>path.id===input.dataset.id);if(!path)return;const key=input.dataset.key;if(!['threshold','action','enabled','compiled','name','field','operator','triggerDurationMs','recoveryDurationMs','comparisonSource','comparisonField'].includes(key))return;path[key]=['enabled','compiled'].includes(key)?input.checked:['threshold','triggerDurationMs','recoveryDurationMs'].includes(key)?readNumericInput(input):input.value;if(key==='field')path.threshold=null;if(key==='compiled')path.enabled=input.checked;},['threshold','name','triggerDurationMs','recoveryDurationMs'].includes(input.dataset.key));return;
   }
 
   if(input.dataset.edit==='platform-core') {
     const {id,child,key}=input.dataset, field=CORE_FIELDS.find(field=>field.key===key);
     if(!field)return;
-    const numeric=['number','integer'].includes(field.type), value=numeric?(readNumericInput(input)):input.value;
+    const cache=input.type==='checkbox'&&['instructionCache','dataCache'].includes(key);
+    const numeric=['number','integer'].includes(field.type), value=cache?(input.checked?'enabled':'disabled'):numeric?readNumericInput(input):input.value;
     if(input.validity.badInput||numeric&&value!==null&&(!Number.isFinite(value)||field.type==='integer'&&!Number.isSafeInteger(value))){input.setCustomValidity('请输入有效数值。');input.reportValidity();return;}
     input.setCustomValidity('');
     change(next=>{
@@ -613,9 +790,49 @@ function handleDesignEdit(input) {
       const platform=driver?getDriverHardware(driver)['hw-platform']:next.instances['hw-platform'].parameters;
       platform.coreConfigs[child]??=createCoreSettings(mcu,child);
       platform.coreConfigs[child][key]=value;
-      if(driver)setDriverHardwareParameter(driver,'hw-platform','coreConfigs',platform.coreConfigs);
+      if(key==='clockHz')syncDerivedClocks(mcu,platform,{editedCoreId:child});
+      if(driver)for(const field of ['coreConfigs',...(key==='clockHz'?['busClockHz','timerClockHz']:[])])setDriverHardwareParameter(driver,'hw-platform',field,platform[field]);
       else next.provenance['hw-platform.coreConfigs']='user';
-    },input.tagName==='INPUT');return;
+    },input.tagName==='INPUT'&&!cache);
+    if(key==='clockHz') {
+      const platform=id?getDriverHardware(project.catalog.drivers.find(driver=>driver.id===id))['hw-platform']:project.instances['hw-platform'].parameters;
+      for(const peer of document.querySelectorAll('[data-edit="platform-core"][data-key="clockHz"]'))if(peer!==input&&peer.dataset.id===id)numericInputs.setValue(peer,platform.coreConfigs[peer.dataset.child]?.clockHz??null);
+    }
+    return;
+  }
+  if(input.dataset.edit==='custom-driver') {
+    try {
+      const {id,key}=input.dataset;
+      if(!['model','bitrate','resource'].includes(key))return;
+      const value=key==='bitrate'?readNumericInput(input):input.value;
+      if(key==='bitrate'&&value!==null&&(!Number.isFinite(value)||value<=0))throw new Error('请输入正数，或留空。');
+      input.setCustomValidity('');
+      change(next=>{
+        const parameters=next.instances['hw-drivers'].parameters, resources=next.instances['hw-board'].parameters.resources||[];
+        const driver=parameters.customDrivers?.find(driver=>driver.id===id);
+        if(!driver)throw new Error('驱动条目不存在。');
+        if(key==='resource')bindCustomDriverResource(driver,value,resources,parameters);
+        else {
+          driver[key]=value;
+          syncCustomDriverResource(driver,resources,{writeRate:key==='bitrate',parameters});
+        }
+        syncSensorResource(parameters,resources);
+        if(['bitrate','resource'].includes(key))syncCustomDriverRates(parameters,resources);
+      },input.tagName==='INPUT');
+      if(key==='bitrate')refreshDriverRateInputs(input);
+    } catch(error) { input.setCustomValidity(error.message); input.reportValidity(); }
+    return;
+  }
+  if(input.dataset.edit==='current-channel-count') {
+    try {
+      const count=Number(input.value), owner=input.dataset.owner||'';
+      change(next=>{
+        const board=owner?next.catalog.drivers.find(driver=>driver.id===owner)?.hardware?.['hw-board']:next.instances['hw-board'].parameters;
+        if(!board)throw new Error('外设配置不存在。');
+        resizeCurrentChannels(board,count);
+      });
+    } catch(error) { showError(error.message); }
+    return;
   }
   if(['pcba-resource','trip-path'].includes(input.dataset.edit)) {
     try {
@@ -629,11 +846,14 @@ function handleDesignEdit(input) {
         const hardware=owner?next.catalog.drivers.find(driver=>driver.id===owner)?.hardware:Object.fromEntries(Object.entries(next.instances).map(([id,instance])=>[id,instance.parameters]));
         const target=scope==='pcba-resource'?hardware['hw-board'].resources.find(item=>item.id===id):hardware['hw-safety'].tripPaths.find(item=>item.id===id);
         if(!target)throw new Error('配置条目不存在。');
-        if(scope==='pcba-resource'&&key==='instance'){selectResourceInstance(target,owner?next.catalog.drivers.find(driver=>driver.id===owner).mcu:next.target.mcu,value);return;}
-        if(scope==='pcba-resource'&&section==='pins'&&value==='none')value='';
+        if(scope==='pcba-resource'&&key==='instance'){selectResourceInstance(target,owner?next.catalog.drivers.find(driver=>driver.id===owner).mcu:next.target.mcu,value);syncHardwareDriverBindings(hardware);return;}
+        if(scope==='pcba-resource'&&key==='channel'){selectAdcChannel(target,owner?next.catalog.drivers.find(driver=>driver.id===owner).mcu:next.target.mcu,value);return;}
+        if(scope==='pcba-resource'&&section==='pins'){
+          selectResourcePin(target,owner?next.catalog.drivers.find(driver=>driver.id===owner).mcu:next.target.mcu,key,value,hardware['hw-board'].resources);return;
+        }
         (section?target[section]:target)[key]=value;
-        if(scope==='pcba-resource'&&section==='settings')syncSensorResource(hardware['hw-drivers'],hardware['hw-board'].resources);
-        if(scope==='trip-path'&&key==='compiled'&&!value)target.enabled=false;
+        if(scope==='pcba-resource'&&section==='settings')syncHardwareDriverBindings(hardware);
+        if(scope==='trip-path'&&key==='compiled')target.enabled=value;
         if(scope==='trip-path'&&key==='route'&&value==='interrupt')target.filterCycles=0;
       },input.tagName==='INPUT'&&valueType!=='boolean');
       // Several device drivers may expose the same physical bus settings.
@@ -662,25 +882,25 @@ function handleDesignEdit(input) {
     return;
   }
 
-  if (['configuration-actuator','configuration-driver'].includes(input.dataset.edit)) {
+  if (['configuration-actuator','configuration-driver','configuration-assembly'].includes(input.dataset.edit)) {
     try {
-      const next = input.dataset.edit === 'configuration-actuator' ? selectConfigurationActuator(project,input.value) : selectConfigurationDriver(project,input.value);
+      const scope = input.dataset.edit;
+      const kind = scope.slice('configuration-'.length), selection = getConfigurationSelection(project);
+      if (input.value === (selection[kind]?.id || '')) return;
+      if (nativeClient.state.busy || nativeClient.state.pendingAction || nativeClient.state.debug.connected) throw new Error(`请等待当前操作完成并断开调试连接，再更换${{assembly:'关节模组',actuator:'执行器',driver:'驱动器'}[kind]}。`);
+      const next = scope === 'configuration-assembly' ? applyAssembly(project,input.value)
+        : scope === 'configuration-actuator' ? selectConfigurationActuator(project,input.value) : selectConfigurationDriver(project,input.value);
       change(current=>Object.assign(current,next));
-      showSuccess(input.dataset.edit === 'configuration-actuator' ? '执行器已选定' : '驱动器硬件配置已复用');
+      showSuccess(scope === 'configuration-assembly' ? '关节模组已应用到当前工程' : scope === 'configuration-actuator' ? '执行器已选定' : '驱动器硬件配置已复用');
     } catch (error) { showError(error.message); render(); }
     return;
   }
   const {edit:scope,id,child,key,section,valueType}=input.dataset;
-  if(scope.startsWith('schedule-')) {
+  if(scope==='schedule-task') {
     try {
-      const value=['number','integer'].includes(valueType)?readNumericInput(input):input.value;
-      change(next=>{
-        if(scope==='schedule-entry'){moveScheduleEntry(next.design.schedule,id,value);return;}
-        const task=next.design.schedule.tasks.find(task=>task.id===id);if(!task)throw Error('任务不存在。');
-        if(!['name','frequencyHz','priority','budgetUs'].includes(key))throw Error('任务字段不存在。');
-        if(key==='frequencyHz'&&task.trigger==='control')next.instances['app-motion'].parameters.outerHz=value;
-        else task[key]=value;
-      });
+      if(key!=='periodUs')throw Error('仅可配置任务调度周期。');
+      const value=readNumericInput(input);
+      change(next=>Object.assign(next,updateUserSchedulePeriod(next,id,value)));
     }catch(error){showError(error.message);}
     return;
   }
@@ -758,8 +978,9 @@ function handleDesignEdit(input) {
       if(scope==='assembly')target=next.catalog.assemblies.find(x=>x.id===id);
       if(scope==='consumer') { if(getModuleContractRole(next.design,id))throw new Error('模块结构的连接请在所属模块的接口页配置。'); const s=next.design.structures.find(x=>x.id===id);if(!s)throw new Error('结构不存在。');s.consumers=value?[...new Set([...s.consumers,key])]:s.consumers.filter(x=>x!==key);return; }
       if(!target)throw new Error('编辑的条目已不存在，请重新选择。');
+      const changedMcu=scope==='driver'&&key==='mcu'&&String(target.mcu).trim().toUpperCase()!==String(value).trim().toUpperCase();
       target[key]=value;
-      if(scope==='driver'){target.hardware=getDriverHardware(target);syncMcuArchitecture(target,target.hardware,{replaceCores:key==='mcu'});}
+      if(scope==='driver'){target.hardware=getDriverHardware(target);syncMcuArchitecture(target,target.hardware,{replaceCores:changedMcu,applyDefaults:changedMcu});}
     }, !((scope==='driver-hardware'&&moduleById(section)?.params.find(p=>p.key===key)?.sensorLayoutTrigger)||(scope==='driver'&&key==='mcu')||(scope==='layer-interface'&&['fromModule','toModule'].includes(key))));
     if(scope==='driver'){const vendor=$('[data-edit="driver"][data-key="vendor"]');if(vendor){vendor.value=project.catalog.drivers.find(d=>d.id===id).vendor;vendor.closest('[data-select-menu]')?.updateTrigger?.();}}
   }catch(error){showError(error.message);}
@@ -818,8 +1039,16 @@ document.addEventListener('click', event => {
   const button = event.target.closest('[data-action]');
   if (!button || button.disabled) return;
   const action = button.dataset.action;
+  if (action === 'show-home-link') {
+    const details = renderHomeLinkDetails(project, button.dataset.link, { nativeState: nativeClient.state });
+    $('#home-inspector-title').textContent = details.title;
+    $('#home-inspector-body').innerHTML = details.html;
+    $('#home-inspector').showModal();
+    $('#home-inspector-title').focus({preventScroll:true});
+    return;
+  }
+  if (action === 'close-home-inspector') { $('#home-inspector').close(); return; }
   if (performanceController.action(action, button.dataset)) return;
-  if(action==='toggle-visual-motion') {motionEnabled=!motionEnabled;lineFields?.setEnabled(motionEnabled);updateMotionToggle();try{localStorage.setItem('actuator-console.motion',motionEnabled?'on':'off');}catch{}return;}
   if(action==='toggle-sidebar'){const root=document.documentElement;const collapsed=root.dataset.sidebar==='collapsed';if(collapsed)delete root.dataset.sidebar;else root.dataset.sidebar='collapsed';const toggle=$('#sidebar-toggle');toggle?.setAttribute('aria-expanded',String(collapsed));toggle?.setAttribute('aria-label',collapsed?'折叠侧栏':'展开侧栏');toggle?.setAttribute('title',collapsed?'折叠侧栏':'展开侧栏');try{localStorage.setItem('abd-foc.sidebar',collapsed?'open':'collapsed')}catch{}return;}
   if(action==='toggle-notification-history'){toggleNotificationHistory();return;}
   if(action==='close-notification-history'){closeNotificationHistory();return;}
@@ -842,15 +1071,13 @@ document.addEventListener('click', event => {
   if(action==='show-issue-level')showIssueResults(issues.filter(issue=>issue.level===button.dataset.level));
   if(action==='show-issues'){let selected=issues;if(button.dataset.issueIds){try{const ids=new Set(JSON.parse(button.dataset.issueIds));selected=issues.filter(issue=>ids.has(issue.id));}catch{selected=[];}}showIssueResults(selected,button.dataset.noticeTitle||'检查结果');}
   if (action === 'import') { $('#import-file').value = ''; $('#import-file').click(); }
-  if (action === 'new-configuration') { if (applyConfiguration(createProject())) showSuccess('已建立空白配置，货架与测试记录已保留。'); }
-  if (action === 'save') {
-    clearTimeout(autosaveTimer);
-    try { saveDraft(); saveState = '配置已保存到此浏览器'; render(); showSuccess(performanceController.hasUnsavedDraft() ? '配置已保存。测量表还有未提交的修改，请在测试页点击“保存记录”。' : '配置已保存。可导出 JSON 备份。'); }
-    catch { saveState = '有修改 · 尚未保存'; render(); showError('浏览器存储不可用。请在设置中“导出全部数据”保存当前货架、配置和测试记录。'); }
+  if (action === 'new-configuration' || action === 'new-project') {
+    const blank = createProject();
+    if (applyConfiguration(blank)) showSuccess(action === 'new-project' ? '已新建工程，请配置执行器与驱动硬件。' : '已建立空白配置，货架与测试记录已保留。');
   }
   if (action === 'export' || action === 'export-workspace' || action === 'export-runtime-config') {
     let serialized;
-    try { serialized = action === 'export-runtime-config' ? JSON.stringify(runtimeConfiguration(project), null, 2) : action === 'export-workspace' ? serializeProject(project) : exportConfiguration(project); }
+    try { serialized = action === 'export-runtime-config' ? JSON.stringify(runtimeConfiguration(project), null, 2) : action === 'export-workspace' ? projectLibrary.exportBackup(project) : exportConfiguration(project); }
     catch (error) { showError(`导出失败：${error.message}`); return; }
     const blob = new Blob([serialized], { type: 'application/json;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -859,7 +1086,7 @@ document.addEventListener('click', event => {
     a.download = action === 'export-runtime-config' ? 'runtime-config.json' : action === 'export-workspace' ? `ABD-FOC-data-${new Date().toISOString().slice(0,10)}.json` : `${(project.name || 'configuration').replace(/[\\/:*?"<>|]/g, '-').slice(0, 70)}.json`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
-    showSuccess(action === 'export-workspace' ? '已导出全部货架、配置与已保存的测试记录' : '已导出配置 JSON');
+    showSuccess(action === 'export-workspace' ? '已导出全部工程、货架与已保存的测试记录' : '已导出配置 JSON');
   }
 });
 
@@ -884,7 +1111,7 @@ document.addEventListener('change', event => {
   }
   const { scope, module: moduleId, key } = input.dataset;
   if (!scope) return;
-  if (scope === 'project' && key === 'name') { change(next => { next.name = input.value.trim().slice(0, 80) || '未命名配置'; }, true); return; }
+  if (scope === 'project' && key === 'name') { change(next => { next.name = normalizeProjectName(input.value.trim().slice(0, 80)); }, true); return; }
   const field = scope === 'target' ? TARGET_FIELDS.find(item => item.key === key) : moduleById(moduleId)?.params.find(item => item.key === key);
   if (!field || field.computed) return;
   let value;
@@ -905,10 +1132,45 @@ document.addEventListener('change', event => {
     input.setCustomValidity('');
   }
   else value = input.value;
+  if(moduleId==='hw-drivers'&&key.endsWith('Bitrate')&&value!==null&&value<=0) {
+    input.setCustomValidity('请输入正数，或留空。'); input.reportValidity(); return;
+  }
+  const resourceRole=moduleId==='hw-drivers'?SENSOR_ROLES.find(role=>key===role.prefix+'Resource'):null;
+  if(resourceRole) {
+    const parameters=project.instances[moduleId].parameters;
+    const type=builtinDriverInterfaceForModel(resourceRole.prefix,parameters[resourceRole.prefix+'Model'])||parameters[resourceRole.prefix+'Interface'];
+    const resources=project.instances['hw-board'].parameters.resources||[];
+    if(!sensorResources(resources,type).some(resource=>resource.id===value)) {
+      input.setCustomValidity('请选择外设页中已配置的匹配外设。'); input.reportValidity(); return;
+    }
+    if(driverResourceOccupants(parameters,resources,value,{prefix:resourceRole.prefix}).length) {
+      input.setCustomValidity('此外设已被其他驱动占用。'); input.reportValidity(); return;
+    }
+    input.setCustomValidity('');
+  }
   change(next => {
-    if (scope === 'target') { next.target[key] = value; if(key==='mcu'||key==='vendor'){const hardware=Object.fromEntries(MODULES.filter(m=>m.layer==='hardware').map(m=>[m.id,next.instances[m.id].parameters]));syncMcuArchitecture(next.target,hardware,{replaceCores:key==='mcu'});} }
-    else { next.instances[moduleId].parameters[key] = value; if(moduleId==='hw-drivers'&&key.endsWith('Resource'))syncSensorResource(next.instances[moduleId].parameters,next.instances['hw-board'].parameters.resources||[],key.slice(0,-8)); if(moduleId==='app-calibration'&&key==='procedures')next.instances[moduleId].parameters.enabledProcedures=next.instances[moduleId].parameters.enabledProcedures.filter(item=>value.includes(item)); next.provenance[`${moduleId}.${key}`] = 'user'; }
-  }, !['select','multiselect'].includes(field.type)&&!field.sensorLayoutTrigger&&!(scope==='target'&&key==='mcu')&&!(moduleId==='app-calibration'&&key==='procedures')&&!(moduleId==='app-state'&&key==='stateMachine'));
+    if(moduleId==='app-calibration'&&key==='procedures') {
+      const params=next.instances[moduleId].parameters;
+      const previous=new Set(params.procedures);
+      params.enabledProcedures=[...new Set([...params.enabledProcedures.filter(item=>value.includes(item)),...value.filter(item=>!previous.has(item))])];
+    }
+    if (scope === 'target') { const changedMcu=key==='mcu'&&String(next.target.mcu).trim().toUpperCase()!==String(value).trim().toUpperCase();next.target[key] = value; if(key==='mcu'||key==='vendor'){const hardware=Object.fromEntries(MODULES.filter(m=>m.layer==='hardware').map(m=>[m.id,next.instances[m.id].parameters]));syncMcuArchitecture(next.target,hardware,{replaceCores:changedMcu,applyDefaults:changedMcu});} }
+    else {
+      const parameters=next.instances[moduleId].parameters;
+      if(moduleId==='hw-drivers') {
+        const resources=next.instances['hw-board'].parameters.resources||[];
+        const modelRole=SENSOR_ROLES.find(role=>key===role.prefix+'Model');
+        const rateRole=SENSOR_ROLES.find(role=>key===role.prefix+'Bitrate');
+        if(modelRole)applyBuiltinDriverModel(parameters,modelRole.prefix,value,resources);
+        else if(rateRole){setDriverCommunicationRate(parameters,rateRole.prefix,value,resources);syncCustomDriverRates(parameters,resources);}
+        else if(resourceRole){bindBuiltinDriverResource(parameters,resourceRole.prefix,value,resources);syncCustomDriverRates(parameters,resources);}
+        else parameters[key]=value;
+      } else parameters[key]=value;
+      if(moduleId==='app-calibration'&&key==='procedures')parameters.enabledProcedures=parameters.enabledProcedures.filter(item=>value.includes(item));
+      next.provenance[`${moduleId}.${key}`]='user';
+    }
+  }, !['select','multiselect','signal-reference'].includes(field.type)&&!field.sensorLayoutTrigger&&!(scope==='target'&&key==='mcu')&&!(moduleId==='app-calibration'&&key==='procedures')&&!(moduleId==='app-state'&&key==='stateMachine'));
+  if(moduleId==='hw-drivers'&&key.endsWith('Bitrate'))refreshDriverRateInputs(input);
   if(scope==='target'){const vendor=$('[data-scope="target"][data-key="vendor"]');if(vendor){vendor.value=project.target.vendor;vendor.closest('[data-select-menu]')?.updateTrigger?.();}}
 });
 
@@ -924,13 +1186,20 @@ $('#import-file').addEventListener('change', async event => {
   if (!file) return;
   if (file.size > 32 * 1024 * 1024) { showError('文件超过 32 MiB，请选择工程 JSON。'); return; }
   try {
-    const next = parseProject(await file.text());
+    const raw = await file.text();
+    const imported = JSON.parse(raw);
+    if (imported?.format === PROJECT_BACKUP_FORMAT) {
+      if (restoreProjectBackup(imported)) showSuccess('已恢复备份中的全部工程、货架和测试记录；恢复前的数据已保留在当前浏览器的恢复记录中。');
+      return;
+    }
+    const next = parseProject(raw);
     if (applyConfiguration(next)) showSuccess('配置已导入，货架与测试记录已保留。');
   } catch (error) { showError(`导入失败，当前配置未更改：${error.message}`); }
 });
 $('#notification-dialog').addEventListener('close',()=>displayedNotices.clear());
 $('#notification-dialog').addEventListener('click',event=>{const dialog=$('#notification-dialog');if(event.target.closest('a'))dialog.close();else if(event.target===dialog){const rect=dialog.getBoundingClientRect();if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)dialog.close();}});
 window.addEventListener('hashchange', () => {
+  $('#home-inspector').close();
   const previous=renderedRoute;
   const sameContext=previous!==null&&navigationContext(previous)===navigationContext(location.hash);
   const clicked=pendingNavigationScroll?.to===location.hash?pendingNavigationScroll:null;

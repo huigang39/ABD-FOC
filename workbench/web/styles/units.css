@@ -1,0 +1,12 @@
+.field-input-wrap > .field-unit.field-unit-picker { pointer-events:auto; }
+#workspace .field-input-wrap > .field-unit.field-unit-picker { padding:0; min-width:58px; pointer-events:auto; }
+.field-input-wrap:has(.field-unit-picker [data-select-menu][data-open]) { z-index:10001; }
+.field-unit-select { display:block; width:100%; min-width:58px; height:100%; min-height:30px; padding:4px 22px 4px 9px; border:0; border-radius:8px; color:inherit; background:transparent; font:inherit; cursor:pointer; }
+.field-unit-select:focus-visible { outline:2px solid var(--focus); outline-offset:2px; }
+.field-unit-select:disabled { cursor:default; opacity:.65; }
+.field-unit-select option { color:var(--ink); background:var(--surface); }
+.field-unit-picker .select-menu { min-width:0; width:auto; }
+.field-unit-picker .select-menu-trigger { min-width:0; min-height:30px; padding:5px 8px; gap:8px; border:0; border-radius:8px; background:transparent; color:inherit; font-size:inherit; }
+.field-unit-picker .select-menu-value { min-width:2ch; }
+.field-unit-picker .select-menu-pop { font-size:12px; }
+.performance-samples .field-input-wrap { min-width:180px; }

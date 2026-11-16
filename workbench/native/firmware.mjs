@@ -17,7 +17,7 @@ const defaultOutput=join(workspace,'.workbench-local/generated');
 const TEMPLATE='abd-modular-v1';
 const issue=(code,message,path='')=>{
   const moduleId = path.startsWith('design.moduleContracts.') ? path.split('.')[2] : path === 'target' ? 'hw-platform' : path.split('.')[0];
-  return {code,id:`generator-${code}-${path}`,level:'error',title:'构建条件未满足',message,path,...(MODULE_CODE[moduleId]?{moduleId}:{})};
+  return {code,id:`generator-${code}-${path}`,level:'error',title:'构建条件未满足',message,path,...(MODULES.some(module=>module.id===moduleId)?{moduleId}:{})};
 };
 const encrypted=p=>p?.build?.encryptFirmware?issue('encryption-unsupported','尚未接入服务器签名加密服务与设备 Bootloader，不能生成或编译明文固件冒充加密包。','build.encryptFirmware'):null;
 export function findFirmwareToolchain(toolchainPath){

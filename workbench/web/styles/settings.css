@@ -101,7 +101,7 @@
   :root[data-theme="dark"] .notification-history-item[data-level="warning"],
   :root[data-theme="dark"] .notification-history-item[data-level="pending"] { --notification-history-accent: var(--warning); }
   :root[data-theme="dark"] .notification-history-item[data-level="error"] { --notification-history-accent: var(--danger); }
-  :root[data-theme="dark"] .notification-unread-count { color: var(--surface); }
+  :root[data-theme="dark"] .notification-unread-count { color: var(--notification-badge-text); }
 
   :root[data-theme="dark"] .memory-tone-hardware { --memory-fill: #3b3425; --memory-ink: #d5c29a; }
   :root[data-theme="dark"] .memory-tone-foc { --memory-fill: #254334; --memory-ink: #9ac9b4; }
@@ -887,13 +887,8 @@ svg.ui-icon[data-live-icon],
 #workspace .field-input-wrap:has(> .field-unit) > .field-input { border:0; border-radius:16px; background:transparent; box-shadow:none; }
 :root[data-theme="neumorphism"] #workspace .field-input-wrap:has(> .field-unit) { border-color:transparent; background:var(--control-fill); }
 #workspace .field-input-wrap:has(> .field-input:focus-visible) { outline:2px solid var(--focus); outline-offset:2px; }
-#workspace .issue-notice-error { color:#d52f43; }
-#workspace .issue-notice-warning { color:#b17d00; }
-#workspace .issue-notice-success { color:#128346; }
-#workspace .issue-notice .issue-notice-count { color:inherit; background:color-mix(in srgb,currentColor 10%,var(--surface)); }
-:root[data-theme="dark"] #workspace .issue-notice-error { color:#ff7a8b; }
-:root[data-theme="dark"] #workspace .issue-notice-warning { color:#ffdc4a; }
-:root[data-theme="dark"] #workspace .issue-notice-success { color:#54e392; }
+#workspace .notification-action { width:40px; min-width:40px; min-height:38px; padding:8px; border-radius:9px; overflow:visible; }
+@media (max-width:600px), (pointer:coarse) { #workspace .notification-action { width:44px; min-width:44px; min-height:44px; } }
 
 #workspace .schedule-task.resource-disclosure { overflow:visible; }
 #workspace .schedule-task.resource-disclosure > summary { background:transparent; }

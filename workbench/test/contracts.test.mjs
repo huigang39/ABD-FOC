@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createDesign, createStructure, createField, createFault, createMessage, checkDesignShape, checkCommissioningShape, getStructureSize, validateDesign, configurationFingerprint } from '../web/src/core/contracts.mjs';
-import { createProject, createExampleProject, parseProject, serializeProject, validateProject } from '../web/src/core/model.mjs';
+import { MODULES, createProject, createExampleProject, parseProject, serializeProject, validateProject } from '../web/src/core/model.mjs';
 import { saveLayerVersion, selectLayerVersion } from '../web/src/features/configuration/versions.mjs';
 
 const has = (project, id, level = 'error') => validateDesign(project).some(issue => issue.id === `design-${id}` && issue.level === level);
@@ -15,7 +15,7 @@ function withTransport(transport) {
 test('七个可编辑模板标明方向、坐标和生效输出边界，无协议硬件默认数值', () => {
   const design = createDesign();
   assert.deepEqual(design.structures.slice(0, 7).map(item => item.name), ['SampleFrame', 'DriveFeedback', 'ObserverSamples', 'ObserverEstimate', 'ControlRef', 'ControlStatus', 'FaultEvent']);
-  assert.equal(design.structures.length, 58);
+  assert.equal(design.structures.length, 7 + MODULES.length * 3);
   assert.doesNotThrow(() => checkDesignShape(design));
   assert.equal(design.protocol.transport, 'unselected');
   for (const key of ['nodeId', 'bitrate', 'timeoutMs']) assert.equal(design.protocol[key], null);

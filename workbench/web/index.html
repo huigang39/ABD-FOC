@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@automann/maple-mono-cn@7.9.2/dist/medium.css">
   <link rel="stylesheet" href="/styles/main.css">
   <link rel="stylesheet" href="/styles/memory.css">
+  <link rel="stylesheet" href="/styles/backup.css">
   <link rel="stylesheet" href="/styles/notifications.css">
   <link rel="stylesheet" href="/styles/options.css">
   <link rel="stylesheet" href="/styles/module-tags.css">
@@ -20,12 +21,15 @@
   <link rel="stylesheet" href="/styles/ram.css">
   <link rel="stylesheet" href="/styles/architecture.css">
   <link rel="stylesheet" href="/styles/workflow.css">
+  <link rel="stylesheet" href="/styles/module-parameters.css">
   <link rel="stylesheet" href="/styles/hardware.css">
   <link rel="stylesheet" href="/styles/settings.css">
+  <link rel="stylesheet" href="/styles/algorithm-children.css">
   <link rel="stylesheet" href="/styles/field-help.css">
   <link rel="stylesheet" href="/styles/configuration-tree.css">
   <link rel="stylesheet" href="/styles/debug.css">
-  <script>try { if (localStorage.getItem('abd-foc.sidebar') === 'collapsed') document.documentElement.dataset.sidebar = 'collapsed'; const w = localStorage.getItem('abd-foc.sidebar-width'); if (w) document.documentElement.style.setProperty('--sidebar-width', w); if (localStorage.getItem('abd-foc.appearance-theme') === 'neumorphism') { const m = localStorage.getItem('abd-foc.appearance-mode'); document.documentElement.dataset.mode = m === 'dark' || (m === 'system' && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light'; } } catch {}</script>
+  <link rel="stylesheet" href="/styles/units.css">
+  <script>try { if (localStorage.getItem('abd-foc.sidebar') === 'collapsed') document.documentElement.dataset.sidebar = 'collapsed'; const w = localStorage.getItem('abd-foc.sidebar-width'); if (w) document.documentElement.style.setProperty('--sidebar-width', w); const t = localStorage.getItem('abd-foc.appearance-theme'), m = localStorage.getItem('abd-foc.appearance-mode'), sys = matchMedia('(prefers-color-scheme: dark)').matches, modes = ['light', 'dark', 'system'], mode = modes.includes(m) ? m : t === 'neumorphism' ? 'light' : modes.includes(t) ? t : 'light', dark = mode === 'dark' || (mode === 'system' && sys); document.documentElement.dataset.theme = t === 'neumorphism' ? 'neumorphism' : dark ? 'dark' : 'light'; document.documentElement.dataset.mode = dark ? 'dark' : 'light'; } catch {}</script>
   <link rel="stylesheet" href="./vendor/katex/katex.min.css">
   <link rel="stylesheet" href="./styles/math.css">
 </head>
@@ -48,14 +52,16 @@
     <div class="sidebar-resizer" role="separator" aria-orientation="vertical" aria-label="调整侧栏宽度" title="拖拽调整侧栏宽度（← → 微调）" tabindex="0"></div>
     <div class="app-content">
       <header class="topbar">
-        <div class="workspace-identity"><span class="workspace-icon" aria-hidden="true"><svg class="ui-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="/assets/icons.svg#folder"></use></svg></span><div><strong id="workspace-title">ABD-FOC</strong><span id="save-status" role="status">本地设计工作区</span></div></div>
-        <nav class="topbar-nav" aria-label="主导航"><a data-nav="architecture" href="#/architecture">主页</a><a data-nav="project" href="#/project/actuator">工程</a><a data-nav="equipment" href="#/equipment">货架</a><a data-nav="debug" href="#/debug">调试</a><a data-nav="operation" href="#/operation">运行</a><a data-nav="performance" href="#/performance">测试</a></nav>
+        <a class="workspace-identity" href="#/architecture" aria-label="返回主页"><span class="workspace-icon" data-home="true" aria-hidden="true"><img class="brand-motor workspace-motor" src="/assets/motor.svg" alt=""><svg class="ui-icon workspace-page-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="/assets/icons.svg#folder"></use></svg></span><div><strong id="workspace-title">ABD-FOC</strong><span id="save-status" role="status"></span></div></a>
+        <div id="home-project-name" class="topbar-project" hidden></div>
         <div class="workspace-actions">
+          <div class="topbar-project-actions" aria-label="工程操作"><button id="home-new-project" class="button canvas-new-project" type="button" data-action="new-project" aria-label="新建工程" title="新建工程"><svg class="ui-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="/assets/icons.svg#plus"></use></svg></button><button id="home-import-project" class="button canvas-new-project" type="button" data-action="import" aria-label="导入工程" title="导入工程"><svg class="ui-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="/assets/icons.svg#import"></use></svg></button></div>
+          <div id="project-file-actions" class="configuration-file-actions" aria-label="工程文件" hidden></div>
           <button id="notification-history-toggle" class="button notification-history-toggle" type="button" data-action="toggle-notification-history" aria-label="通知" aria-expanded="false" aria-controls="notification-history"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span id="notification-unread-count" class="notification-unread-count" hidden></span></button>
           <div id="appearance-settings"></div>
         </div>
       </header>
-      <main id="workspace" tabindex="-1"><div class="loading-state"><h1>正在载入工作台</h1><p>需要启用浏览器 JavaScript，并通过本地服务打开。</p></div></main>
+      <main id="workspace" tabindex="-1"></main>
     </div>
   </div>
   <input id="import-file" type="file" accept=".json,application/json" hidden>
@@ -66,6 +72,10 @@
     <div id="notification-history-list" class="notification-history-list"></div>
     <div class="notification-history-footer"><button id="notification-mark-read" class="button small" type="button" data-action="read-notifications">全部已读</button><button id="notification-clear" class="button small quiet" type="button" data-action="clear-notifications">清空记录</button></div>
   </aside>
+  <dialog id="home-inspector" class="notification-dialog home-inspector" aria-labelledby="home-inspector-title">
+    <div class="dialog-header"><h2 id="home-inspector-title" tabindex="-1"></h2><button class="dialog-close" type="button" data-action="close-home-inspector" aria-label="关闭详情">×</button></div>
+    <div id="home-inspector-body" class="notification-body home-link-details"></div>
+  </dialog>
   <dialog id="notification-dialog" class="notification-dialog" aria-labelledby="notification-title">
     <div class="dialog-header"><div><span id="notification-kind" class="eyebrow">信息</span><h2 id="notification-title" tabindex="-1">提示</h2></div><button class="dialog-close" type="button" data-action="close-notification" aria-label="关闭消息">×</button></div>
     <div id="notification-body" class="notification-body"></div>

@@ -90,10 +90,10 @@ test('任务顺序、预算、优先级、重复调用与内核冲突阻止构�
 
 test('应用周期校验微秒精度；生成器按本核优先级输出多个周期',()=>{
   const p=newModuleProject(),tasks=schedulerTasks(p);
-  assert.deepEqual(tasks.map(task=>task.id),['control','maintenance']);
+  assert.deepEqual(tasks.map(task=>task.id),['diagnostics','control','maintenance']);
   const config=moduleConfig(p,'app-runtime');
-  assert.match(config,/\.task_count=2u/);
-  assert.match(config,/\.period_us=\{200u,10000u\}/);
+  assert.match(config,/\.task_count=3u/);
+  assert.match(config,/\.period_us=\{200u,200u,10000u\}/);
   p.design.schedule.tasks.find(task=>task.id==='maintenance').frequencyHz=3000;
   assert(validateSchedule(p).some(issue=>issue.id==='schedule-period-maintenance'));
   assert.throws(()=>moduleConfig(p,'app-runtime'));
@@ -101,7 +101,7 @@ test('应用周期校验微秒精度；生成器按本核优先级输出多个�
 
 test('自定义任务可移动同核入口；非法任务表与事件入口被拒绝',()=>{
   const p=createNeo75hProject();
-  p.design.schedule.tasks.push({id:'extra',name:'诊断任务',trigger:'periodic',frequencyHz:1000,priority:5,budgetUs:10,entries:[]});
+  p.design.schedule.tasks.push({id:'extra',name:'诊断任务',trigger:'periodic',frequencyHz:1000,priority:6,budgetUs:10,entries:[]});
   moveScheduleEntry(p.design.schedule,'diagnostics.step','extra');
   assert.deepEqual(validateSchedule(p),[]);
   p.design.schedule.tasks.at(-1).entries.push('scheduler.step');

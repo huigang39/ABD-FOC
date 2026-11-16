@@ -2,6 +2,16 @@
 export const LINE_FIELD_GRID = 60;
 const GRID = LINE_FIELD_GRID, SEGMENTS = 30, COUNT = GRID * SEGMENTS;
 const WEIGHTS = [0.38, 1.12, 2.28, 3.80], ALPHAS = [0.15, 0.64, 0.93, 1];
+function statorPath(cx, cy, ringR, boreR, tipR, teeth, halfArc, rotorR, shaftR) {
+  const circle = r => `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${r * 2} 0a${r} ${r} 0 1 0 ${-r * 2} 0`;
+  const point = (r, angle) => `${(cx + r * Math.cos(angle)).toFixed(2)} ${(cy + r * Math.sin(angle)).toFixed(2)}`;
+  let d = `${circle(ringR)}${circle(boreR)}${circle(rotorR)}${circle(shaftR)}`;
+  for (let i = 0; i < teeth; i++) {
+    const angle = (i / teeth) * Math.PI * 2;
+    d += `M${point(boreR, angle - halfArc)}L${point(tipR, angle - halfArc)}L${point(tipR, angle + halfArc)}L${point(boreR, angle + halfArc)}`;
+  }
+  return d;
+}
 function gearPath(cx, cy, outer, inner, teeth, hole) {
   const steps = teeth * 4;
   let d = '';
@@ -13,12 +23,12 @@ function gearPath(cx, cy, outer, inner, teeth, hole) {
 }
 const MARKS = Object.freeze({
   // Three rounded 7 × 7 cells and a plus, matching assets/icons.svg#application.
-  application: { seed: 3, scale: 0.82, strokeWidth: 1.7, path: 'M4.5 3H8.5A1.5 1.5 0 0 1 10 4.5V8.5A1.5 1.5 0 0 1 8.5 10H4.5A1.5 1.5 0 0 1 3 8.5V4.5A1.5 1.5 0 0 1 4.5 3ZM15.5 3H19.5A1.5 1.5 0 0 1 21 4.5V8.5A1.5 1.5 0 0 1 19.5 10H15.5A1.5 1.5 0 0 1 14 8.5V4.5A1.5 1.5 0 0 1 15.5 3ZM4.5 14H8.5A1.5 1.5 0 0 1 10 15.5V19.5A1.5 1.5 0 0 1 8.5 21H4.5A1.5 1.5 0 0 1 3 19.5V15.5A1.5 1.5 0 0 1 4.5 14ZM14 17.5h7M17.5 14v7' },
+  application: { seed: 3, scale: 0.84, strokeWidth: 1.7, path: 'M4.5 3H8.5A1.5 1.5 0 0 1 10 4.5V8.5A1.5 1.5 0 0 1 8.5 10H4.5A1.5 1.5 0 0 1 3 8.5V4.5A1.5 1.5 0 0 1 4.5 3ZM15.5 3H19.5A1.5 1.5 0 0 1 21 4.5V8.5A1.5 1.5 0 0 1 19.5 10H15.5A1.5 1.5 0 0 1 14 8.5V4.5A1.5 1.5 0 0 1 15.5 3ZM4.5 14H8.5A1.5 1.5 0 0 1 10 15.5V19.5A1.5 1.5 0 0 1 8.5 21H4.5A1.5 1.5 0 0 1 3 19.5V15.5A1.5 1.5 0 0 1 4.5 14ZM14 17.5h7M17.5 14v7' },
   // Three 120°-shifted sine paths, matching the algorithm symbol in assets/icons.svg.
   algorithm: { seed: 29, scale: 0.84, strokeWidth: 1.8, path: 'M2 12C3.111 9.906 4.222 7.851 5.333 6.804C6.444 5.757 7.556 5.757 8.667 6.804C9.778 7.851 10.889 9.906 12 12C13.111 14.094 14.222 16.149 15.333 17.196C16.444 18.243 17.556 18.243 18.667 17.196C19.778 16.149 20.889 14.094 22 12 M2 6.804C3.111 7.851 4.222 9.906 5.333 12C6.444 14.094 7.556 16.149 8.667 17.196C9.778 18.243 10.889 18.243 12 17.196C13.111 16.149 14.222 14.094 15.333 12C16.444 9.906 17.556 7.851 18.667 6.804C19.778 5.757 20.889 5.757 22 6.804 M2 17.196C3.111 18.243 4.222 18.243 5.333 17.196C6.444 16.149 7.556 14.094 8.667 12C9.778 9.906 10.889 7.851 12 6.804C13.111 5.757 14.222 5.757 15.333 6.804C16.444 7.851 17.556 9.906 18.667 12C19.778 14.094 20.889 16.149 22 17.196' },
-  hardware: { seed: 51, scale: 0.80, path: 'M5 5H19V19H5ZM8 8V16H16V8ZM7 1H9V5H7ZM11 1H13V5H11ZM15 1H17V5H15ZM7 19H9V23H7ZM11 19H13V23H11ZM15 19H17V23H15ZM1 7H5V9H1ZM1 11H5V13H1ZM1 15H5V17H1ZM19 7H23V9H19ZM19 11H23V13H19ZM19 15H23V17H19Z' },
+  hardware: { seed: 51, scale: 0.84, path: 'M5 5H19V19H5ZM8 8V16H16V8ZM7 1H9V5H7ZM11 1H13V5H11ZM15 1H17V5H15ZM7 19H9V23H7ZM11 19H13V23H11ZM15 19H17V23H15ZM1 7H5V9H1ZM1 11H5V13H1ZM1 15H5V17H1ZM19 7H23V9H19ZM19 11H23V13H19ZM19 15H23V17H19Z' },
   // Stator, rotor and shaft of a frameless motor, drawn as concentric rings.
-  motor: { seed: 61, scale: 0.84, strokeWidth: 1.2, path: 'M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0M7 12a5 5 0 1 0 10 0a5 5 0 1 0-10 0M10.8 12a1.2 1.2 0 1 0 2.4 0a1.2 1.2 0 1 0-2.4 0' },
+  motor: { seed: 61, scale: 0.84, strokeWidth: 1.1, path: statorPath(12, 12, 9.4, 7.4, 5.9, 12, 0.07, 5.2, 1.2) },
   // Two meshing gears: the reduction stage of a harmonic or planetary gearbox.
   reducer: { seed: 73, scale: 0.84, strokeWidth: 1.3, path: `${gearPath(8.5, 8.5, 6, 4.6, 8, 1.6)}${gearPath(16.5, 16.5, 4.6, 3.2, 6, 1.1)}` },
 });

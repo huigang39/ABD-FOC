@@ -7,6 +7,7 @@ import { createProject, parseProject, serializeProject } from '../web/src/core/m
 import { configurationFingerprint } from '../web/src/core/contracts.mjs';
 import { createNeo75hProject } from '../web/src/profiles/neo75h.mjs';
 import { renderBuild } from '../web/src/features/build/view.mjs';
+import { createNativeClient } from '../web/src/features/device/client.mjs';
 import { inspectFirmwareSupport, generateFirmware, buildFirmware } from '../native/firmware.mjs';
 
 test('固件加密默认关闭，缺省字段经项目规范化后为 false', () => {
@@ -38,13 +39,25 @@ test('固件加密可保存加载并影响配置指纹，不改变编译器或�
   }
 });
 
-test('构建页将固件交付与优化配置分开，开关使用现有布尔编辑器', () => {
+test('构建设置可展开，加密与 LTO 保留布尔编辑，生成与烧录位于同页', () => {
   const project = createProject();
-  const html = renderBuild(project);
-  assert.match(html, /<h2>固件交付<\/h2>/);
-  assert.match(html, /type="checkbox"[^>]*data-edit="build"[^>]*data-key="encryptFirmware"[^>]*data-value-type="boolean"/);
-  assert.match(html, /服务器签名加密服务与设备 Bootloader/);
-  assert.match(html, /当前尚未接入，生成和编译会被阻止/);
+  const { state } = createNativeClient({ getProject: () => project, onUpdate() {}, onError() {} });
+  for (const enabled of [false, true]) {
+    project.build.encryptFirmware = enabled;
+    project.build.lto = enabled;
+    const html = renderBuild(project, state);
+    assert.match(html, /<details[^>]*data-state-key="build-options"[^>]*><summary>构建设置<\/summary>/);
+    for (const key of ['encryptFirmware', 'lto']) {
+      const input = html.match(new RegExp(`<input\\b[^>]*data-edit="build"[^>]*data-key="${key}"[^>]*>`))?.[0];
+      assert.ok(input, `${key} 编辑器应保留`);
+      assert.match(input, /type="checkbox"/);
+      assert.match(input, /data-value-type="boolean"/);
+      assert.equal(/\schecked(?:\s|>)/.test(input), enabled);
+    }
+    assert.equal((html.match(/data-native-action="build"/g) || []).length, 1);
+    assert.equal((html.match(/data-native-action="flash"/g) || []).length, 1);
+    assert.doesNotMatch(html, /data-edit="module-optimization"|运行时配置/);
+  }
 });
 
 test('加密配置在所有型号上明确为不支持，关闭后不影响原支持判断', () => {

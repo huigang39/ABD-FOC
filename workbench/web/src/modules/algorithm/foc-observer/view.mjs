@@ -1,9 +1,18 @@
-import { encoderTrackingDomain } from '../signals.mjs';
+import { encoderTrackingDomain, resolveAlgorithmSignal } from '../signals.mjs';
 import { esc } from '../../../shared/esc.mjs';
 import { fieldHelp } from '../../../shared/ui/field-help.mjs';
 import { OBSERVER_CHILDREN } from './chains.mjs';
 
-export function observerStages(type,method='pll',child) {
+function pllDomain(child,project) {
+ const source=child?.routing?.source?resolveAlgorithmSignal(project,child.routing.source):null;
+ return {
+  'motor-angle':{label:'电机侧机械角度',angleField:'motor_angle',speedField:'motor_velocity',speedLabel:'电机侧机械角速度'},
+  'output-angle':{label:'出轴侧机械角度',angleField:'output_angle',speedField:'output_velocity',speedLabel:'出轴侧机械角速度'},
+  'electrical-angle':{label:'电角度',angleField:'electrical_angle',speedField:'electrical_velocity',speedLabel:'电角速度'},
+ }[source?.quantity]||{label:'输入角度',angleField:'angle',speedField:'angular_velocity',speedLabel:'与输入同域的角速度'};
+}
+export function observerStages(type,method='pll',child,project) {
+ if(type==='pll')return [pllDomain(child,project).label,'PLL 跟踪','同域角度与角速度'];
  const tracking=type?.startsWith('encoder_tracking');
  const extract=method==='pll'?'PLL 跟踪':tracking?'差分与滤波':'反正切与滤波';
  return tracking?[child?encoderTrackingDomain(child)?.label||'编码器机械角度':type==='encoder_tracking_output'?'出轴侧机械角度':'电机侧机械角度',extract,'同域角度与速度']
@@ -22,13 +31,18 @@ export function renderObserverArchitecture() {
  return `${renderObserverGuide()}<div class="observer-architecture-list">${OBSERVER_CHILDREN.map(type=>`<article><strong>${esc(type.title)}</strong>${renderObserverStages(observerStages(type.id))}</article>`).join('')}</div>`;
 }
 const f=(name,unit,meaning,type='f32',count=1)=>({name,unit,meaning,type,count});
-export function observerChainContracts(child) {
+export function observerChainContracts(child,project) {
  const timing=[f('sample_time_us','μs','测量时间戳','u32'),f('valid','','输入有效标志','bool')];
  const outputTiming=[f('sample_time_us','μs','结果对应的测量时间戳','u32'),f('valid','','本周期结果可用；关闭、失锁或过期时为 false','bool')];
  const positionOutput=[f('electrical_angle','rad','转子电角度'),f('electrical_velocity','rad/s','带方向的电角速度'),f('motor_velocity','rad/s','按转子极对数换算的机械速度'),...outputTiming];
  let input,output,state;
  const tracking=child.type.startsWith('encoder_tracking');
- if(tracking||['smo','flux'].includes(child.type)){
+ if(child.type==='pll'){
+  const domain=pllDomain(child,project);
+  input=[f(domain.angleField,'rad',domain.label+'；保持来源坐标与轴侧'),f('dt','s','相邻样本的时间间隔'),...timing];
+  output=[f(domain.angleField,'rad','跟踪后的'+domain.label),f(domain.speedField,'rad/s',domain.speedLabel),...outputTiming];
+  state=[f('tracked_angle','rad','输入角度域内的 PLL 状态'),f('integral_velocity','rad/s','与输入同域的 PLL 积分状态')];
+ }else if(tracking||['smo','flux'].includes(child.type)){
   const domain=encoderTrackingDomain(child);
   input=tracking?[f(domain?.angleField||'angle','rad',(domain?.label||'输入角度')+'；单圈输入，按 2π 处理回绕')]:[f('current_alpha_beta','A','本周期静止坐标电流','f32',2),f('applied_voltage_alpha_beta','V','对应采样区间的已生效电压，非本周期刚算出的指令','f32',2),f('voltage_time_us','μs','已生效电压时间戳','u32')];
   input.push(f('dt','s','派生自电流环控制周期'),...timing);
@@ -49,6 +63,6 @@ export function observerChainContracts(child) {
  state.push(f('initialized','','内部状态已初始化','bool'));
  return {input,output,state};
 }
-export function renderObserverData(children) {
- return `<section class="observer-chain-data"><h3>链路数据约定</h3>${children.map(child=>`<details class="resource-disclosure hardware-resource" data-state-key="observer-data-${esc(child.type)}"><summary><strong>${esc(child.name)}</strong></summary><div class="hardware-resource-body"><div class="observer-data-grid">${Object.entries(observerChainContracts(child)).map(([role,fields])=>`<section><h4>${{input:'输入',output:'输出',state:'状态'}[role]}</h4><ul class="contract-field-preview">${fields.map(field=>`<li><code>${esc(field.name)}</code>${fieldHelp(field.meaning,field.name)}<span class="contract-field-meta">${field.unit?`<span class="contract-data-unit">${esc(field.unit)}</span>`:'<span class="contract-unit-empty"></span>'}<span class="contract-data-type">${field.type}${field.count>1?`[${field.count}]`:''}</span></span></li>`).join('')}</ul></section>`).join('')}</div></div></details>`).join('')}</section>`;
+export function renderObserverData(children,project) {
+ return `<section class="observer-chain-data"><h3>链路数据约定</h3>${children.map(child=>`<section class="hardware-resource algorithm-child-card"><header class="hardware-resource-heading"><strong>${esc(child.name)}</strong></header><div class="hardware-resource-body"><div class="observer-data-grid">${Object.entries(observerChainContracts(child,project)).map(([role,fields])=>`<section><h4>${{input:'输入',output:'输出',state:'状态'}[role]}</h4><ul class="contract-field-preview">${fields.map(field=>`<li><code>${esc(field.name)}</code>${fieldHelp(field.meaning,field.name)}<span class="contract-field-meta">${field.unit?`<span class="contract-data-unit">${esc(field.unit)}</span>`:'<span class="contract-unit-empty"></span>'}<span class="contract-data-type">${field.type}${field.count>1?`[${field.count}]`:''}</span></span></li>`).join('')}</ul></section>`).join('')}</div></div></section>`).join('')}</section>`;
 }

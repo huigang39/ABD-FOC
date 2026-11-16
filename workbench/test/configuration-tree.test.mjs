@@ -71,25 +71,26 @@ test('board measurements do not masquerade as configuration work or completion',
 test('tree links every module and keeps only the selected module in the editor', () => {
   const p=createNeo75hProject();
   const html=renderGuide(p,validateProject(p),'hardware',{selectedModuleId:'hw-board',parameters:module=>`<div data-parameters="${module.id}"></div>`});
-  assert.equal([...html.matchAll(/data-tree-module=/g)].length,16);
+  assert.equal([...html.matchAll(/data-tree-module=/g)].length,15);
   assert.deepEqual([...html.matchAll(/data-guide-module="([^"]+)"/g)].map(match=>match[1]),['hw-board']);
   assert.match(html,/data-state-key="tree-hardware" open/);
   assert.match(html,/下一个模块/);
   assert.match(html,/title="待配置"/);
   assert.ok(html.indexOf('data-tree-module="foc-observer"') < html.indexOf('data-tree-module="foc-compensation"'));
+  assert.match(html,/data-tree-module="foc-filter"/);
 });
 
-test('modules have stable sequence numbers and independently collapsible configuration/data branches', () => {
+test('modules have stable sequence numbers and direct configuration links without data/interface branches', () => {
   const p=createNeo75hProject();
   const html=renderGuide(p,[],'hardware',{selectedModuleId:'hw-board',tab:'data'});
-  assert.equal([...html.matchAll(/class="configuration-module-branch"/g)].length,16);
-  assert.match(html,/data-state-key="tree-module-hw-board" open/);
-  assert.match(html,/data-state-key="tree-module-hw-platform" >/);
+  assert.equal([...html.matchAll(/class="configuration-tree-item configuration-module-leaf"/g)].length,15);
+  assert.doesNotMatch(html,/configuration-module-branch|configuration-module-pages|data-tree-tab|tree-module-hw-board|tab=data|tab=interfaces/);
   assert.match(html,/<span class="tree-module-number">02<\/span><span class="tree-module-title">外设/);
-  assert.match(html,/<span class="module-sequence">02<\/span>/);
-  assert.match(html,/href="#\/project\/hardware\?module=hw-board&tab=data" data-tree-tab="data" aria-current="page"/);
+  assert.match(html,/<div class="guide-summary-copy"><h2>外设<\/h2>/);
+  assert.match(html,/href="#\/project\/hardware\?module=hw-board&tab=config" data-tree-module="hw-board"[^>]*aria-current="page"/);
   assert.doesNotMatch(html,/tree-group-|class="tree-module-number">\d+\.\d+/);
-  assert.deepEqual([...html.matchAll(/data-tree-module="(hw-[^"]+)"/g)].map(match=>match[1]),['hw-platform','hw-board','hw-drivers','hw-safety']);
+  assert.deepEqual([...html.matchAll(/data-tree-module="(hw-[^"]+)"/g)].map(match=>match[1]),['hw-platform','hw-board','hw-drivers']);
   const algorithm=renderGuide(p,[],'algorithm',{selectedModuleId:'foc-observer'});
   assert.match(algorithm,/<span class="tree-module-number">03<\/span><span class="tree-module-title">观测器/);
+  assert.doesNotMatch(algorithm,/data-tree-module="foc-lifecycle"|data-guide-module="foc-lifecycle"/);
 });

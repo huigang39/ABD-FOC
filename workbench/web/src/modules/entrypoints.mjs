@@ -1,5 +1,6 @@
 /** Public C entry points. The editor and generator share these names. */
 const ENTRY_COMMENTS = {
+  "filter.step": "按实例的数据依赖执行低通或陷波，保留输入的物理量、时间戳和有效性。独立实例执行连接尚待固件适配。",
   "state_machine.step": "异常检查完成后、控制环前调用，更新驱动状态与运行许可；故障复位不自动使能。",
   "core.step": "平台启动完成后或时基事件到达时调用，读取启动、复位和时钟状态，更新平台就绪结果。",
   "peripherals.sample": "ADC 采样完成后调用，接收已换算的相电流、母线电压与采样时间，输出本周期采样快照；此入口不直接启动 ADC。",
@@ -29,6 +30,7 @@ export const ENTRYPOINTS = Object.freeze([
   entry('protection.step', 'hw-safety', 'protection_step', '保护锁存', '硬件故障与复位请求'),
   entry('feedback.step', 'foc-feedback', 'feedback_step', '反馈解算'),
   entry('modulation.transform', 'foc-modulation', 'modulation_transform', '电流坐标变换'),
+  entry('filter.step', 'foc-filter', 'filter_step', '数据滤波'),
   entry('observer.step', 'foc-observer', 'observer_step', '状态观测'),
   entry('friction.step', 'foc-compensation', 'friction_step', '摩擦补偿'),
   entry('control.step', 'foc-lifecycle', 'control_step', '输出许可'),
@@ -54,14 +56,15 @@ export const EXTERNAL_INPUTS = {
   'foc-feedback': { electrical_offset:'编码器校准记录' },
   'foc-lifecycle': { reset_request:'应用复位命令', hardware_ready:'内核与外设就绪聚合', calibration_valid:'必要校准记录校验', fault_flags:'硬件与电流环故障按位聚合' },
   'foc-current': { voltage_limit:'母线电压与调制余量计算', dt:'电流环实际控制间隔', now_us:'平台单调时钟', reference_time_us:'给定快照的生成时间' },
+  'foc-filter': { dt:'电流环实际控制间隔', enable:'模块运行开关', sample_time_us:'所选输入数据时间戳', valid:'所选输入数据有效性' },
   'foc-observer': { dt:'电流环实际控制间隔', enable:'模块运行开关' },
   'foc-compensation': { joint_velocity:'电机速度 / 减速比，或出轴速度', valid:'所选速度来源有效性', enable:'模块运行开关' },
   'app-runtime': { now_us:'平台单调时钟' },
   'app-state': { enable_request:'应用使能命令', ready:'配置、平台和校准就绪聚合', reset_request:'应用复位命令' },
-  'app-motion': { dynamic_limit:'配置限值与降额结果', enabled:'应用许可与算法许可取交集' },
+  'app-motion': { dynamic_limit:'配置限值与降额结果', enabled:'应用许可与算法许可取交集', requested_velocity:'本地或通信输出轴转速给定', motor_velocity:'方向修正后的电机编码器速度',dt:'应用控制周期',speed_mode:'运行模式仲裁',feedback_valid:'编码器速度有效性' },
   'app-comms': { sequence:'通信解析结果', receive_time_us:'通信接收时间戳', now_us:'平台单调时钟', iq:'通信解析结果', received:'新命令事件', frame_valid:'长度与完整性校验' },
   'app-params': { sequence:'参数事务序号', payload:'参数序列化结果，包含标零值', length:'序列化长度', commit:'参数提交事件', storage_done:'Flash 事务回执', storage_ok:'Flash 写后校验' },
-  'app-calibration': { sample:'所选标零通道的测量值', sample_valid:'所选通道的有效性', start:'校准启动命令', cancel:'校准取消命令', stationary:'静止条件确认' },
+  'app-calibration': { motor_angle:'原始电机编码器机械角度',dt:'校准周期',sample_valid:'编码器反馈有效性',start:'停机时校准启动边沿',cancel:'取消校准命令',permitted:'采样和保护许可' },
   'app-safety': { output_disabled:'实际 PWM 关断确认', reset_request:'应用复位命令' },
 };
 

@@ -167,7 +167,17 @@ body.sidebar-resizing .sidebar-resizer::after { background: var(--primary); }
 .topbar { min-height: 72px; position: sticky; top: 0; z-index: 20; background: var(--page); border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 13px 30px; }
 .workspace-identity { min-width: 0; display: flex; align-items: center; gap: 11px; }
 .workspace-icon { width: 29px; height: 31px; color: var(--muted); background: var(--soft); border-radius: 9px; display: grid; place-items: center; font-size: 19px; flex-shrink: 0; }
+.workspace-icon .workspace-motor { display: none; width: 100%; height: 100%; }
+.workspace-icon[data-home="true"] { width: clamp(36px, 3vw, 48px); height: clamp(36px, 3vw, 48px); background: transparent; border-radius: 0; }
+.workspace-icon[data-home="true"] .workspace-motor { display: block; }
+.workspace-icon[data-home="true"] .workspace-page-icon { display: none; }
+:root[data-icon-motion="off"] .brand-motor { animation-play-state: paused; }
 .workspace-identity > div { min-width: 0; }
+#workspace-title { display: block; font-size: clamp(18px, 1.1vw, 24px); font-weight: 700; white-space: nowrap; }
+.topbar .topbar-project { overflow: visible; }
+.topbar-project > .select-menu { width: min(100%, 460px); min-width: 160px; }
+.topbar-project .select-menu-trigger { justify-content: center; border: 0; background: transparent; box-shadow: none; }
+.topbar-project .select-menu-value { text-align: center; font-weight: 500; }
 #project-name { display: block; font-size: 13px; max-width: 330px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 #save-status { display: block; color: var(--muted); font-size: 11px; margin-top: 2px; }
 .workspace-actions { display: flex; flex-wrap: wrap; justify-content: end; align-items: center; gap: 10px; min-width: 0; }
@@ -192,6 +202,7 @@ body.sidebar-resizing .sidebar-resizer::after { background: var(--primary); }
 .breadcrumbs { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; font-size: 12px; color: var(--muted); margin-bottom: 17px; }
 .breadcrumbs a { text-decoration: none; }
 .breadcrumbs span { color: var(--muted); }
+.page-back-actions { display: flex; align-items: center; justify-content: flex-start; gap: 12px; margin-top: 24px; }
 .page-heading { display: flex; align-items: start; justify-content: space-between; flex-wrap: wrap; gap: 15px 24px; margin-bottom: 28px; }
 .page-heading > div { min-width: 0; }
 .eyebrow { color: var(--muted); font-size: 11px; letter-spacing: .07em; margin-bottom: 7px; }

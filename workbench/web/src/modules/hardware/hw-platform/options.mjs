@@ -1,4 +1,5 @@
 import { INTERRUPT_LEVELS } from './priorities.mjs';
+import { bindOscillatorField } from './clocks.mjs';
 /** STM32H745 limits from ST's stm32h745xx.h, stm32h7xx_hal_adc.h and
  * stm32h7xx_hal_spi.c. Other MCU families need their own verified capability table.
  * Numeric choices retain their numeric JSON/storage type.
@@ -16,7 +17,8 @@ export function hardwareFieldOptions(mcu, moduleId, key) {
   }
   return undefined;
 }
-export function bindHardwareField(field, mcu, moduleId) {
+export function bindHardwareField(field, mcu, moduleId, platform = {}) {
+  if(moduleId==='hw-platform')field=bindOscillatorField(field,mcu,platform);
   const choices = hardwareFieldOptions(mcu, moduleId, field.key);
   return choices ? { ...field, options: choices } : field;
 }

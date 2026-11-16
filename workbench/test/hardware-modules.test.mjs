@@ -15,8 +15,8 @@ test('four hardware modules own their complete parameter sets and their own thre
   assert.equal(p.instances['hw-platform'].parameters.flashKiB,2048);
   assert.equal(p.instances['hw-board'].parameters.pwmHz,20000);
   assert.equal(p.instances['hw-board'].parameters.currentTopology,'three_shunt');
-  assert.equal(p.instances['hw-board'].parameters.resources.length,7);
-  assert.equal(getGuide(p).steps.find(s=>s.id==='hardware').children.length,4);
+  assert.equal(p.instances['hw-board'].parameters.resources.length,12);
+  assert.equal(getGuide(p).steps.find(s=>s.id==='hardware').children.length,3);
 });
 test('a detailed Flash plan does not bypass shared clock validation or core configuration progress',()=>{
   const p=createNeo75hProject();p.instances['hw-platform'].parameters.oscillatorHz=null;

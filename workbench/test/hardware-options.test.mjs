@@ -36,14 +36,14 @@ test('numeric choices stay numeric through save and import and capability valida
   q.instances['hw-board'].parameters.adcBits=13;
   assert(validateProject(q).some(issue=>issue.id==='hardware-adcBits-choice'&&issue.level==='error'));
 });
-test('both board editors and shelf use constrained selects; continuous values remain numeric',()=>{
+test('peripheral controls use constrained choices without removed trigger or shelf ADC settings',()=>{
   const p=createNeo75hProject(), resources=p.instances['hw-board'].parameters.resources;
   const html=renderResourceEditor(mcu,resources);
   assert.match(html,/<select[^>]+data-key="sampleCycles"[^>]+data-value-type="number"/);
-  assert.match(html,/<select[^>]+data-key="trigger"/);
-  assert.match(html,/<input[^>]+data-key="bitrate"[^>]+type="number"/);
+  assert.doesNotMatch(html,/<select[^>]+data-key="trigger"/);
+  assert.match(html,/<input[^>]+data-key="bitrate"[^>]+data-number-input="true"/);
   assert.match(renderTripEditor([createTripPath('fault')],resources,{mcu}),/<select[^>]+data-key="priority"[^>]+data-value-type="select"/);
-  assert.match(renderEquipment(p,[],'drivers'),/<select[^>]+data-key="adcBits"[^>]+data-value-type="integer"/);
+  assert.doesNotMatch(renderEquipment(p,[],'drivers'),/data-key="adcBits"/);
 });
 test('help metadata escapes HTML and does not become an action or form submission',()=>{
   const html=fieldHelp('A < B "quote" <img src=x>','ADC');

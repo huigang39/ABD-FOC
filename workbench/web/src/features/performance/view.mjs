@@ -31,19 +31,23 @@ const xLabel = entry => entry.kind === 'tn_curve' ? (entry.measurementSide === '
 const xUnit = entry => entry.kind === 'tn_curve' ? 'rpm' : 'A';
 
 function field(label, key, value, { type = 'text', choices, description, step = 'any', min, area = false } = {}) {
+  const suffix=type==='number'?/ · ([^·]+)$/.exec(label):null;
+  if(suffix)label=label.slice(0,suffix.index);
   const attrs = `data-performance-field="${key}" aria-label="${esc(label)}"`;
   const control = choices ? `<select class="field-select" ${attrs}>${selectOptions(choices, value)}</select>`
     : area ? `<textarea class="field-input" rows="3" ${attrs}>${esc(value || '')}</textarea>`
       : `<input class="field-input" ${type==='number'?numericInputAttributes(value):`type="${type}" value="${esc(value ?? '')}"`} ${attrs} ${type === 'number' ? `step="${step}" ${min === undefined ? '' : `min="${min}"`}` : type === 'text' ? 'maxlength="160"' : ''}>`;
-  return `<label class="form-field"><span class="field-label">${esc(label)}</span>${control}${description ? `<span class="field-description">${esc(description)}</span>` : ''}</label>`;
+  return `<label class="form-field"><span class="field-label">${esc(label)}</span>${suffix?`<div class="field-input-wrap">${control}<span class="field-unit">${esc(suffix[1])}</span></div>`:control}${description ? `<span class="field-description">${esc(description)}</span>` : ''}</label>`;
 }
 
 function sampleTable(entry, editable) {
   const samples = entry.samples || [], key = entry.kind === 'tn_curve' ? 'speedRpm' : 'currentA';
-  const cell = (sample, index, property, label, numeric = true) => editable
-    ? `<input class="field-input performance-cell" ${numeric?numericInputAttributes(sample[property]):`type="text" value="${esc(sample[property] ?? '')}"`} ${numeric ? `step="any"${property === 'currentA' && entry.currentBasis === 'phase_rms' ? ' min="0"' : ''}` : 'maxlength="80"'} data-performance-row="${index}" data-performance-key="${property}" aria-label="第 ${index + 1} 点 · ${esc(label)}">`
-    : esc(numeric ? fmt(sample[property]) : sample[property] || '默认');
-  return `<div class="contract-table-wrap performance-sample-wrap"><table class="contract-table performance-samples"><thead><tr><th scope="col">点</th><th scope="col">${esc(xLabel(entry))} · ${xUnit(entry)}</th><th scope="col">${torqueLabel(entry)} · N·m</th><th scope="col">分组</th>${editable ? '<th scope="col"><span class="visually-hidden">操作</span></th>' : ''}</tr></thead><tbody>${samples.length ? samples.map((sample, index) => `<tr><th scope="row">${index + 1}</th><td>${cell(sample, index, key, xLabel(entry))}</td><td>${cell(sample, index, 'torqueNm', torqueLabel(entry))}</td><td>${cell(sample, index, 'series', '分组', false)}</td>${editable ? `<td>${button('移除', 'remove-row', `data-index="${index}" aria-label="移除第 ${index + 1} 个测量点"`)}</td>` : ''}</tr>`).join('') : `<tr><td colspan="${editable ? 5 : 4}" class="performance-empty-row">${editable ? '添加测量点，或从下方导入数据。' : '没有测量点。'}</td></tr>`}</tbody></table></div>`;
+  const cell = (sample, index, property, label, numeric = true) => {
+    if(!editable)return esc(numeric ? fmt(sample[property]) : sample[property] || '默认');
+    const input=`<input class="field-input performance-cell" ${numeric?numericInputAttributes(sample[property]):`type="text" value="${esc(sample[property] ?? '')}"`} ${numeric ? `step="any"${property === 'currentA' && entry.currentBasis === 'phase_rms' ? ' min="0"' : ''}` : 'maxlength="80"'} data-performance-row="${index}" data-performance-key="${property}" aria-label="第 ${index + 1} 点 · ${esc(label)}">`;
+    return numeric?`<div class="field-input-wrap">${input}<span class="field-unit">${property==='torqueNm'?'N·m':xUnit(entry)}</span></div>`:input;
+  };
+  return `<div class="contract-table-wrap performance-sample-wrap"><table class="contract-table performance-samples"><thead><tr><th scope="col">点</th><th scope="col">${esc(xLabel(entry))}${editable?'':` · ${xUnit(entry)}`}</th><th scope="col">${torqueLabel(entry)}${editable?'':' · N·m'}</th><th scope="col">分组</th>${editable ? '<th scope="col"><span class="visually-hidden">操作</span></th>' : ''}</tr></thead><tbody>${samples.length ? samples.map((sample, index) => `<tr><th scope="row">${index + 1}</th><td>${cell(sample, index, key, xLabel(entry))}</td><td>${cell(sample, index, 'torqueNm', torqueLabel(entry))}</td><td>${cell(sample, index, 'series', '分组', false)}</td>${editable ? `<td>${button('移除', 'remove-row', `data-index="${index}" aria-label="移除第 ${index + 1} 个测量点"`)}</td>` : ''}</tr>`).join('') : `<tr><td colspan="${editable ? 5 : 4}" class="performance-empty-row">${editable ? '添加测量点，或从下方导入数据。' : '没有测量点。'}</td></tr>`}</tbody></table></div>`;
 }
 
 /** Plot only measured points, joining each named series in its original row order. */

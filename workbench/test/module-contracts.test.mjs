@@ -17,10 +17,10 @@ function fixture() {
   return { project, source, target, item };
 }
 
-test('十七模块分别拥有输入输出状态，51个新结构名有效唯一并保留旧7模板', () => {
+test('每个注册模块拥有独立输入输出状态，结构名有效唯一并保留旧7模板', () => {
   const design = createDesign();
   assert.deepEqual(CONTRACT_ROLES, ['input', 'output', 'state']);
-  assert.equal(design.structures.length, 58);
+  assert.equal(design.structures.length, 7 + MODULES.length * CONTRACT_ROLES.length);
   assert.equal(checkModuleContractsShape(design), true);
   assert.doesNotThrow(() => checkDesignShape(design));
   const refs = [];
@@ -29,14 +29,15 @@ test('十七模块分别拥有输入输出状态，51个新结构名有效唯一
     assert.ok(structure);
     assert.equal(structure.owner, module.id);
     assert.deepEqual(structure.fields, module.contracts[role].fields);
-    assert.ok(structure.fields.length);
+    if (module.id === 'foc-filter' && role === 'state') assert.deepEqual(structure.fields, [], '滤波器私有状态尚无固件 ABI，不能伪造默认字段');
+    else assert.ok(structure.fields.length);
     assert.deepEqual(structure.consumers, []);
     assert.match(structure.name, /^[A-Za-z_]\w*$/);
     assert.deepEqual(getModuleContractRole(design, structure.id), { moduleId: module.id, role });
     refs.push(structure.id);
   }
-  assert.equal(new Set(refs).size, 51);
-  assert.equal(new Set(design.structures.map(structure => structure.name)).size, 58);
+  assert.equal(new Set(refs).size, MODULES.length * CONTRACT_ROLES.length);
+  assert.equal(new Set(design.structures.map(structure => structure.name)).size, design.structures.length);
   assert.equal(getModuleContract(design, 'hw-drivers', 'state').name, 'DriversState');
   assert.equal(getModuleContractRole(design, 'sample-frame'), null);
 });

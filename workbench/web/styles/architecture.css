@@ -41,126 +41,218 @@
   .architecture-role-strip > div { display: grid; grid-template-columns: 36px minmax(0,1fr); gap: 10px; align-items: baseline; }
   .architecture-role-strip span { margin-top: 0; }
 }
-/* 主页全景画布：信号与功率链。卡片自然高度，分组内垂直居中，避免挤压叠字。 */
-.architecture-overview { display: flex; flex-direction: column; justify-content: center; gap: 12px; min-height: calc(100dvh - 132px); }
-.lifecycle-canvas { overflow-x: auto; }
-.canvas-flow {
-  display: grid; flex: none; width: 100%; min-width: 960px;
-  grid-template-columns: 148px minmax(106px, 164px) minmax(420px, 1.6fr) 54px minmax(192px, 0.9fr);
-  grid-template-rows: auto auto auto auto;
-  grid-template-areas:
-    ".    sims   sims   .    ."
-    "host host   driver gapD actuator"
-    "dbg  dbg    driver gapD actuator"
-    "dyn  dyn    dyn    dyn  dyn";
-  align-items: stretch; column-gap: 6px; row-gap: 10px;
-}
-/* 分组容器：虚线大块 + 顶部名称与快速选择；内部为链网格，节点自然高度居中。 */
-.canvas-group { position: relative; display: flex; flex-direction: column; justify-content: center; border: 1.5px dashed var(--line-strong); border-radius: 20px; padding: 22px 12px 12px; min-width: 0; }
-.canvas-group-label { position: absolute; top: -10px; left: 16px; display: flex; align-items: center; gap: 10px; background: var(--page); padding: 0 8px; white-space: nowrap; }
-.canvas-group-label b { font-size: 13px; color: var(--ink); }
-.canvas-group-label a { font-size: 10.5px; color: var(--primary); text-decoration: none; }
-.canvas-group-label a:hover { text-decoration: underline; }
-.canvas-quick-select { max-width: 148px; min-height: 26px; padding: 2px 8px; font-size: 10.5px; border-radius: 999px; }
-.canvas-group-chain { flex: 1; }
-.canvas-group-chain-layers { display: grid; grid-template-columns: minmax(184px, 1fr) 78px minmax(184px, 1fr) 78px minmax(196px, 1.15fr); column-gap: 5px; align-items: stretch; }
-.canvas-group-chain-layers .chain-node { height: 100%; box-sizing: border-box; }
-.canvas-group-chain-physical { display: grid; grid-template-columns: minmax(92px, 1fr) 44px minmax(92px, 1fr); column-gap: 4px; align-items: center; }
-.canvas-source-unit { align-self: center; }
-.canvas-sims { display: flex; gap: 14px; justify-content: space-between; align-items: end; padding: 0 6px; }
-.canvas-sims .canvas-sim { flex: 0 1 auto; min-width: 240px; }
-/* 指令源单元：卡片 + 各自的通行线；上位机三条（CAN / EtherCAT / Ethernet）选一条，调试器一条 J-Link。 */
-.canvas-source-unit { display: flex; align-items: center; gap: 10px; position: relative; cursor: default; }
-.canvas-source-card { flex: 0 0 148px; display: flex; flex-direction: column; gap: 3px; padding: 13px 14px; border: 1px solid var(--line-strong); border-radius: 12px; background: var(--surface); transition: border-color var(--motion), background-color var(--motion), box-shadow var(--motion), opacity var(--motion); }
-.canvas-source-card strong { font-size: 13.5px; }
-.canvas-lines { display: flex; flex-direction: column; gap: 14px; flex: 1; justify-content: center; min-width: 0; }
-.canvas-line { display: flex; align-items: center; gap: 7px; cursor: pointer; position: relative; }
+/* Project home: double-click editing inside a single joint module. */
+.workspace-identity { color: var(--ink); text-decoration: none; border-radius: 8px; }
+.workspace-identity:focus-visible { outline: 2px solid var(--primary); outline-offset: 6px; }
+.topbar:has(.topbar-project:not([hidden])) { display: grid; grid-template-columns: minmax(440px, 1fr) minmax(180px, 1fr) minmax(440px, 1fr); }
+.topbar-project { min-width: 0; max-width: 100%; justify-self: center; color: var(--ink); font-size: 14px; font-weight: 500; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-radius: 4px; }
+#home-project-name[hidden] { display: none; }
+#workspace:has(.architecture-overview) { display: flex; align-items: center; width: 100%; max-width: none; min-height: calc(100dvh - 72px); margin: 0; padding: 20px 28px; }
+.architecture-overview { display: flex; flex: 1; flex-direction: column; gap: 16px; min-height: min(calc(100dvh - 112px), 1120px); justify-content: flex-start; }
+.lifecycle-canvas { overflow: visible; }
+.topbar-project-actions .canvas-new-project { flex: none; width: 36px; min-width: 36px; height: 36px; min-height: 36px; padding: 0; }
+:root .topbar-project-actions .button.canvas-new-project:not(:disabled) { color: var(--ink); background: var(--surface); border-color: var(--line-strong); }
+.topbar-project-actions { display: flex; flex: none; align-items: center; gap: 8px; margin-right: 16px; }
+:root .topbar-project-actions .button.canvas-new-project:hover:not(:disabled) { color: var(--ink); background: var(--soft); border-color: var(--ink); }
+.canvas-new-project .ui-icon { width: 18px; height: 18px; }
+.canvas-flow { display: grid; flex: 1; width: 100%; min-width: 0; grid-template-columns: clamp(190px, 16vw, 320px) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto auto; grid-template-areas: ". sims" "sources joint" "power joint" ". dyn"; column-gap: 20px; row-gap: 14px; align-items: stretch; }
+.canvas-control-sources { display: grid; align-content: center; align-self: stretch; min-width: 0; gap: 24px; }
+.canvas-group-joint { display: flex; flex-direction: column; min-width: 0; padding: 22px; border: 1px solid var(--line-strong); border-radius: 24px; background: var(--surface); }
+.canvas-joint-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px; padding-bottom: 16px; }
+.canvas-joint-title { display: flex; align-items: center; gap: 10px; border-radius: 6px; }
+.canvas-joint-title strong { display: block; font-size: clamp(16px, 1.1vw, 24px); font-weight: 600; }
+.canvas-joint-mark { display: grid; place-items: center; width: 26px; height: 30px; color: var(--muted); }
+.canvas-joint-mark .ui-icon { width: 24px; height: 24px; }
+.canvas-model-picker { display: flex; align-items: center; gap: 10px; max-width: 100%; }
+.canvas-model-picker > select { width: 248px; max-width: 100%; min-width: 0; min-height: 34px; font-size: 11px; }
+.canvas-model-picker .select-menu { width: 248px; max-width: 100%; min-width: 0; }
+.canvas-joint-body { display: grid; flex: 1; grid-template-columns: minmax(0, 1fr) 112px minmax(156px, .32fr); align-items: stretch; min-width: 0; }
+.canvas-group { display: flex; flex-direction: column; min-width: 0; border: 1px dashed var(--line-strong); border-radius: 17px; padding: 16px 13px; }
+.canvas-group-label { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-height: clamp(54px, 5vh, 76px); margin-bottom: 18px; min-width: 0; border-radius: 4px; }
+.canvas-group-label > span { display: flex; flex: none; align-items: center; gap: 7px; }
+.canvas-group-label b { font-size: clamp(15px, 1vw, 22px); font-weight: 600; }
+.canvas-group-label > .field-select, .canvas-group-label > .select-menu { width: min(320px, calc(100% - 96px)); min-width: 0; margin-left: auto; }
+.canvas-group-label .select-menu-trigger { min-height: 42px; padding: 8px 12px; font-size: clamp(11px, .7vw, 15px); }
+.canvas-group-icon { width: clamp(18px, 1vw, 24px); height: clamp(18px, 1vw, 24px); color: var(--muted); }
+.canvas-group-chain { flex: 1; min-width: 0; }
+.canvas-group-chain-layers { display: grid; grid-template-columns: minmax(0, 1fr) 58px minmax(0, 1fr) 58px minmax(0, 1fr); gap: 5px; align-items: center; }
+.chain-node { display: flex; flex-direction: column; justify-content: center; gap: 10px; min-width: 0; padding: 15px 12px; border: 1px solid #111; border-radius: 13px; background: transparent; color: var(--ink); transition: border-color var(--motion), box-shadow var(--motion); }
+.canvas-group-chain-layers > .chain-node { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: 24px minmax(0, 1fr) 32px; justify-content: stretch; align-items: center; align-self: stretch; }
+.canvas-group-chain-layers > .chain-node .chain-head { grid-row: 1; }
+.canvas-group-chain-layers > .chain-node .chain-visual { grid-row: 2; justify-self: center; margin: 0; }
+.canvas-group-chain-layers > .chain-node .chain-embedded { grid-row: 3; }
+[data-home-route] { cursor: pointer; }
+[data-home-route]:focus-visible { outline: 2px solid var(--primary); outline-offset: 4px; }
+.chain-node:hover, .chain-node:focus-visible { border-color: var(--health-color, #111); box-shadow: 0 0 0 2px #111, 0 8px 22px rgb(0 0 0 / 18%); }
+.chain-head { display: flex; width: 100%; min-width: 0; justify-self: stretch; align-items: center; justify-content: space-between; gap: 5px; text-align: left; }
+.chain-head strong { font-size: clamp(14px, 1vw, 22px); white-space: nowrap; }
+.chain-visual { position: relative; width: clamp(70px, calc(11vw - 18px), 320px); max-width: 100%; aspect-ratio: 1; margin: auto; flex: none; }
+.chain-node .line-field { display: block; position: absolute; inset: 0; width: 100%; height: 100%; }
+.chain-embedded { display: flex; justify-content: center; padding: 5px 3px; border: 1px dashed var(--line-strong); border-radius: 7px; }
+.chain-embedded b { font-size: 10px; font-weight: 500; white-space: nowrap; }
+.canvas-group-chain-physical { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) 58px minmax(0, 1fr); align-items: stretch; justify-items: stretch; gap: 0; }
+.chain-physical { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: 24px minmax(0, 1fr) 32px; align-items: center; gap: 10px; padding: 15px 12px; background: transparent; }
+.chain-physical .chain-visual { grid-row: 2; }
+.chain-physical strong { font-size: clamp(14px, 1vw, 22px); font-weight: 600; }
+.canvas-link { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; padding: 0 6px; }
+.canvas-link > span, .canvas-link-lane > span { font-size: 9px; color: var(--muted); text-align: center; line-height: 1.5; white-space: nowrap; }
+.canvas-link > span small { display: block; font-size: 8px; color: var(--subtle); }
+.canvas-link i { display: block; position: relative; width: 100%; height: 0; border-top: 1px solid var(--line-strong); }
+.canvas-link i::before, .canvas-link i::after { content: ''; position: absolute; top: -3.5px; width: 5px; height: 5px; border-top: 1px solid var(--line-strong); border-left: 1px solid var(--line-strong); }
+.canvas-link i::before { left: 0; transform: rotate(-45deg); }
+.canvas-link i::after { right: 0; transform: rotate(135deg); }
+.canvas-link-one i { border-top-width: 2px; }
+.canvas-link-one i::before, .canvas-link-lane i::before { display: none; }
+.canvas-link-pair { gap: 18px; }
+.canvas-link-lane { display: flex; flex-direction: column; gap: 5px; width: 100%; }
+.canvas-link-lane, .canvas-source-wire { appearance: none; border: 0; border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer; padding: 6px 4px; min-height: 32px; }
+.canvas-link-lane:hover, .canvas-source-wire:hover { background: var(--soft); box-shadow: 0 0 0 1px var(--line-strong); }
+.canvas-link-lane:focus-visible, .canvas-source-wire:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.canvas-link-lane-back i { transform: rotate(180deg); }
+.canvas-power-links { align-self: center; display: grid; gap: 24px; padding-inline: 10px; }
+.canvas-phase-wires { display: grid; gap: 22px; }
+.canvas-power-links .canvas-link-lane > span { display: flex; justify-content: space-between; align-items: center; text-align: left; font-size: 10px; }
+.canvas-power-links .canvas-link-lane i { display: block; position: relative; width: 100%; height: 0; border-top: 1px solid currentColor; }
+.canvas-power-links .canvas-link-lane i::after { content: ''; position: absolute; right: 0; top: -3.5px; width: 5px; height: 5px; border-top: 1px solid currentColor; border-right: 1px solid currentColor; transform: rotate(45deg); }
+.canvas-phase-wire.phase-error, .canvas-phase-wire.phase-error > span { color: var(--danger); }
+.canvas-phase-wire.phase-warning, .canvas-phase-wire.phase-warning > span { color: var(--warning); }
+.canvas-phase-wire.phase-ok, .canvas-phase-wire.phase-ok > span { color: var(--success, #398565); }
+.canvas-phase-wire.phase-unknown { color: var(--subtle); }
+.phase-wire-status { display: grid; place-items: center; width: 17px; height: 17px; border: 1px solid currentColor; border-radius: 50%; font-size: 10px; font-weight: 600; }
+.home-link-details { display: grid; gap: 18px; font-size: 12px; line-height: 1.7; }
+.home-link-details table { width: 100%; border-collapse: collapse; }
+.home-link-details th, .home-link-details td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: left; overflow-wrap: anywhere; }
+.home-link-details code { overflow-wrap: anywhere; }
+.home-link-details .design-note, .home-link-details .contract-table-wrap { margin: 0; }
+.home-link-details td small { display: block; color: var(--muted); }
+.home-link-details > .button { justify-self: start; }
+.home-inspector { width: min(860px, calc(100vw - 32px)); }
+.canvas-link-axis { align-self: center; padding: 4px; }
+.canvas-link-axis .canvas-link-lane { flex-direction: row; align-items: center; justify-content: center; gap: 12px; }
+.canvas-link-axis i { width: 1px; height: 18px; border-top: 0; border-left: 1px solid var(--line-strong); }
+.canvas-link-axis i::before { display: none; }
+.canvas-link-axis i::after { top: auto; right: auto; bottom: 0; left: -3.5px; transform: rotate(225deg); }
+.canvas-output-link { flex: none; align-self: stretch; margin-top: 10px; }
+.canvas-output-link .canvas-link-lane { max-width: 220px; margin-left: auto; }
+.canvas-source-unit { display: flex; gap: 12px; align-items: center; align-self: center; min-width: 0; }
+.canvas-power-source > .canvas-link { flex: 1; min-width: 0; padding: 0; }
+.canvas-power-source { align-self: end; }
+.canvas-power-source .canvas-source-card { min-height: clamp(110px, 13vh, 180px); }
+.canvas-source-card { display: flex; justify-content: center; align-items: center; min-height: clamp(160px, 23vh, 260px); flex: 0 0 clamp(64px, 5vw, 100px); padding: 18px 8px; writing-mode: vertical-rl; letter-spacing: .16em; border: 1px solid var(--line-strong); border-radius: 12px; background: var(--surface); transition: border-color var(--motion), background-color var(--motion); }
+.canvas-source-card strong { font-size: clamp(15px, 1.1vw, 22px); }
+.canvas-source-card:hover { border-color: #111; box-shadow: 0 0 0 2px #111, 0 6px 18px rgb(0 0 0 / 18%); }
+.canvas-lines { display: flex; flex-direction: column; gap: 14px; flex: 1; min-width: 0; }
+.canvas-line { position: relative; display: flex; align-items: center; gap: 7px; cursor: pointer; }
+.canvas-line > label { display: flex; align-items: center; cursor: pointer; }
+.canvas-source-wire { flex: 1; min-width: 20px; }
+.canvas-source-wire i { display: block; width: 100%; }
 .canvas-line input { position: absolute; opacity: 0; width: 1px; height: 1px; }
-.canvas-line small { font-size: 9.5px; color: var(--muted); white-space: nowrap; transition: color var(--motion); }
-.canvas-line i { flex: 1; height: 0; border-top: 1.5px solid var(--line-strong); position: relative; transition: border-color var(--motion); }
-.canvas-line i::after { content: ''; position: absolute; right: -1px; top: -4.5px; width: 7px; height: 7px; border-top: 1.5px solid var(--line-strong); border-left: 1.5px solid var(--line-strong); transform: rotate(135deg); }
-.canvas-line:not(:has(input:checked)) { opacity: .32; }
+.canvas-line small { font-size: clamp(10px, .7vw, 14px); color: var(--muted); white-space: nowrap; }
+.canvas-line i { flex: 1; height: 0; border-top: 1px solid var(--line-strong); position: relative; }
+.canvas-line i::after { content: ''; position: absolute; right: 0; top: -3.5px; width: 5px; height: 5px; border-top: 1px solid var(--line-strong); border-left: 1px solid var(--line-strong); transform: rotate(135deg); }
+.canvas-line:not(:has(input:checked)) { opacity: .4; }
+.canvas-line:hover { opacity: 1; }
 .canvas-line:has(input:checked) i, .canvas-line:has(input:checked) i::after { border-color: var(--primary); }
-.canvas-line:has(input:checked) small { color: var(--primary); font-weight: 600; }
-.canvas-line input:focus-visible ~ i { outline: 2px solid var(--focus); outline-offset: 4px; }
-.canvas-source-unit:not(:has(input:checked)) .canvas-source-card { opacity: .55; }
-.canvas-source-unit:has(input:checked) .canvas-source-card { border-color: var(--primary); background: var(--soft); box-shadow: 0 0 0 1px var(--primary); }
-/* 链节点解剖：左上标题、右上状态（！？✓）、中央点阵动图或大图标。 */
-.chain-node { display: flex; flex-direction: column; gap: 8px; padding: 13px 14px 11px; border: 1px solid var(--line); border-radius: 15px; background: var(--surface); color: var(--ink); text-decoration: none; transition: border-color var(--motion), background-color var(--motion); min-width: 0; }
-a.chain-node:hover { border-color: var(--primary); background: var(--surface-hover); }
-.chain-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; min-height: 20px; }
-.chain-head strong { font-size: 15px; }
-.chain-status { flex: none; }
-.chain-visual { flex: 1; display: grid; place-items: center; min-height: 200px; }
-.chain-node .line-field { width: 100%; height: 200px; }
-.chain-embedded { padding: 5px 10px; border: 1px dashed var(--line-strong); border-radius: 999px; display: flex; justify-content: center; }
-.chain-embedded b { font-size: 11px; }
-/* 物理端：贴合实物的大图标（转子 / 齿轮），无边框。 */
-.chain-physical { justify-content: center; align-items: center; gap: 10px; background: transparent; border: 0; padding: 8px 4px; }
-.chain-physical:hover { background: transparent; }
-.chain-physical strong { font-size: 14px; }
-.chain-glyph { display: grid; place-items: center; color: var(--ink); }
-.chain-glyph .chain-glyph-icon, .chain-glyph-icon { width: 76px; height: 76px; }
-.chain-glyph .ui-icon { stroke-width: 1.15; }
-.canvas-group-icon { width: 17px; height: 17px; color: var(--muted); }
-/* 链上连接：标签 + 双向轨道（单向时只留右箭头）。 */
-.canvas-link { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 0 4px; }
-.canvas-link > span { font-size: 10px; color: var(--muted); text-align: center; line-height: 1.45; }
-.canvas-link > span small { display: block; color: var(--subtle); font-size: 9px; }
-.canvas-link i { display: block; width: 100%; height: 0; border-top: 1.5px solid var(--line-strong); position: relative; }
-.canvas-link i::before, .canvas-link i::after { content: ''; position: absolute; top: -4.5px; width: 7px; height: 7px; border-top: 1.5px solid var(--line-strong); border-left: 1.5px solid var(--line-strong); }
-.canvas-link i::before { left: -1px; transform: rotate(-45deg); }
-.canvas-link i::after { right: -1px; transform: rotate(135deg); }
-.canvas-link-one i::before { display: none; }
-.canvas-link-one i { border-top-width: 3px; }
-/* 指令源：上位机 / 调试器 单选，选择态高亮；下方两个直达链接。 */
-/* 仿真卡（规划中）：凹陷质感，与已实现的凸起卡片区分。 */
-.canvas-sim { position: relative; display: flex; flex-direction: column; gap: 7px; padding: 12px 16px; border: 1px solid transparent; border-radius: 13px; background: var(--soft); box-shadow: inset 0 2px 6px rgb(20 30 24 / 7%); color: var(--muted); align-self: end; }
-.canvas-sim strong { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink); }
-.canvas-soon { position: absolute; top: 9px; right: 11px; padding: 2px 8px; border-radius: 999px; background: var(--soft); color: var(--subtle); font: 500 9.5px/1.4 var(--font); }
-.canvas-sim-items { display: flex; flex-wrap: wrap; gap: 5px; }
-.canvas-sim-items span { padding: 2px 9px; border-radius: 999px; background: var(--soft); font-size: 10px; }
-.canvas-sim small { font-size: 10px; color: var(--subtle); line-height: 1.5; }
-.canvas-dynamics { position: relative; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 16px; padding: 12px 20px; border: 1px solid transparent; border-radius: 14px; background: var(--soft); box-shadow: inset 0 2px 6px rgb(20 30 24 / 7%); }
-.canvas-dynamics strong { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink); }
-/* 拟态：已实现 = 凸起，规划中（仿真卡/动力学/指令源）= 凹陷。 */
-:root[data-theme="neumorphism"] .chain-node { border-color: transparent; box-shadow: var(--neu-raised-sm); }
-:root[data-theme="neumorphism"] .chain-node:hover { background: var(--control-fill); }
-:root[data-theme="neumorphism"] :is(.canvas-sim, .canvas-dynamics, .canvas-source-card) { border-color: transparent; box-shadow: var(--neu-sunken); }
-:root[data-theme="neumorphism"] .canvas-source-unit:has(input:checked) .canvas-source-card { box-shadow: var(--neu-sunken-sm), var(--neu-ring); border-color: transparent; background: var(--control-fill); }
-:root[data-theme="neumorphism"] .canvas-sim-items span, :root[data-theme="neumorphism"] .canvas-soon { background: var(--control-fill); box-shadow: var(--neu-sunken-sm); }
-/* 响应式缩放：窄屏收紧网格、字号与留白，画布保持完整链路。 */
-@media (max-width: 1240px) {
-  .canvas-flow { min-width: 0; grid-template-columns: 132px minmax(96px, 128px) minmax(0, 1.9fr) 48px minmax(0, 0.8fr); }
-  .canvas-group-chain-layers { grid-template-columns: minmax(0, 1fr) 56px minmax(0, 1fr) 56px minmax(0, 1fr); }
-  .canvas-group-chain-physical { grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr); }
-  .chain-node { padding: 10px 11px 9px; border-radius: 13px; }
-  .chain-head strong { font-size: 13px; }
-  .canvas-source-unit .canvas-source-card { flex-basis: 132px; }
-  .chain-glyph .chain-glyph-icon, .chain-glyph-icon { width: 54px; height: 54px; }
+.canvas-line:has(input:checked) small { color: var(--primary); }
+.canvas-line label:has(input:focus-visible) { outline: 2px solid var(--primary); outline-offset: 4px; }
+.canvas-source-unit:has(input:checked) .canvas-source-card { border-color: var(--primary); background: var(--soft); }
+.canvas-sims { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.canvas-sim, .canvas-dynamics { display: flex; align-items: center; position: relative; min-width: 0; min-height: clamp(72px, 6.5vh, 96px); padding: 20px 24px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink); transition: border-color var(--motion), box-shadow var(--motion); }
+.canvas-sim strong, .canvas-dynamics strong { display: flex; align-items: center; gap: 10px; font-size: clamp(14px, .85vw, 20px); font-weight: 600; }
+.canvas-sim:hover, .canvas-dynamics:hover { border-color: #111; box-shadow: 0 0 0 2px #111; }
+.canvas-group:hover:not(:has(.chain-node:hover)) { border-color: #111; }
+.canvas-dynamics { padding-block: 13px; }
+:root[data-theme="neumorphism"] .chain-node { border-color: var(--health-color, #111); box-shadow: var(--neu-raised-sm); }
+:root[data-theme="neumorphism"] :is(.canvas-sim, .canvas-dynamics, .canvas-source-card) { border-color: transparent; box-shadow: var(--neu-raised-sm); }
+:root[data-theme="neumorphism"] :is(.chain-node, .canvas-sim, .canvas-dynamics, .canvas-source-card):hover { box-shadow: var(--neu-raised-sm), 0 0 0 2px #111; }
+:root[data-theme="neumorphism"] .canvas-source-unit:has(input:checked) .canvas-source-card { box-shadow: var(--neu-sunken-sm), var(--neu-ring); }
+.chain-node[data-health="error"] { --health-color: var(--danger); }
+.chain-node[data-health="warning"] { --health-color: #e2b300; }
+.chain-node[data-health="ok"] { --health-color: var(--success, #398565); }
+.chain-node:is([data-health="error"], [data-health="warning"], [data-health="ok"]) { border: 2px solid var(--health-color); padding: 14px 11px; }
+.chain-node:is([data-health="error"], [data-health="warning"], [data-health="ok"]):hover { box-shadow: 0 0 0 2px #111, 0 8px 22px rgb(0 0 0 / 18%); }
+@media (min-width: 2000px) {
+  .canvas-flow { grid-template-columns: clamp(240px, 16vw, 360px) minmax(0, 1fr); gap: 24px; }
+  .canvas-joint-body { grid-template-columns: minmax(0, 3fr) 112px minmax(0, 2fr); }
+  .canvas-group-chain-physical { grid-template-columns: minmax(0, 1fr) 76px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+  .canvas-link-axis { flex-direction: column; }
+  .canvas-link-axis .canvas-link-lane { flex-direction: column; }
+  .canvas-link-axis .canvas-link-lane > span { white-space: normal; }
+  .canvas-link-axis i { width: 100%; height: 0; border-left: 0; border-top: 1px solid var(--line-strong); }
+  .canvas-link-axis i::after { top: -3.5px; right: 0; bottom: auto; left: auto; transform: rotate(135deg); }
 }
-@media (max-width: 1024px) {
-  .architecture-overview { min-height: 0; }
-  .lifecycle-canvas { overflow: visible; }
-  /* 窄屏改为纵向流：指令源 → 驱动器 → 三相 → 执行器，驱动器与执行器内部保持横向链路。 */
-  .canvas-flow {
-    min-width: 0; row-gap: 14px; column-gap: 22px;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto;
-    grid-template-areas:
-      "sims sims"
-      "host dbg"
-      "driver driver"
-      "gapD gapD"
-      "actuator actuator"
-      "dyn dyn";
-  }
-  .canvas-sims { gap: 12px; padding: 0; }
-  .canvas-sims .canvas-sim { flex: 1 1 0; min-width: 0; }
-  .canvas-group-chain-layers { grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr) 44px minmax(0, 1fr); }
-  .canvas-group-chain-physical { grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr); }
-  .canvas-link[style*="gapD"] { flex-direction: column; align-items: stretch; gap: 6px; }
-  .canvas-link[style*="gapD"] > span { text-align: center; }
-  .canvas-source-card { flex-basis: 132px; }
-  .canvas-group { padding: 26px 16px 16px; }
-  .chain-node .line-field { min-height: 40px; }
+@media (max-width: 1200px) {
+  .canvas-flow { grid-template-columns: 180px minmax(0, 1fr); column-gap: 14px; }
+  .canvas-group-joint { padding: 18px; }
+  .canvas-joint-body { grid-template-columns: minmax(0, 1fr) 100px 180px; }
+  .canvas-group { padding: 14px 10px; }
+  .canvas-group-chain-layers { grid-template-columns: minmax(0, 1fr) 45px minmax(0, 1fr) 45px minmax(0, 1fr); gap: 2px; }
+  .chain-node { padding: 12px 8px; }
+  .chain-node:is([data-health="error"], [data-health="warning"], [data-health="ok"]) { padding: 11px 7px; }
+  .chain-head strong { font-size: 12px; }
+  .canvas-link { padding-inline: 4px; }
+  .canvas-link-lane > span { font-size: 8px; }
+}
+@media (max-width: 1200px) {
+  .topbar:has(.topbar-project:not([hidden])) { grid-template-columns: minmax(100px, 1fr) auto; }
+  .topbar-project { grid-row: 2; grid-column: 1 / -1; }
+  .topbar .workspace-actions { grid-row: 1; grid-column: 2; }
+}
+@media (max-width: 1000px) {
+  #workspace:has(.architecture-overview) { padding: 18px 22px; min-height: 0; }
+  .architecture-overview { min-height: 0; justify-content: flex-start; gap: 22px; }
+  .canvas-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: auto; grid-template-areas: "sims sims" "sources sources" "power power" "joint joint" "dyn dyn"; gap: 18px; }
+  .canvas-control-sources { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+  .canvas-source-card { min-height: 52px; writing-mode: horizontal-tb; letter-spacing: 0; flex-basis: 100px; }
+  .canvas-power-source .canvas-source-card { min-height: 52px; }
+  .canvas-power-source > .canvas-link { max-width: 200px; }
+  .canvas-lines { gap: 8px; }
+  .canvas-joint-body { grid-template-columns: minmax(0, 1fr) 100px 160px; }
+  .canvas-group-chain-layers { grid-template-columns: minmax(0, 1fr) 52px minmax(0, 1fr) 52px minmax(0, 1fr); }
+}
+@media (max-width: 700px) {
+  .canvas-joint-body { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .canvas-power-links { align-self: stretch; padding: 0 20px; }
+  .canvas-phase-wires { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+  .canvas-joint-body > .canvas-link-one { flex-direction: row; gap: 14px; }
+  .canvas-joint-body > .canvas-link-one i { width: 45px; }
+  .canvas-group-chain-physical { grid-template-columns: minmax(0, 1fr) 72px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+  .canvas-link-axis { flex-direction: column; }
+  .canvas-link-axis .canvas-link-lane { flex-direction: column; }
+  .canvas-link-axis .canvas-link-lane > span { white-space: normal; }
+  .canvas-link-axis i { width: 100%; height: 0; border-left: 0; border-top: 1px solid var(--line-strong); }
+  .canvas-link-axis i::after { top: -3.5px; right: 0; bottom: auto; left: auto; transform: rotate(135deg); }
+  .canvas-group-label { margin-bottom: 12px; }
+  .canvas-model-picker { width: auto; max-width: 55%; margin-left: auto; }
+  .canvas-model-picker > select { flex: 1; width: auto; }
+  .canvas-model-picker .select-menu { flex: 1; width: auto; }
+  .canvas-joint-heading { gap: 14px; padding-bottom: 18px; }
+}
+@media (max-width: 620px) {
+  #workspace:has(.architecture-overview) { padding: 16px; }
+  .topbar { flex-wrap: wrap; align-items: center; gap: 10px; }
+  .topbar:has(.topbar-project:not([hidden])) { grid-template-columns: minmax(0, 1fr); }
+  .topbar .workspace-identity { flex: 1 1 auto; }
+  .topbar .workspace-actions { display: flex; grid-row: 3; grid-column: 1 / -1; width: 100%; flex-wrap: wrap; justify-content: center; gap: 6px; }
+  .topbar .workspace-actions .button { flex: none; }
+  .canvas-new-project { padding-inline: 10px; font-size: 11px; }
+  .topbar-project-actions { margin-right: 6px; gap: 6px; }
+  .canvas-flow { gap: 14px 12px; }
+  .canvas-sims { gap: 10px; }
+  .canvas-sim { padding: 12px; }
+  .canvas-sim strong { align-items: flex-start; flex-direction: column; gap: 5px; }
+  .canvas-source-card { flex-basis: 42px; min-height: 90px; writing-mode: vertical-rl; }
+  .canvas-power-source .canvas-source-card { flex-basis: 90px; writing-mode: horizontal-tb; }
+  .canvas-source-unit { gap: 8px; }
+  .canvas-line { gap: 4px; }
+  .canvas-line small { font-size: 8px; }
+  .canvas-group-joint { border-radius: 18px; padding: 14px; }
+  .canvas-group-chain-layers { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .canvas-group-chain-layers > .chain-node { display: grid; grid-template-columns: 1fr 80px; grid-template-rows: auto auto; }
+  .architecture-overview .chain-visual { width: 80px; }
+  .canvas-group-chain-layers > .chain-node .chain-visual { width: 80px; grid-row: 1 / span 2; grid-column: 2; }
+  .canvas-group-chain-layers > .chain-node .chain-embedded { grid-row: 2; }
+  .canvas-group-chain-layers .chain-head { align-self: end; }
+  .chain-embedded { width: fit-content; padding-inline: 10px; }
+  .canvas-link-pair { flex-direction: row; gap: 28px; padding: 3px 18px; }
 }
