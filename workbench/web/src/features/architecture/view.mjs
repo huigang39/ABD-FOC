@@ -50,16 +50,7 @@ export function renderArchitectureOverview() {
       const layer = LAYERS[id];
       return `${index ? bridge(index) : ''}<a class="layer-entry layer-${id}" href="#/architecture/${id}"><span class="layer-order">${icon(LAYER_ICONS[id], 'layer-order-icon')}<small>${layer.code}</small></span><span class="layer-main"><strong>${layer.name}</strong><span>${layer.summary}</span><span class="layer-capabilities">${layerModules(id).map(module => `<span>${esc(module.title)}</span>`).join('')}</span></span><canvas class="line-field" data-mark="${id}" aria-hidden="true"></canvas><span class="layer-meta"><strong>${layerModules(id).length} 个模块</strong><span>查看功能</span></span>${icon('arrow-right', 'entry-arrow')}</a>`;
     }).join('')}</div>
-    <div class="overview-details architecture-principles">
-      <details class="panel overview-contracts"><summary>层间接口与数据</summary><div class="overview-facts">
-        <article><h3>应用 ↔ 算法</h3><div class="feedback-map"><div><strong>↓ 控制给定</strong><span>目标、动态限值、序号与有效期</span></div><div><strong>↑ 反馈快照</strong><span>控制状态、测量反馈与故障摘要</span></div></div><p>应用任务处理位置、速度和力矩策略；电流环与观测器在同一控制周期内更新。</p></article>
-        <article><h3>算法 ↔ 硬件</h3><div class="feedback-map"><div><strong>↑ 同步采样</strong><span>采样值、时间戳、有效性与实际输出状态</span></div><div><strong>↓ 调制提交</strong><span>占空比、输出许可与更新序号</span></div></div><p>算法产生调制结果，硬件在约定的定时器边界更新输出。</p></article>
-      </div><div class="architecture-role-strip"><div><strong>输入</strong><span>接收其他模块提供的数据</span></div><div><strong>输出</strong><span>发布本模块的处理结果</span></div><div><strong>状态</strong><span>保留模块内部的跨周期数据</span></div></div><p class="design-note">每个模块拥有输入、输出、状态三个结构体；层间交换连接输出与输入，状态由模块自身维护。</p></details>
-      <details class="panel overview-contracts"><summary>反馈来源与持久化数据</summary><div class="overview-facts">
-        <article><h3>三类反馈</h3><div class="feedback-map"><div><strong>电机侧编码器</strong><span>转子角度与换相依据</span></div><div><strong>出轴侧编码器</strong><span>输出轴机械位置</span></div><div><strong>力矩传感器</strong><span>负载力矩测量</span></div></div><p>反馈保留来源、时间戳与有效性，测量值与估算值分别表达。</p></article>
-        <article><h3>三类存储数据</h3><div class="feedback-map"><div><strong>校准</strong><span>编码器校准、摩擦辨识结果</span></div><div><strong>参数</strong><span>参数列表、出轴标零、力矩标零</span></div><div><strong>日志</strong><span>故障记录、掉电数据与事件</span></div></div><p>应用管理数据的提交与恢复，硬件提供存储服务；Flash 擦写不阻塞电流环。</p></article>
-      </div></details>
-    </div></section>`;
+  </section>`;
 }
 
 function moduleLinks(modules) {
