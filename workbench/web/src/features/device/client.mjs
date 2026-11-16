@@ -5,8 +5,11 @@ import { getBuildInspectionState } from '../build/gate.mjs';
 import { readBuildResponse } from '../build/transport.mjs';
 import { getFirmwareFlashState, isFirmwareImage } from './flash-state.mjs';
 
+// 通道调色板：曲线、图例、监视表共用同一颜色键（series.index）。
+export const CHANNEL_COLORS = ['#15796e', '#4269b4', '#9a703c', '#955b7e', '#6d5aa8', '#3d7a9c', '#a05656', '#5c8a46'];
+
 export function createNativeClient({ getProject, onUpdate, onError, onNotice = () => {}, validateConfiguration = validateProject }) {
-  const state = { available: false, busy: false, pendingAction: '', profileVariant: 'KW', error: '', jobs: [], job: null, delivery: null, inspection: null, debug: { connected: false }, probes: [], serialNumber: '', speedKHz: 4000, divider: 20, channels: [], series: [], capturing: false, captureMeta: null };
+  const state = { available: false, busy: false, pendingAction: '', profileVariant: 'KW', error: '', jobs: [], job: null, delivery: null, inspection: null, debug: { connected: false }, probes: [], serialNumber: '', speedKHz: 4000, divider: 20, channels: [], series: [], capturing: false, captureMeta: null, view: 'wave', frozen: false, freezeSnapshot: null };
   let token = '', pollTimer, captureTimer, pending = false, alive = true, flashSequence = 0, buildAbort;
   const watchedJobs = new Set(), notifiedJobs = new Set();
   const update = full => onUpdate(full);
@@ -82,9 +85,12 @@ export function createNativeClient({ getProject, onUpdate, onError, onNotice = (
       state.series = (packet.channels || []).map(channel => {
         let series = state.series.find(item => item.index === channel.index);
         if (!series || series.generation !== channel.generation || series.address !== channel.address || series.type !== channel.type) series = { ...channel, dropped: 0, samples: [] };
+        const previous = series.samples.at(-1)?.value;
         series.dropped = (series.dropped || 0) + (channel.dropped || 0); series.overwrites = channel.overwrites;
         for (const sample of channel.samples || []) if (Number.isFinite(sample.value) && !series.samples.some(existing => existing.seq === sample.seq)) series.samples.push(sample);
         if (series.samples.length > 2000) series.samples.splice(0, series.samples.length - 2000);
+        // 数值变化标记：data-live 节点替换时触发一次脉冲高亮。
+        series.valueChanged = series.samples.at(-1)?.value !== previous;
         return series;
       });
       state.error = ''; update(false);
@@ -195,7 +201,13 @@ export function createNativeClient({ getProject, onUpdate, onError, onNotice = (
         await request('/debug/configure', { channels, divider: state.divider });
         state.series = []; state.capturing = true; update(true); capture();
       }
-      if (name === 'stop-capture') { state.capturing = false; clearTimeout(captureTimer); await request('/debug/configure', { channels: [], divider: state.divider }); update(true); }
+      if (name === 'stop-capture') { state.capturing = false; state.frozen = false; state.freezeSnapshot = null; clearTimeout(captureTimer); await request('/debug/configure', { channels: [], divider: state.divider }); update(true); }
+      // 参考 ava_tool：冻结只停显示，采样与统计继续更新。
+      if (name === 'freeze-display') { state.frozen = !state.frozen; state.freezeSnapshot = state.frozen ? structuredClone(state.series) : null; update(true); }
+      if (name === 'show-capture-view') { state.view = data.view === 'table' ? 'table' : 'wave'; update(true); }
+      if (name === 'clear-capture-data') { for (const series of state.series) { series.samples = []; series.dropped = 0; } state.freezeSnapshot = null; state.frozen = false; update(true); }
+      if (name === 'add-capture-channel') { if (!state.capturing && state.channels.length < 16) state.channels.push({ name: `通道 ${state.channels.length + 1}`, address: '', type: 'f32', enabled: false }); update(true); }
+      if (name === 'remove-capture-channel') { if (!state.capturing && state.channels.length > 1) state.channels.splice(Number(data.channel), 1); update(true); }
       if (name === 'flash') {
         const selectedJob = state.job;
         clearTimeout(captureTimer);
@@ -205,10 +217,13 @@ export function createNativeClient({ getProject, onUpdate, onError, onNotice = (
         onNotice(result.message || '双核固件已烧录，设备保持停止。', { level: 'success', title: '烧录完成' });
       }
       if (name === 'export-csv') {
+        // \u901A\u9053\u7EF4\u5EA6\u7684\u9009\u62E9\u6027\u5BFC\u51FA\uFF1A\u4E0D\u4F20 channel \u5BFC\u51FA\u5168\u90E8\uFF0Cdata.channel \u4E3A\u901A\u9053 index\u3002
+        const chosen = data.channel === undefined ? state.series : state.series.filter(series => series.index === Number(data.channel));
         const rows = ['channel,sequence,value'];
-        for (const channel of state.series) for (const sample of channel.samples) rows.push(`"${String(channel.name).replaceAll('"', '""')}",${sample.seq},${sample.value}`);
+        for (const channel of chosen) for (const sample of channel.samples) rows.push(`"${String(channel.name).replaceAll('"', '""')}",${sample.seq},${sample.value}`);
+        const suffix = chosen.length === 1 ? `-${String(chosen[0].name).replace(/[\\/:*?"<>|\s]+/g, '_')}` : '';
         const url = URL.createObjectURL(new Blob(['\uFEFF' + rows.join('\n')], { type: 'text/csv;charset=utf-8' }));
-        const link = document.createElement('a'); link.href = url; link.download = 'neo75h-waveform.csv'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+        const link = document.createElement('a'); link.href = url; link.download = `neo75h-waveform${suffix}.csv`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
       }
     } catch (error) { state.error = error.message; state.busy = false; if (error.level) onNotice(error.message, { level: error.level, title: error.title }); else onError(error.message); update(false); }
     finally {
@@ -240,19 +255,45 @@ export function createNativeClient({ getProject, onUpdate, onError, onNotice = (
     canvas.width = Math.max(1, box.width * ratio); canvas.height = Math.max(1, box.height * ratio);
     const ctx = canvas.getContext('2d'); if (!ctx) return;
     ctx.scale(ratio, ratio);
-    const w = box.width, h = box.height, colors = ['#15796e', '#4269b4', '#9a703c', '#955b7e'];
+    const w = box.width, h = box.height;
+    // 冻结显示：绘制冻结瞬间的快照，采样与统计仍在后台继续。
+    const series = state.frozen && state.freezeSnapshot ? state.freezeSnapshot : state.series;
     ctx.clearRect(0, 0, w, h); ctx.strokeStyle = '#e0e3dc'; ctx.lineWidth = 1;
     for (let i = 1; i < 5; i++) { const y = h * i / 5; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
-    let end = state.series.find(channel => channel.samples.length)?.samples.at(-1).seq;
-    for (const channel of state.series) if (channel.samples.length && ((channel.samples.at(-1).seq - end) | 0) > 0) end = channel.samples.at(-1).seq;
-    state.series.forEach((channel, index) => {
+    let end;
+    for (const channel of series) if (channel.samples.length && (end === undefined || ((channel.samples.at(-1).seq - end) | 0) > 0)) end = channel.samples.at(-1).seq;
+    if (end === undefined) return;
+    // 时间轴：nominalSampleHz 已含分频（服务端 sampleHz / divider），直接折算毫秒。
+    const sampleHz = state.captureMeta?.nominalSampleHz;
+    const msPerSample = Number.isFinite(sampleHz) && sampleHz > 0 ? 1000 / sampleHz : null;
+    ctx.fillStyle = '#7b827c'; ctx.font = '10px "Maple Mono CN", monospace'; ctx.textAlign = 'center';
+    for (let tick = 5; tick >= 0; tick--) {
+      const offset = -600 + tick * 120, x = 8 + (1 + offset / 599) * (w - 16);
+      ctx.strokeStyle = '#e0e3dc'; ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h - 22); ctx.stroke();
+      const label = msPerSample ? `${Math.round(Math.abs(offset) * msPerSample)} ms` : `${Math.abs(offset)} smp`;
+      ctx.fillText(label, x, h - 8);
+    }
+    ctx.textAlign = 'left';
+    series.forEach((channel, index) => {
       const samples = channel.samples.filter(sample => { const offset = (sample.seq - end) | 0; return offset >= -599 && offset <= 0; }); if (samples.length < 2) return;
       const values = samples.map(s => s.value), min = Math.min(...values), max = Math.max(...values), span = max - min || Math.max(1, Math.abs(max) * .1);
-      ctx.strokeStyle = colors[(channel.index ?? index) % colors.length]; ctx.lineWidth = 1.6; ctx.beginPath();
-      let started = false;
-      samples.forEach((sample, i) => { const offset = (sample.seq - end) | 0; if (offset < -599 || offset > 0) return; const x = 8 + (1 + offset / 599) * (w - 16), y = h - 24 - (sample.value - min) / span * (h - 48); if (!started || ((sample.seq - samples[i - 1].seq) >>> 0) !== 1) ctx.moveTo(x, y); else ctx.lineTo(x, y); started = true; });
+      const color = CHANNEL_COLORS[(channel.index ?? index) % CHANNEL_COLORS.length];
+      ctx.strokeStyle = color; ctx.lineWidth = 1.6; ctx.beginPath();
+      let started = false, last = null;
+      samples.forEach((sample, i) => { const offset = (sample.seq - end) | 0; if (offset < -599 || offset > 0) return; const x = 8 + (1 + offset / 599) * (w - 16), y = h - 24 - (sample.value - min) / span * (h - 48); if (!started || ((sample.seq - samples[i - 1].seq) >>> 0) !== 1) ctx.moveTo(x, y); else ctx.lineTo(x, y); started = true; last = { x, y, value: sample.value }; });
       ctx.stroke();
+      // 通道铭牌跟随曲线末端：名称 + 当前值，示波器式读数。
+      if (last) {
+        const label = `${channel.name || `通道 ${(channel.index ?? index) + 1}`} ${last.value.toPrecision(5)}`;
+        ctx.font = '10px "Maple Mono CN", monospace';
+        const width = ctx.measureText(label).width + 10;
+        const bx = Math.min(last.x + 6, w - width - 4), by = Math.max(10, Math.min(last.y - 20, h - 52));
+        ctx.fillStyle = 'rgb(255 254 250 / 88%)'; ctx.strokeStyle = color;
+        ctx.beginPath(); ctx.roundRect(bx, by, width, 16, 8); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = color; ctx.fillText(label, bx + 5, by + 11.5);
+      }
     });
+    if (state.frozen) { ctx.fillStyle = 'rgb(197 138 0 / 90%)'; ctx.font = '600 11px "Maple Mono CN", monospace'; ctx.fillText('已冻结显示 · 采样继续', 12, 18); }
   }
   function menuEvent(event, root = globalThis.document) {
     if (!root?.querySelectorAll) return;

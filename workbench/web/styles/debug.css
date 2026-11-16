@@ -1,0 +1,30 @@
+/* 调试页专属样式：视图切换、监视表与数值脉冲（参考 ava_tool 的 Monitor/Scope 设计）。 */
+
+.native-view-toggle { display: flex; flex-shrink: 0; border: 1px solid var(--control-border); border-radius: 8px; overflow: hidden; }
+.native-view-toggle button { min-height: 34px; padding: 6px 14px; border: 0; background: transparent; color: var(--muted); font: 500 12px/1.4 var(--font); cursor: pointer; transition: background-color var(--motion), color var(--motion); }
+.native-view-toggle button + button { border-left: 1px solid var(--control-border); }
+.native-view-toggle button.active { background: var(--soft); color: var(--primary); }
+.native-view-toggle button:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+
+/* 监视表：通道色点 + 数值列，变化时脉冲一次。 */
+.native-watch-wrap { margin: 14px 0 8px; }
+.native-watch-table td { font-variant-numeric: tabular-nums; }
+.native-watch-name { display: inline-flex; align-items: center; gap: 7px; min-width: 0; }
+.native-watch-name i { flex: none; width: 9px; height: 9px; border-radius: 50%; }
+.native-watch-value { font-weight: 600; }
+.native-watch-value[data-flash="1"], .native-wave-legend span[data-flash="1"] { animation: native-value-pulse 900ms ease-out; }
+@keyframes native-value-pulse {
+  0% { background: color-mix(in srgb, var(--primary) 22%, transparent); }
+  100% { background: transparent; }
+}
+.native-watch-empty { border: 1px dashed var(--line-strong); border-radius: 10px; padding: 26px; color: var(--muted); text-align: center; font-size: 12px; }
+
+:root[data-theme="neumorphism"] .native-view-toggle { border-color: transparent; border-radius: 999px; background: var(--control-fill); box-shadow: var(--neu-sunken-sm); }
+:root[data-theme="neumorphism"] .native-view-toggle button { border-radius: 999px; }
+:root[data-theme="neumorphism"] .native-view-toggle button + button { border-left: 0; }
+:root[data-theme="neumorphism"] .native-view-toggle button.active { background: var(--control-fill); box-shadow: var(--neu-raised-sm); }
+:root[data-theme="dark"] .native-watch-value[data-flash="1"], :root[data-theme="dark"] .native-wave-legend span[data-flash="1"] { animation-name: native-value-pulse-dark; }
+@keyframes native-value-pulse-dark {
+  0% { background: rgb(104 127 112 / 35%); }
+  100% { background: transparent; }
+}
