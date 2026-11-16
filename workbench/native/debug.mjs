@@ -8,7 +8,12 @@ import { fileURLToPath } from 'node:url';
 
 const exec = promisify(execFile);
 const here = dirname(fileURLToPath(import.meta.url));
-const DEFAULT_JLINK = '/Applications/SEGGER/JLink_V992';
+// J-Link 安装位置按平台取默认；ABD_JLINK_DIR 可覆盖目录，options 可覆盖完整文件路径。
+const IS_WINDOWS = process.platform === 'win32';
+const PLATFORM_JLINK = IS_WINDOWS ? { dir: 'C:\\Program Files\\SEGGER\\JLink', library: 'JLink_x64.dll', exe: 'JLink.exe', python: 'python' }
+  : process.platform === 'darwin' ? { dir: '/Applications/SEGGER/JLink_V992', library: 'libjlinkarm.dylib', exe: 'JLinkExe', python: 'python3' }
+  : { dir: '/opt/SEGGER/JLink', library: 'libjlinkarm.so', exe: 'JLinkExe', python: 'python3' };
+const DEFAULT_JLINK = process.env.ABD_JLINK_DIR || PLATFORM_JLINK.dir;
 export const TRACE_ABI = Object.freeze({ version: 5, magic: 0x05545243, controlSize: 688, dataSize: 4096, sampleSize: 8, channels: 16 });
 export const TRACE_TYPES = Object.freeze(['u8', 'i8', 'u16', 'i16', 'u32', 'i32', 'f32']);
 export const BUILD_IDENTITY = Object.freeze({ magic: 0x42415641, version: 1, size: 64, mailboxAddress: 0x2001ffc0 });
@@ -98,9 +103,9 @@ class PythonTransport {
 export class DebugService {
   constructor(options = {}) {
     this.workspaceRoot = resolve(options.workspaceRoot || join(here, '../..'));
-    this.library = options.jlinkLibrary || join(DEFAULT_JLINK, 'libjlinkarm.dylib');
-    this.jlinkExe = options.jlinkExe || join(DEFAULT_JLINK, 'JLinkExe');
-    this.transport = options.transport || new PythonTransport({ python: options.python || 'python3', library: this.library });
+    this.library = options.jlinkLibrary || join(DEFAULT_JLINK, PLATFORM_JLINK.library);
+    this.jlinkExe = options.jlinkExe || join(DEFAULT_JLINK, PLATFORM_JLINK.exe);
+    this.transport = options.transport || new PythonTransport({ python: options.python || PLATFORM_JLINK.python, library: this.library });
     this.state = { connected: false, device: 'STM32H745II_M7', serialNumber: null, capture: null, lastError: null, activeRateUnknown: true };
     this.queue = Promise.resolve(); this.trace = null; this.channels = []; this.cursors = new Map(); this.sampleHz = null;
     this.expectedIdentity = null; this.identityRequired = false; this.bootSequence = null;
