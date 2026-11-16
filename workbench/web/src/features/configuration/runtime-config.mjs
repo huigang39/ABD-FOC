@@ -46,12 +46,13 @@ export function runtimeConfiguration(project) {
   }
   return { schemaVersion: 1, kind: 'runtime-configuration', deviceBinding: 'pending', entries };
 }
+const LAYER_NAMES = { app: '应用层', foc: '算法层', hardware: '硬件层' };
 export function renderRuntimeConfiguration(project, renderField) {
   const { entries } = runtimeConfiguration(project);
-  return '<section class="runtime-configuration"><div class="design-toolbar"><h3>运行时配置</h3><button class="button small" data-action="export-runtime-config">导出配置</button></div>' +
-    MODULES.map(module => {
+  const rendered = new Map();
+  for (const module of MODULES) {
       const rows = entries.filter(entry => entry.moduleId === module.id);
-      if (!rows.length) return '';
+      if (!rows.length) continue;
       const toggle = rows.find(entry => entry.kind === 'switch'&&!entry.childId);
       const parameters = rows.filter(entry => entry.kind === 'parameter'||entry.childId);
       const switchHtml = toggle ? `<label class="switch-field runtime-config-switch phase-runtime-switch" title="${esc(toggle.description)}"><input type="checkbox" data-action="toggle-runtime" data-module="${esc(module.id)}" aria-label="${esc(module.title)}运行开关" ${toggle.value ? 'checked' : ''}><span class="switch-ui" data-phase-label="运行期" aria-hidden="true"></span></label>` : '';
@@ -77,6 +78,12 @@ export function renderRuntimeConfiguration(project, renderField) {
         if (!key) return `<div class="profile-form">${fields}</div>`;
         return `<details class="resource-disclosure hardware-resource runtime-config-subgroup" data-state-key="runtime-config-${esc(module.id)}-${esc(key)}"><summary><strong>${esc(group.title)}</strong><span class="attribute-tag">${group.entries.length - (toggleEntry ? 1 : 0)} 项</span>${childSwitch}</summary><div class="hardware-resource-body"><div class="profile-form">${fields}</div></div></details>`;
       }).join('');
-      return `<details class="resource-disclosure hardware-resource" data-state-key="runtime-config-${esc(module.id)}"><summary><strong>${esc(module.title)}</strong><span class="attribute-tag">${parameters.length} 项</span>${switchHtml}</summary><div class="hardware-resource-body">${content}</div></details>`;
+      rendered.set(module.id, `<details class="resource-disclosure hardware-resource" data-state-key="runtime-config-${esc(module.id)}"><summary><strong>${esc(module.title)}</strong><span class="attribute-tag">${parameters.length} 项</span>${switchHtml}</summary><div class="hardware-resource-body">${content}</div></details>`);
+  }
+  // 按层级分组展示：应用层 → 算法层 → 硬件层，各层内按模块排列。
+  return '<section class="runtime-configuration"><div class="design-toolbar"><h3>运行时配置</h3><button class="button small" data-action="export-runtime-config">导出配置</button></div>' +
+    ['app', 'foc', 'hardware'].map(layer => {
+      const blocks = MODULES.filter(module => module.layer === layer).map(module => rendered.get(module.id)).filter(Boolean).join('');
+      return blocks ? `<h4 class="runtime-config-layer">${LAYER_NAMES[layer]}</h4>${blocks}` : '';
     }).join('') + '</section>';
 }

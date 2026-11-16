@@ -1,6 +1,6 @@
 import { identifyMcu } from '../../modules/hardware/hw-platform/targets.mjs';
 import { createCoreSettings, coreCapabilities } from '../../modules/hardware/hw-platform/cores.mjs';
-export { MCU_FAMILIES, identifyMcu, getMcuCores } from '../../modules/hardware/hw-platform/targets.mjs';
+export { MCU_FAMILIES, identifyMcu, getMcuCores, coreArchitectureName } from '../../modules/hardware/hw-platform/targets.mjs';
 export function syncMcuArchitecture(target,hardware,{replaceCores=false}={}) {
   const info=identifyMcu(target?.mcu);
   if(info)target.vendor=info.vendor;

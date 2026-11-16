@@ -13,3 +13,9 @@ export function identifyMcu(model) {
 export function getMcuCores(model) {
   return (identifyMcu(model)?.cores || []).map(({id,label})=>({id,label}));
 }
+/** 界面标签统一用内核架构全称（Arm Cortex-M7 / RISC-V），不用 CM7、M7 一类缩写。 */
+export function coreArchitectureName(model, coreId) {
+  const core = getMcuCores(model).find(item=>item.id===coreId);
+  if(!core)return String(coreId??'');
+  return identifyMcu(model)?.architecture==='arm'?`Arm ${core.label}`:core.label;
+}

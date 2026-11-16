@@ -28,7 +28,11 @@ export function createMemoryPlan(target = {}) {
   return { layout: createMemoryLayout(target), placements: Object.fromEntries(regionIds.map(id => [id, emptyPlacement()])) };
 }
 export function createMemoryBank() {
-  return { id: makeId('flash'), name: 'Flash', baseAddress: null, sizeKiB: null, executable: 'unconfirmed', sectors: [] };
+  return { id: makeId('flash'), name: 'Flash', baseAddress: null, sizeKiB: null, executable: true, sectors: [] };
+}
+/** 旧草稿的可执行代码为三态文本；迁移为开关布尔值（no → false，其余视为可执行）。 */
+export function migrateMemoryLayoutValues(layout) {
+  for (const bank of layout?.banks || []) if (typeof bank.executable === 'string') bank.executable = bank.executable !== 'no';
 }
 export function createMemorySector() {
   return { id: makeId('sector'), name: '', offsetKiB: null, sizeKiB: null, reserved: false };
@@ -60,7 +64,7 @@ function checkBank(bank, location) {
   keys(bank, ['id', 'name', 'baseAddress', 'sizeKiB', 'executable', 'sectors'], location);
   text(bank.id, `${location}.id`, true); text(bank.name, `${location}.name`);
   number(bank.baseAddress, `${location}.baseAddress`); number(bank.sizeKiB, `${location}.sizeKiB`);
-  if (!['unconfirmed', 'yes', 'no'].includes(bank.executable)) throw new Error(`${location}.executable 不是允许的选项。`);
+  if (typeof bank.executable !== 'boolean') throw new Error(`${location}.executable 必须是布尔值。`);
   collection(bank.sectors, `${location}.sectors`, 4096);
   for (const sector of bank.sectors) {
     const at = `${location}.sectors.${sector.id}`;
@@ -228,8 +232,7 @@ export function validateMemory(project) {
       if (!adjacent) add(`${prefix}-discontinuous`, 'error', `${region.label} 扇区不连续`, '当前用途需要一个连续地址区间；请选相邻擦除扇区，不跨越空洞或其他分区。', region.moduleId, region.id);
     }
     if (region.kind === 'firmware') {
-      if (bank.executable === 'no') add(`${prefix}-not-executable`, 'error', `${region.label} 不能放入此 Flash`, '此 Flash 已声明不可执行，需选择可直接执行或已完成执行映射的存储区。', region.moduleId, region.id);
-      else if (bank.executable !== 'yes') add(`${prefix}-execution-unknown`, 'pending', `${bank.name} 的代码执行能力待确认`, '需要结合 MCU 映射、启动方式及链接配置确认，不能从存储容量推断。', region.moduleId, region.id);
+      if (!bank.executable) add(`${prefix}-not-executable`, 'error', `${region.label} 不能放入此 Flash`, '此 Flash 已声明不可执行，需选择可直接执行或已完成执行映射的存储区。', region.moduleId, region.id);
     }
     if (capacityKiB !== null && requiredKiB !== null && capacityKiB < requiredKiB) add(`${prefix}-capacity`, 'error', `${region.label} 分区容量不足`, `选中 ${capacityKiB} KiB，容量预算为 ${requiredKiB} KiB。`, region.moduleId, region.id);
     if (region.kind === 'data' && requiredKiB !== 0 && project?.instances?.['app-params']?.parameters?.commitStrategy === 'dual_copy' && contiguous && sectors.length < 2) {

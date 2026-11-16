@@ -11,7 +11,7 @@ function configured() {
     target: { ...target }, memory: createMemoryPlan(target),
     instances: { 'app-params': { parameters: { motionCalibrationKiB: 8, parametersKiB: 8, runtimeRecordsKiB: 8, commitStrategy: 'dual_copy' } } },
   };
-  const bank = Object.assign(createMemoryBank(), { id: 'flash-main', name: '主 Flash', baseAddress: 0x08000000, sizeKiB: 64, executable: 'yes' });
+  const bank = Object.assign(createMemoryBank(), { id: 'flash-main', name: '主 Flash', baseAddress: 0x08000000, sizeKiB: 64, executable: true });
   bank.sectors = generateUniformSectors(bank, 4);
   project.memory.layout.banks.push(bank);
   const ranges = [[0, 1], [2, 3, 4], [5, 6], [7, 8], [9, 10], [11, 12]];
@@ -58,7 +58,7 @@ test('结构检查拒绝未知字段、错误类型、重复 ID 和重复扇区�
     plan => { plan.extra = 1; },
     plan => { delete plan.placements.app; },
     plan => { plan.layout.banks[0].baseAddress = Infinity; },
-    plan => { plan.layout.banks[0].executable = true; },
+    plan => { plan.layout.banks[0].executable = 'yes'; },
     plan => { plan.layout.banks[0].sectors[0].reserved = 'true'; },
     plan => { plan.layout.banks.push(structuredClone(plan.layout.banks[0])); },
     plan => { plan.layout.banks[0].sectors.push(structuredClone(plan.layout.banks[0].sectors[0])); },
@@ -137,7 +137,7 @@ test('扇区越界、彼此重叠、负偏移和非整数字节会被拒绝', ()
 
 test('CPU 地址空间中重叠的 Flash 会报错，相邻 Bank 可以独立分配', () => {
   const project = configured(), first = project.memory.layout.banks[0];
-  const second = Object.assign(createMemoryBank(), { id: 'flash-second', name: '第二 Flash', baseAddress: first.baseAddress + 64 * 1024, sizeKiB: 16, executable: 'yes' });
+  const second = Object.assign(createMemoryBank(), { id: 'flash-second', name: '第二 Flash', baseAddress: first.baseAddress + 64 * 1024, sizeKiB: 16, executable: true });
   second.sectors = generateUniformSectors(second, 4);
   project.memory.layout.banks.push(second);
   assert.equal(has(project, 'banks-overlap-flash-second'), false);
@@ -180,9 +180,7 @@ test('不连续的分配不能伪装成一个连续链接区间', () => {
 
 test('固件执行能力必须单独声明，不因 MCU 或 Flash 地址自动认可', () => {
   const project = configured(), bank = project.memory.layout.banks[0];
-  bank.executable = 'unconfirmed';
-  assert.equal(validateMemory(project).filter(issue => issue.id.endsWith('execution-unknown')).length, 3);
-  bank.executable = 'no';
+  bank.executable = false;
   assert.equal(problems(project).filter(issue => issue.id.endsWith('not-executable')).length, 3);
 });
 

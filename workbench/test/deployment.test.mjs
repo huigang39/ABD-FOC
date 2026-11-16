@@ -11,7 +11,7 @@ function deployment() {
   project.target = { vendor: 'st', mcu: 'STM32G474', board: 'Flash 布局验证板' };
   project.instances['hw-platform'].parameters.architecture = 'arm';
   project.memory = createMemoryPlan(project.target);
-  const bank = Object.assign(createMemoryBank(), { id: 'declared-flash', name: '用户声明 Flash', baseAddress: 0x08000000, sizeKiB: 64, executable: 'yes' });
+  const bank = Object.assign(createMemoryBank(), { id: 'declared-flash', name: '用户声明 Flash', baseAddress: 0x08000000, sizeKiB: 64, executable: true });
   bank.sectors = generateUniformSectors(bank, 4);
   project.memory.layout.banks.push(bank);
   Object.assign(project.instances['app-params'].parameters, { motionCalibrationKiB: 8, parametersKiB: 8, runtimeRecordsKiB: 8 });

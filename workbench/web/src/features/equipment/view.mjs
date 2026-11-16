@@ -9,7 +9,6 @@ import { getAssemblySummary, getDriverHardware, isAssemblyComplete } from './mod
 import { MODULES } from '../../core/catalog.mjs';
 import { icon } from '../../shared/ui/icons.mjs';
 import { renderSensorConfig } from '../../modules/hardware/hw-sensors/view.mjs';
-import { renderMcuInfo } from '../deployment/mcu-view.mjs';
 import { renderAssemblyPerformance } from '../performance/view.mjs';
 
 const groups={assemblies:'关节模组',actuators:'执行器',drivers:'驱动器'};
@@ -65,7 +64,7 @@ function actuatorEditor(a) {
   return `${edit('执行器名称',a.name,'actuator','name',{id:a.id})}<div class="design-toolbar"><h3>电机参数</h3><span class="asset-kind asset-kind-actuator">电机侧</span></div><div class="profile-form">${motorFields.map(([label,key,unit])=>edit(label,a.motor[key],'actuator',key,{id:a.id,section:'motor',unit,type:['polePairs','statorSlots'].includes(key)?'integer':'number'})).join('')}</div><p class="design-note">电流、磁链和转矩常数应使用一致的相量与峰值 / 有效值约定；参数用于设计记录，应用前需与控制算法定义核对。</p><div class="design-toolbar"><h3>减速机参数</h3><span class="asset-kind asset-kind-actuator">出轴侧</span></div><div class="profile-form">${reducerFields.map(([label,key,unit])=>edit(label,key==='efficiency'&&a.reducer[key]!=null?a.reducer[key]*100:a.reducer[key],'actuator',key,{id:a.id,section:'reducer',unit,type:'number',...(key==='efficiency'?{min:0,max:100,scale:0.01}:{})})).join('')}</div><p class="design-note">减速比 = 电机转速 / 输出轴转速。直驱填 1；电机电角度、转子机械角和输出轴角度分别定义。</p>`;
 }
 function driverEditor(d) {
-  return `<div class="profile-form">${edit('驱动器名称',d.name,'driver','name',{id:d.id})}${edit('MCU 型号',d.mcu,'driver','mcu',{id:d.id})}${renderMcuInfo(d.mcu,{showSource:true})}${edit('PCBA 标识 / 版本',d.board,'driver','board',{id:d.id})}${driverFields.filter(([,key])=>!d.memoryLayout?.banks.length||!['flashKiB','eraseKiB','firmwareReserveKiB'].includes(key)).map(([label,key,unit])=>edit(label,d[key],'driver',key,{id:d.id,unit,type:key==='adcBits'?'integer':'number',choices:hardwareFieldOptions(d.mcu,'hw-board',key)})).join('')}</div>${driverHardwareEditor(d)}`;
+  return `<div class="profile-form">${edit('驱动器名称',d.name,'driver','name',{id:d.id})}${edit('MCU 型号',d.mcu,'driver','mcu',{id:d.id})}${edit('PCBA 标识 / 版本',d.board,'driver','board',{id:d.id})}${driverFields.filter(([,key])=>!d.memoryLayout?.banks.length||!['flashKiB','eraseKiB','firmwareReserveKiB'].includes(key)).map(([label,key,unit])=>edit(label,d[key],'driver',key,{id:d.id,unit,type:key==='adcBits'?'integer':'number',choices:hardwareFieldOptions(d.mcu,'hw-board',key)})).join('')}</div>${driverHardwareEditor(d)}`;
 }
 function assemblyEditor(a,project,issues,firmwareState) {
   const s=getAssemblySummary(project,a.id);

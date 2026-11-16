@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { enhanceSelectMenus, listSelectOptions, placeSelectPop } from '../web/src/shared/ui/select-menu.mjs';
+import { enhanceSelectMenus, listSelectOptions, placeSelectPop, mcuCoreTags } from '../web/src/shared/ui/select-menu.mjs';
 
 const option = (value, label = value, extra = {}) => ({ tagName: 'OPTION', value, textContent: label, disabled: false, hidden: false, ...extra });
 
@@ -43,4 +43,13 @@ test('增强入口对空根、无匹配选择器与已增强项安全返回', ()
   assert.equal(enhanceSelectMenus({ querySelectorAll: () => [] }), 0);
   const enhanced = { closest: () => ({}) };
   assert.equal(enhanceSelectMenus({ querySelectorAll: () => [enhanced] }), 0);
+});
+
+test('MCU 核心标签按核心逐枚输出架构全称：双核两枚、单核一枚、未收录与空值为空', () => {
+  assert.deepEqual(mcuCoreTags('STM32H745'), ['Arm Cortex-M7', 'Arm Cortex-M4']);
+  assert.deepEqual(mcuCoreTags('STM32H745IIK6'), ['Arm Cortex-M7', 'Arm Cortex-M4']);
+  assert.deepEqual(mcuCoreTags('STM32G474RE'), ['Arm Cortex-M4']);
+  assert.deepEqual(mcuCoreTags('HPM5361'), ['RISC-V']);
+  assert.deepEqual(mcuCoreTags(''), []);
+  assert.deepEqual(mcuCoreTags('STM32F103C8'), []);
 });

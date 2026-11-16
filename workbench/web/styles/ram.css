@@ -13,6 +13,11 @@
 .ram-capacity-track { height: 6px; border-radius: 6px; margin: 13px 0 9px; background: var(--soft); overflow: hidden; }
 .ram-capacity-track > span { display: block; height: 100%; background: var(--primary); border-radius: inherit; }
 .ram-capacity-unknown { border: 1px dashed var(--line-strong); background: transparent; }
+/* 内核访问开关纵向堆叠并限制宽度，避免把 DMA / 操作列挤出可视区域。 */
+.ram-core-access { display: grid; gap: 4px; min-width: 0; }
+/* 代码与 DMA 列的开关文字和表头重复：收起文字、居中开关，为右侧列留出空间。 */
+.ram-bank-table td:nth-child(4) .switch-label,.ram-bank-table td:nth-child(6) .switch-label { display: none; }
+.ram-bank-table td:nth-child(4) .switch-field,.ram-bank-table td:nth-child(6) .switch-field { justify-content: center; gap: 0; min-height: 32px; }
 .ram-capacity-caption { color: var(--muted); font-size: 10px; gap: 4px 10px; }
 .ram-capacity > code { display: block; margin-top: 7px; font-size: 10px; color: var(--subtle); overflow-wrap: anywhere; }
 .ram-geometry,.ram-placement { border: 1px solid var(--line); border-radius: 10px; background: var(--surface); margin-top: 12px; min-width: 0; }

@@ -12,7 +12,7 @@ function configured() {
   const next = applyRamPreset(project);
   next.memory.layout = { ...next.target, banks: [] };
   delete next.memory.layout.vendor;
-  next.memory.layout.banks.push({ ...createMemoryBank(), id: 'flash-load', baseAddress: 0x08000000, sizeKiB: 256, executable: 'no' });
+  next.memory.layout.banks.push({ ...createMemoryBank(), id: 'flash-load', baseAddress: 0x08000000, sizeKiB: 256, executable: false });
   return next;
 }
 function addPlacement(project, id, values = {}) {

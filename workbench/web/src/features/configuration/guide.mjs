@@ -8,7 +8,7 @@ export const GUIDE_STEPS = [
   { id: 'actuator', title: '选型', summary: '选择电机与减速机组成的执行器，确定机械与电机参数。', modules: [], outcome: '执行器已选定。' },
   { id: 'hardware', title: '硬件', summary: '依次配置内核、外设、驱动和异常，也可复用货架驱动器。', modules: MODULES.filter(module=>module.layer==='hardware').map(module=>module.id), outcome: '目标硬件与模块配置明确。' },
   { id: 'algorithm', title: '算法', summary: '配置电流环、调制器与异常处理，按需启用观测器和补偿器。', why: '硬件能力确定后，再选择算法组合；每个子功能各自管理参数和数据结构。', modules: ['foc-current', 'foc-modulation', 'foc-observer', 'foc-compensation', 'foc-lifecycle'], outcome: '算法参数、数据接口和电流环依赖一致。' },
-  { id: 'application', title: '应用', summary: '配置调度器、状态机、控制环路、通信、校准、异常与备份。', why: '错误码由保护与诊断模块管理，协议与解析由通信协议模块管理；各功能通过数据结构协作。', modules: ['app-runtime', 'app-state', 'app-motion', 'app-comms', 'app-calibration', 'app-safety', 'app-params'], designPages: ['faults', 'protocol'], outcome: '任务、业务策略、错误码与通信消息已定义。' },
+  { id: 'application', title: '应用', summary: '配置调度器、状态机、控制环、通信、校准、异常与备份。', why: '错误码由保护与诊断模块管理，协议与解析由通信协议模块管理；各功能通过数据结构协作。', modules: ['app-runtime', 'app-state', 'app-motion', 'app-comms', 'app-calibration', 'app-safety', 'app-params'], designPages: ['faults', 'protocol'], outcome: '任务、业务策略、错误码与通信消息已定义。' },
   { id: 'build', title: '构建', summary: '检查当前配置，通过后生成模块源码并编译固件。', modules: [], outcome: '当前配置已完成构建。' },
   { id: 'flash', title: '烧录', summary: '选择已构建的固件与调试探针，写入设备并核对烧录结果。', modules: [], outcome: '当前固件已完成烧录。' },
 ];

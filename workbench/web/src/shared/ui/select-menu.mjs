@@ -1,8 +1,14 @@
-import { identifyMcu } from '../../features/deployment/mcu.mjs';
+import { coreArchitectureName, getMcuCores, identifyMcu } from '../../features/deployment/mcu.mjs';
 import { isEmptyChoice } from '../forms/select-control.mjs';
 
 const ARROW = '<svg class="select-menu-arrow" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m4 6 4 4 4-4"/></svg>';
 const SELECTOR = 'select.field-select:not([multiple]), select.compact-input:not([multiple])';
+
+/** MCU 型号按已收录内核逐核出标签：双核（如 STM32H745）显示 Arm Cortex-M7 与 Arm Cortex-M4 两枚全称，未收录型号不带标签。 */
+export function mcuCoreTags(model) {
+  return getMcuCores(model).map(core => coreArchitectureName(model, core.id));
+}
+const coreTag = (doc, label, index = 0) => { const tag = doc.createElement('span'); tag.className = `mcu-core-tag core-tone-${Math.min(index, 1)}`; tag.textContent = label; return tag; };
 
 /** Flattens an option list (including optgroups) into renderable groups; hidden placeholder options stay hidden. */
 export function listSelectOptions(select) {
@@ -56,9 +62,12 @@ function enhanceSelect(select) {
   }
   const value = doc.createElement('span');
   value.className = 'select-menu-value';
+  // 核心标签与数值单位同样作为后缀出现在框内；仅 MCU 型号下拉需要。
+  const tags = select.dataset.optionGroup === 'mcu' ? doc.createElement('span') : null;
+  if (tags) { tags.className = 'select-menu-tags'; tags.setAttribute('aria-hidden', 'true'); }
   const template = doc.createElement('template');
   template.innerHTML = ARROW;
-  trigger.append(value, template.content.firstElementChild);
+  trigger.append(value, ...(tags ? [tags] : []), template.content.firstElementChild);
   const pop = doc.createElement('div');
   pop.className = 'select-menu-pop';
   pop.setAttribute('role', 'listbox');
@@ -75,6 +84,7 @@ function enhanceSelect(select) {
   const updateTrigger = () => {
     const selected = select.selectedOptions?.[0];
     value.textContent = selected ? selected.textContent : '';
+    if (tags) tags.replaceChildren(...mcuCoreTags(select.value).map((label, index) => coreTag(doc, label, index)));
     trigger.dataset.empty = select.dataset.empty || String(isEmptyChoice(select.value));
   };
   container.updateTrigger = () => updateTrigger();
@@ -121,7 +131,15 @@ function enhanceSelect(select) {
         item.setAttribute('role', 'option');
         item.tabIndex = -1;
         item.dataset.value = entry.value;
-        item.textContent = entry.label;
+        const coreTagList = select.dataset.optionGroup === 'mcu' ? mcuCoreTags(entry.value) : [];
+        if (coreTagList.length) {
+          const name = doc.createElement('span');
+          name.className = 'select-menu-option-label';
+          name.textContent = entry.label;
+          item.append(name, ...coreTagList.map((label, index) => coreTag(doc, label, index)));
+        } else {
+          item.textContent = entry.label;
+        }
         if (entry.disabled) { item.setAttribute('aria-disabled', 'true'); if(select.dataset.edit==='pcba-resource'&&['pins',''].includes(select.dataset.section||''))item.dataset.conflict='true'; }
         if (String(entry.value) === String(select.value)) item.setAttribute('aria-selected', 'true');
         pop.append(item);

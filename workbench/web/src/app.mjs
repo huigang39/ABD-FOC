@@ -47,7 +47,6 @@ import { createActuator, createDriver, createJointModule, createBinding, applyAs
 import { renderGuide, renderStructures, renderFaults, renderProtocol } from './features/configuration/view.mjs';
 import { renderEquipment } from './features/equipment/view.mjs';
 import { renderSensorConfig } from './modules/hardware/hw-sensors/view.mjs';
-import { renderMcuInfo } from './features/deployment/mcu-view.mjs';
 import { syncMcuArchitecture } from './features/deployment/mcu.mjs';
 import { renderBuild, renderDebug, renderFlash } from './features/build/view.mjs';
 import { renderOperation } from './features/operation/view.mjs';
@@ -302,9 +301,7 @@ function fieldHtml(field, value, scope, moduleId = '') {
   const example = moduleId && project.provenance?.[`${moduleId}.${key}`] === 'example';
   const help = [field.description, example ? '预置值 · 待设备确认' : ''].filter(Boolean).join('\n');
   let input;
-  if (field.computed) {
-    return renderMcuInfo(project.target.mcu);
-  } else if (field.type === 'readout') {
+  if (field.type === 'readout') {
     input=`<output class="computed-field">${escape(field.displayValue??'—')}</output>`;
   } else if (optionGroupFor(scope,key)) {
     input=modelSelect(optionGroupFor(scope,key),value,attrs);
@@ -337,7 +334,7 @@ function moduleParameters(module) {
     const feedback=moduleById('foc-feedback');
     config += `<details class="resource-disclosure hardware-resource current-feedback-config" data-state-key="current-feedback"><summary><strong>电角度源</strong></summary><div class="hardware-resource-body"><div class="profile-form">${feedback.params.filter(field=>parameterVisible(project,feedback.id,field)).map(field=>fieldHtml(field,project.instances[feedback.id].parameters[field.key],'module',feedback.id)).join('')}</div></div></details>`;
   }
-  if(module.id==='hw-platform')config=targetForm()+renderPlatformConfiguration(project.target.mcu,params,fields,renderField,{project})+`<div class="memory-summary"><div>${icon('chip')}<span><strong>模块分工与核间协作</strong><small>模块执行内核与跨核数据交换</small></span></div><a class="button small" href="#/project/execution">配置分工 ${icon('arrow-right')}</a></div>`;
+  if(module.id==='hw-platform')config=targetForm()+renderPlatformConfiguration(project.target.mcu,params,fields,renderField,{project})+`<div class="memory-summary"><div>${icon('chip')}<span><strong>双核协作</strong></span></div><a class="button small" href="#/project/execution">配置分工 ${icon('arrow-right')}</a></div>`;
   if(module.id==='hw-board')config=fieldHtml(TARGET_FIELDS.find(field=>field.key==='board'),project.target.board,'target')+fields.filter(field=>!field.group).map(renderField).join('')+renderResourceEditor(project.target.mcu,resources)+`<section class="hardware-field-group" id="peripheral-timing"><h3>采样与 PWM</h3><div class="profile-form">${fields.filter(field=>field.group==='timing').map(renderField).join('')}</div></section>`;
   if(module.id==='hw-sensors')config=renderSensorConfig(params,field=>renderField(bindSensorField(field,params,resources)),{renderTransport:role=>renderSensorTransport(params,role,resources,{mcu:project.target.mcu})});
   if(module.id==='foc-lifecycle')config+=renderAlgorithmPaths(project);
@@ -353,7 +350,7 @@ function moduleExtras(module) {
 }
 function issueCard(issue) {
   const module = moduleById(issue.moduleId);
-  const pageNames={structures:'数据结构',faults:'错误码',protocol:'通信协议',equipment:'货架',build:'构建配置',versions:'版本组合',interfaces:'模块接口',memory:'部署配置',execution:'模块分工与核间协作'};
+  const pageNames={structures:'数据结构',faults:'错误码',protocol:'通信协议',equipment:'货架',build:'构建配置',versions:'版本组合',interfaces:'模块接口',memory:'部署配置',execution:'双核协作'};
   const designPage=Object.hasOwn(pageNames,issue.designPage)?issue.designPage:null;
   const connection=project.design.layerInterfaces.find(item=>item.id===issue.itemId);
   const link=designPage==='interfaces'?moduleRoute(connection?.toModule||issue.moduleId||'foc-current','interfaces')+(connection?`&interface=${encodeURIComponent(connection.id)}`:''):designPage==='equipment'?equipmentIssueRoute(issue.itemId):`#/project/${designPage}/${encodeURIComponent(issue.itemId||'')}`;
@@ -396,7 +393,7 @@ function render(formOnly = false) {
   const inspection = { ...nativeClient.state.inspection, current: gate.current, supported: gate.supported };
   let content;
   switch (current.page) {
-    case 'execution': content = `<nav class="breadcrumbs" aria-label="当前位置"><a href="#/project/hardware">硬件</a><span>/</span><a href="#/project/hardware?module=hw-platform&tab=config">内核</a><span>/</span><span aria-current="page">模块分工与核间协作</span></nav>${heading('模块分工与核间协作','分配模块执行内核，配置跨核数据交换。')}${renderExecution(project)}<div data-live="execution-issues">${issueNoticeButton(issues.filter(issue=>issue.id.startsWith('execution-')),{label:'内核配置检查'})}</div>`; break;
+    case 'execution': content = `<nav class="breadcrumbs" aria-label="当前位置"><a href="#/project/hardware">硬件</a><span>/</span><a href="#/project/hardware?module=hw-platform&tab=config">内核</a><span>/</span><span aria-current="page">双核协作</span></nav>${heading('双核协作','分配模块执行内核，配置跨核数据交换。')}${renderExecution(project)}<div data-live="execution-issues">${issueNoticeButton(issues.filter(issue=>issue.id.startsWith('execution-')),{label:'内核配置检查'})}</div>`; break;
     case 'memory': content = `<nav class="breadcrumbs" aria-label="当前位置"><a href="#/project/hardware">硬件层</a><span>/</span><a href="#/project/hardware?module=hw-platform&tab=config">内核</a><span>/</span><span aria-current="page">部署配置</span></nav>${heading('部署配置','按目标硬件分配 Flash 和 RAM。')}${renderMemory(project,issues,{sectorSizes})}${renderRam(project,issues)}`; break;
     case 'architecture': content = current.id ? renderArchitectureLayer(current.id,current.moduleId) : renderArchitectureOverview(); break;
     case 'project': content = renderGuide(project,issues,current.id,{parameters:moduleParameters,moduleRoute,moduleExtras,interfaces:module=>renderModuleInterfaces(project,issues,module.id,current.interfaceId),selectedModuleId:current.moduleId,tab:current.tab,inspection,buildStatus:nativeClient.state.delivery?.projectId === project.id && nativeClient.state.delivery.fingerprint === configurationFingerprint(project) ? 'built' : nativeClient.state.job?.fingerprint === configurationFingerprint(project) ? nativeClient.state.job.status : '',flashStatus:{current:nativeClient.state.flashResult?.fingerprint===configurationFingerprint(project),programmed:nativeClient.state.flashResult?.programmed===true},profileVariant:nativeClient.state.profileVariant,saveStatus:saveState,configurationLocked:nativeClient.state.busy || nativeClient.state.debug.connected,buildHtml:current.id==='build'?renderValidation()+renderBuild(project,nativeClient.state)+renderRuntimeConfiguration(project, fieldHtml):'',flashHtml:current.id==='flash'?renderFlash(project,nativeClient.state):''}); break;

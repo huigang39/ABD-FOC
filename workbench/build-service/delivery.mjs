@@ -33,7 +33,7 @@ export async function deliverFirmware({ project, result, outputRoot, buildId, fi
     const address = artifact.loadAddress ?? artifact.address ?? manifest.flashaddresses?.[core];
     if (!Number.isSafeInteger(address) || address < 0 || address % 4 || address + data.length > 0x100000000) fail('镜像缺少有效的烧录地址。');
     const banks = project.memory.layout.banks;
-    if (!banks.some(bank => bank.executable === 'yes' && address >= bank.baseAddress && address + data.length <= bank.baseAddress + bank.sizeKiB * 1024)) fail('镜像超出已配置的可执行 Flash 区域。');
+    if (!banks.some(bank => bank.executable === true && address >= bank.baseAddress && address + data.length <= bank.baseAddress + bank.sizeKiB * 1024)) fail('镜像超出已配置的可执行 Flash 区域。');
     for (const id of ['motion-calibration','parameters','fault-records']) {
       const placement = project.memory.placements[id], bank = banks.find(bank => bank.id === placement.bankId);
       for (const sector of bank?.sectors.filter(sector => placement.sectorIds.includes(sector.id)) || []) {

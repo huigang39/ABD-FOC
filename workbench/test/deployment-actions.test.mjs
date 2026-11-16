@@ -11,7 +11,7 @@ function projectWithFlash() {
   project.target = { vendor: 'st', mcu: 'STM32H745ZI', board: 'BOARD-A' };
   project = deploymentAction(project, 'memory-add-bank');
   const id = project.memory.layout.banks[0].id;
-  for (const [key, value] of Object.entries({ name: 'Flash Bank 1', baseAddress: 0x08000000, sizeKiB: 64, executable: 'yes' })) {
+  for (const [key, value] of Object.entries({ name: 'Flash Bank 1', baseAddress: 0x08000000, sizeKiB: 64, executable: true })) {
     project = deploymentEdit(project, 'memory-bank', { id, key }, value);
   }
   project = deploymentAction(project, 'memory-generate-sectors', { id, value: 4 });

@@ -60,7 +60,7 @@ function renderBankEditor(bank, index, sectorSizes) {
       ${edit('Flash 名称', bank.name, 'memory-bank', 'name', key)}
       ${edit('起始地址', addressInput(bank.baseAddress), 'memory-bank', 'baseAddress', { ...key, type: 'address', description: '支持十六进制 0x… 或十进制地址' })}
       ${edit('容量', bank.sizeKiB, 'memory-bank', 'sizeKiB', { ...key, type: 'number', unit: 'KiB' })}
-      ${edit('可执行代码', bank.executable, 'memory-bank', 'executable', { ...key, choices: [['unconfirmed', '待确认'], ['yes', '支持'], ['no', '仅存储数据']] })}
+      ${edit('可执行代码', bank.executable, 'memory-bank', 'executable', { ...key, type: 'boolean' })}
     </div><p class="design-note">每一行对应硬件实际的最小擦除扇区，偏移相对于本区域起始地址。Bootloader、升级暂存等占用的扇区可标记为保留。</p>
     ${!bank.sectors.length ? `<div class="memory-generator"><div>${edit('均匀扇区大小', sectorSizes[bank.id] ?? '', 'memory-generator', 'eraseKiB', { id: bank.id, type: 'number', unit: 'KiB' })}</div>${button('生成扇区表', 'memory-generate-sectors', { id: bank.id, symbol: 'plus' })}<p>适用于每个擦除扇区大小相同的 Flash；不同大小的扇区请逐项添加。</p></div>` : ''}
     ${bank.sectors.length ? `<div class="memory-sector-table-wrap"><table class="contract-table memory-sector-table"><thead><tr><th scope="col">扇区</th><th scope="col">偏移（KiB）</th><th scope="col">大小（KiB）</th><th scope="col">用途</th><th scope="col">操作</th></tr></thead><tbody>${bank.sectors.map((sector, sectorIndex) => {
@@ -124,7 +124,5 @@ export function renderMemory(project, issues = [], { sectorSizes = {} } = {}) {
 }
 
 export function renderMemorySummary(project) {
-  const plan = project.memory || createMemoryPlan();
-  const assigned = MEMORY_REGIONS.filter(region => plan.placements[region.id]?.bankId && plan.placements[region.id]?.sectorIds?.length).length;
-  return `<div class="memory-summary"><div>${icon('database')}<span><strong>RAM 与 Flash</strong><small>${plan.layout.banks.length ? `${plan.layout.banks.length} 个 Flash 区域 · ${assigned} / ${MEMORY_REGIONS.length} 项已指定扇区` : '各层固件与备份数据的扇区尚未分配'}</small></span></div><a class="button small" href="#/project/memory">配置部署 ${icon('arrow-right')}</a></div>`;
+  return `<div class="memory-summary"><div>${icon('database')}<span><strong>内存划分</strong></span></div><a class="button small" href="#/project/memory">配置部署 ${icon('arrow-right')}</a></div>`;
 }

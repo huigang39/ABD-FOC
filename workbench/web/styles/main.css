@@ -294,7 +294,23 @@ body.sidebar-resizing .sidebar-resizer::after { background: var(--primary); }
 .module-switch { display: flex; gap: 9px; align-items: center; padding: 12px 0 0; margin-top: 12px; border-top: 1px solid var(--line); font-size: 12px; cursor: pointer; }
 .module-switch label { display: flex; gap: 8px; align-items: center; }
 .module-switch small { color: var(--muted); font-size: 10px; }
-input[type="checkbox"],input[type="radio"] { width: 16px; height: 16px; accent-color: var(--primary); flex-shrink: 0; margin: 0; cursor: pointer; }
+input[type="radio"] { width: 16px; height: 16px; accent-color: var(--primary); flex-shrink: 0; margin: 0; cursor: pointer; }
+/* 复选框统一自绘：圆角框 + 缩放对勾，不再随操作系统外观变化；开关控件走 .switch-field 不受影响。 */
+:where(input[type="checkbox"]:not(.switch-field input)) {
+  appearance: none; -webkit-appearance: none;
+  width: 16px; height: 16px; flex-shrink: 0; margin: 0; cursor: pointer;
+  display: inline-grid; place-content: center;
+  border: 1px solid var(--line-strong); border-radius: 5px; background: var(--surface);
+  transition: background-color var(--motion), border-color var(--motion), box-shadow var(--motion);
+}
+:where(input[type="checkbox"]:not(.switch-field input))::before {
+  content: ''; width: 9px; height: 9px; background: var(--surface);
+  clip-path: polygon(14% 44%, 0 65%, 40% 100%, 100% 16%, 80% 0%, 37% 62%);
+  transform: scale(0) rotate(-15deg); transition: transform var(--motion);
+}
+:where(input[type="checkbox"]:not(.switch-field input):checked) { background: var(--primary); border-color: var(--primary); }
+:where(input[type="checkbox"]:not(.switch-field input):checked)::before { transform: scale(1) rotate(0deg); }
+:where(input[type="checkbox"]:not(.switch-field input):focus-visible) { outline: 2px solid var(--focus); outline-offset: 2px; }
 .form-field { display: block; margin-bottom: 19px; min-width: 0; }
 .form-field:last-child { margin-bottom: 0; }
 .field-label { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; justify-content: space-between; margin-bottom: 7px; font-size: 13px; font-weight: 500; line-height: 1.55; }
@@ -639,6 +655,9 @@ select.field-select:disabled,.form-field select:disabled { cursor: not-allowed; 
 @media(max-width:1100px){.assembly-bench{grid-template-columns:minmax(130px,1fr) minmax(200px,1.2fr) minmax(130px,1fr);gap:12px}.part-card{gap:6px;padding:10px 6px}.part-grip{display:none}}
 @media(max-width:650px){.assembly-builder{padding:16px 12px}.assembly-bench{grid-template-columns:1fr 1fr}.assembly-stage{grid-column:1/-1;grid-row:2}.parts-tray:last-child{grid-column:2;grid-row:1}.parts-items{max-height:180px}.part-card{flex-wrap:wrap}.part-card > div{flex-basis:calc(100% - 36px)}.part-select{width:30px;height:32px;margin-left:auto}.assembly-slot{min-height:90px}}
 .contract-table .compact-input:is([type="number"],[data-number-input]) { min-width: 72px; }
+/* 表格内的开关行不得横向溢出压到相邻列；标签收缩省略。 */
+.contract-table .switch-field { max-width: 100%; }
+.contract-table .switch-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fields-table { table-layout: fixed; min-width: 650px; }
 .fields-table th:nth-child(1) { width: 22%; }
 .fields-table th:nth-child(2) { width: 12%; }
@@ -1198,7 +1217,15 @@ input[data-number-input] { font-variant-numeric: tabular-nums; }
   border: 0; border-radius: 999px; background: var(--soft); color: var(--muted);
   font-size: 11px; font-weight: 500; line-height: 1.3;
 }
-.mcu-info .computed-field .mcu-model-badge { padding: 5px 12px; border-radius: 999px; background: var(--soft); font-size: 11px; }
+/* MCU 核心标签沿用单位后缀的胶囊样式：每个已收录核心一枚，随型号出现在收起框与选项行内。 */
+.select-menu-trigger:has(.select-menu-tags) .select-menu-value { flex: 1 1 auto; }
+.select-menu-tags { display: flex; gap: 4px; flex: none; }
+.mcu-core-tag { padding: 2px 8px; border-radius: 999px; background: var(--soft); color: var(--muted); font-size: 10px; font-weight: 500; line-height: 1.5; white-space: nowrap; }
+/* 双核两色：第一核（如 Cortex-M7）蓝色、第二核（如 Cortex-M4）赭色，单核 RISC-V 取第一色。 */
+:is(.mcu-core-tag,.attribute-tag).core-tone-0 { color: var(--driver); background: color-mix(in srgb, var(--driver) 12%, var(--surface)); }
+:is(.mcu-core-tag,.attribute-tag).core-tone-1 { color: var(--hardware); background: color-mix(in srgb, var(--hardware) 14%, var(--surface)); }
+.select-menu-option:has(.mcu-core-tag) { display: flex; align-items: center; gap: 6px; }
+.select-menu-option .select-menu-option-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mcu-vendor-filter { display:flex; flex-wrap:wrap; gap:6px; padding:10px 12px; position:sticky; top:0; background:var(--surface); z-index:1; }
 .mcu-vendor-chip { padding:4px 12px; border:1px solid var(--line-strong); border-radius:999px; background:var(--surface); color:var(--muted); font:inherit; font-size:12px; cursor:pointer; transition: box-shadow var(--motion), background-color var(--motion), color var(--motion); }
 .mcu-vendor-chip:hover { color:var(--ink); }

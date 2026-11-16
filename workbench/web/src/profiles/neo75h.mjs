@@ -904,7 +904,7 @@ export function getNeo75hModuleMap(variant = 'KW') {
 function memoryPlan(target) {
   const plan = createMemoryPlan(target);
   plan.layout.banks = [1, 2].map(number => ({
-    id: `neo-bank-${number}`, name: `Bank ${number}`, baseAddress: number === 1 ? 0x08000000 : 0x08100000, sizeKiB: 1024, executable: 'yes',
+    id: `neo-bank-${number}`, name: `Bank ${number}`, baseAddress: number === 1 ? 0x08000000 : 0x08100000, sizeKiB: 1024, executable: true,
     sectors: Array.from({ length: 8 }, (_, index) => ({
       id: `neo-bank-${number}-sector-${index}`, offsetKiB: index * 128, sizeKiB: 128,
       name: `Sector ${index}${number === 1 ? [' · 硬件层', ' · 算法层', ' · 应用层', '', '', '', '', ''][index] : index < 4 ? ' · M4 通信' : ['', '', '', '', '', ' · 校准', ' · 参数', ' · 日志'][index]}`,

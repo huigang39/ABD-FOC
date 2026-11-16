@@ -1,6 +1,6 @@
 /** Public C entry points. The editor and generator share these names. */
 const ENTRY_COMMENTS = {
-  "state_machine.step": "异常检查完成后、控制环路前调用，更新驱动状态与运行许可；故障复位不自动使能。",
+  "state_machine.step": "异常检查完成后、控制环前调用，更新驱动状态与运行许可；故障复位不自动使能。",
   "core.step": "平台启动完成后或时基事件到达时调用，读取启动、复位和时钟状态，更新平台就绪结果。",
   "peripherals.sample": "ADC 采样完成后调用，接收已换算的相电流、母线电压与采样时间，输出本周期采样快照；此入口不直接启动 ADC。",
   "peripherals.apply": "电压调制完成后调用，依据占空比请求、输出许可和故障状态形成 PWM 输出命令，由平台适配器写入定时器。",

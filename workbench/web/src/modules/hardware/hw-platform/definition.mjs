@@ -18,7 +18,7 @@ export default {
   "dependencies": [],
   contracts: CONTRACTS,
   params: [
-    select('architecture', 'CPU 架构', choices([unset, ['arm', 'Arm'], ['riscv', 'RISC-V'], ['other', '其他']]), 'compile', '由 MCU 型号自动识别。', { computed: true }),
+    select('architecture', '架构', choices([unset, ['arm', 'Arm'], ['riscv', 'RISC-V'], ['other', '其他']]), 'compile', '由 MCU 型号自动识别并随构建使用；界面不单独展示。', { hidden: true }),
     select('clockSource', '主时钟来源', choices([unset, ['external','外部晶振'], ['internal','内部振荡器'], ['bypass','外部有源时钟']]), 'init', '由平台适配计算 PLL 与总线分频。', { group:'clock' }),
     number('oscillatorHz','输入时钟','Hz','init','所选时钟源的实际频率。',{min:1,group:'clock'}),
     number('busClockHz','总线时钟','Hz','init','主总线目标频率。',{min:1,group:'clock'}),

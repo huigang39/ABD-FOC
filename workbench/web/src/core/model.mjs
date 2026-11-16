@@ -10,7 +10,7 @@ import { createLayerVersions, checkLayerVersionsShape, validateLayerVersions, ch
 import { createOperation, checkOperationShape } from '../features/operation/model.mjs';
 import { checkModuleOptimizations } from '../features/build/options.mjs';
 import { ensureModuleContracts, validateModuleContracts } from './module-contracts.mjs';
-import { createMemoryPlan, checkMemoryPlanShape, validateMemory } from '../features/deployment/flash.mjs';
+import { createMemoryPlan, checkMemoryPlanShape, validateMemory, migrateMemoryLayoutValues } from '../features/deployment/flash.mjs';
 import { createExecutionPlan, checkExecutionShape, validateExecution } from '../features/deployment/execution.mjs';
 import { calibrationEnabled } from '../modules/application/app-calibration/validation.mjs';
 /** Design-time configuration only. No firmware generation or hardware verification. */
@@ -245,6 +245,7 @@ function migrateInputs(project) {
   migrateLegacyModuleParameters(project);
   if(project.schemaVersion===2) {
     if(!Object.hasOwn(project,'memory'))project.memory=createMemoryPlan();
+    migrateMemoryLayoutValues(project.memory?.layout);
     if(!Object.hasOwn(project,'execution'))project.execution=createExecutionPlan();
     else if(plain(project.execution?.assignments)&&!Object.hasOwn(project.execution.assignments,'foc-compensation'))project.execution.assignments['foc-compensation']='';
   }
@@ -255,6 +256,7 @@ function migrateInputs(project) {
   if(hallAngle)feedback.angleSource='encoder';
   if(Array.isArray(project.catalog?.drivers))for(const driver of project.catalog.drivers){
     if(driver?.hardware?.['hw-sensors'])migrateSensorParameters(driver.hardware['hw-sensors']);
+    migrateMemoryLayoutValues(driver?.memoryLayout);
     const coreConfigs=driver?.hardware?.['hw-platform']?.coreConfigs;
     if(plain(coreConfigs))for(const core of Object.values(coreConfigs)) {
       if (!plain(core)) continue;
@@ -269,7 +271,9 @@ function migrateInputs(project) {
     if(plain(instances))migrateLegacyModuleParameters({instances,execution:{}});
     if(instances?.['hw-sensors'])migrateSensorParameters(instances['hw-sensors'].parameters);
     if(instances?.['foc-feedback']?.parameters?.angleSource==='hall')instances['foc-feedback'].parameters.angleSource='encoder';
+    migrateMemoryLayoutValues(release?.snapshot?.memoryLayout);
   }
+  if(Array.isArray(project.performance?.records))for(const record of project.performance.records)migrateMemoryLayoutValues(record?.snapshot?.driver?.memoryLayout);
 }
 
 export function parseProject(jsonText) {
