@@ -41,3 +41,5 @@
   .architecture-role-strip > div { display: grid; grid-template-columns: 36px minmax(0,1fr); gap: 10px; align-items: baseline; }
   .architecture-role-strip span { margin-top: 0; }
 }
+/* 总览只剩三层入口：内容在视口内垂直居中，避免底部大片留白。 */
+.architecture-overview { min-height: calc(100dvh - 150px); display: flex; flex-direction: column; justify-content: center; }
