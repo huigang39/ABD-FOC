@@ -7,11 +7,12 @@ export const SENSOR_ROLES = [
   {id:'motor',title:'电机侧编码器',capability:'encoderCapability',prefix:'motorEncoder',description:'转子角度，供电角度计算与换相使用。'},
   {id:'output',title:'出轴侧编码器',capability:'outputEncoderCapability',prefix:'outputEncoder',description:'减速机输出轴位置，供全闭环位置控制使用。'},
   {id:'torque',title:'力矩传感器',capability:'torqueCapability',prefix:'torqueSensor',description:'测量输出负载力矩，与电流估计力矩分别记录。'},
+  {id:'gate',title:'预驱（门极驱动）',capability:'gateDriverCapability',prefix:'gateDriver',description:'三相门极驱动器；提供功率级故障状态，参与通道有效性与内核分配。'},
 ];
 const field=(role,key,label,type,extra={})=>({key,label,type,phase:'init',description:`${role.title}的${label}配置。`,required:false,defaultValue:type==='select'?'unselected':type==='text'?'':null,sensorRole:role.id,...extra});
 const select=(role,key,label,entries,extra={})=>field(role,key,label,'select',{options:entries,...extra});
 export const SENSOR_PARAMS = SENSOR_ROLES.flatMap(role=>{
-  const p=role.prefix, encoder=role.id!=='torque';
+  const p=role.prefix, gate=role.id==='gate', encoder=!gate&&role.id!=='torque';
   return [
     select(role,role.capability,'使用状态',states,{required:true,defaultValue:'unconfirmed',sensorLayoutTrigger:true}),
     ...(encoder?[
@@ -23,7 +24,7 @@ export const SENSOR_PARAMS = SENSOR_ROLES.flatMap(role=>{
     select(role,p+'Interface','通信方式',interfaces,{sensorRequired:true,sensorLayoutTrigger:true}),
     field(role,p+'Resource','外设接口','text',{sensorRequired:true,sensorLayoutTrigger:true,description:'引用 PCBA 已分配的外设与引脚。'}),
     field(role,p+'Commands','接收命令','command-list',{defaultValue:[],hidden:true}),
-    ...(encoder?[
+    ...(gate?[]:encoder?[
       select(role,p+'AngleDomain','输出角度语义',options([['unselected','待选择'],['mechanical','机械角度'],['electrical','电角度']]),{sensorRequired:true}),
       field(role,role.id==='motor'?'encoderBits':'outputEncoderBits','有效分辨率','integer',{unit:'bit',min:1,max:64,when:'absolute',sensorRequired:true,advanced:true}),
       field(role,p+'CountsPerRev','每圈有效计数','integer',{min:1,when:'incremental',sensorRequired:true,advanced:true}),
@@ -32,9 +33,11 @@ export const SENSOR_PARAMS = SENSOR_ROLES.flatMap(role=>{
       field(role,p+'RangeNm','额定量程','number',{unit:'N·m',min:Number.MIN_VALUE,sensorRequired:true}),
       field(role,p+'Scale','换算系数','number',{unit:'N·m/原始单位',min:Number.MIN_VALUE,when:'raw_torque',sensorRequired:true}),
     ]),
-    select(role,p+'Direction','方向处理',options([['calibration','使用校准记录'],['positive','配置正向'],['negative','配置反向']]),{defaultValue:'calibration',hidden:true}),
-    select(role,p+'Timing','更新方式',options([['unselected','待选择'],['fast','跟随电流环控制周期'],['periodic','独立周期'],['event','接收事件驱动']]),{sensorRequired:true,sensorLayoutTrigger:true,advanced:true}),
-    field(role,p+'RateHz','更新频率','number',{unit:'Hz',min:Number.MIN_VALUE,when:'periodic',sensorRequired:true,advanced:true}),
+    ...(gate?[]:[
+      select(role,p+'Direction','方向处理',options([['calibration','使用校准记录'],['positive','配置正向'],['negative','配置反向']]),{defaultValue:'calibration',hidden:true}),
+      select(role,p+'Timing','更新方式',options([['unselected','待选择'],['fast','跟随电流环控制周期'],['periodic','独立周期'],['event','接收事件驱动']]),{sensorRequired:true,sensorLayoutTrigger:true,advanced:true}),
+      field(role,p+'RateHz','更新频率','number',{unit:'Hz',min:Number.MIN_VALUE,when:'periodic',sensorRequired:true,advanced:true}),
+    ]),
     field(role,p+'TimeoutUs','数据有效期','number',{unit:'μs',min:Number.MIN_VALUE,sensorRequired:true,advanced:true,description:'超过有效期的反馈不能继续当作新数据使用。'}),
     field(role,p+'Bitrate','接口速率 / 时钟','number',{min:Number.MIN_VALUE,when:'serial',advanced:true,description:'SPI / SSI 等填写时钟 Hz，UART / RS-485 等填写 bit/s。'}),
     ...(encoder?[
@@ -45,7 +48,7 @@ export const SENSOR_PARAMS = SENSOR_ROLES.flatMap(role=>{
     ]:[]),
   ];
 });
-// Preserve a legacy independent Hall declaration on import; it is never a fourth sensor role.
+// Preserve a legacy independent Hall declaration on import; it stays outside the role list.
 SENSOR_PARAMS.push({key:'hallCapability',label:'旧霍尔声明',type:'select',options:states,phase:'init',description:'旧格式迁移记录。',required:false,defaultValue:'unconfirmed',hidden:true});
 export function sensorFieldVisible(field,parameters) {
   if(field.hidden)return false;

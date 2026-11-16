@@ -1,6 +1,7 @@
 import { edit, esc } from '../configuration/view.mjs';
 import { isAssemblyComplete } from '../equipment/model.mjs';
 import { createOperation } from './model.mjs';
+import { pageHeading } from '../../shared/ui/page-heading.mjs';
 
 const transportChoices = [['unselected', '待选择'], ['canfd', 'CAN FD'], ['ethercat', 'EtherCAT'], ['ethernet', 'Ethernet']];
 const modeChoices = [['disabled', '停用（给定配置）'], ['position', '位置'], ['speed', '速度'], ['torque', '力矩'], ['impedance', '阻抗 / PD']];
@@ -10,7 +11,7 @@ export function renderOperation(project) {
   const operation = project.operation ?? createOperation();
   const assembly = project.catalog?.assemblies?.find(item => item.id === project.catalog.activeAssemblyId && isAssemblyComplete(project.catalog,item));
   const control = (label, key, description = '') => edit(label, operation[key], 'operation', key, { type: 'number', description });
-  return `<div class="page-heading"><div><h1>运行</h1><p class="page-description">配置上位机连接与关节模组控制给定。</p></div><span class="status-pill neutral">未连接</span></div>
+  return `${pageHeading({ title: '运行', description: '配置上位机连接与关节模组控制给定。', actions: '<span class="status-pill neutral">未连接</span>' })}
     <div class="project-grid operation-layout"><div>
       <section class="panel" aria-label="运行连接配置">
         <div class="design-toolbar"><h2>当前关节模组</h2><a href="#/equipment/assemblies">${assembly ? '更换选型 →' : '前往选型 →'}</a></div>

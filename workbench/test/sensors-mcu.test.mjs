@@ -10,8 +10,9 @@ const sensors = project => project.instances['hw-drivers'].parameters;
 const field = key => SENSOR_PARAMS.find(item => item.key === key);
 const has = (project, id, level) => validateProject(project).some(issue => issue.id === id && (!level || issue.level === level));
 
-test('三类传感器独立配置，霍尔属于编码器类型且条件字段随方案变化', () => {
-  assert.deepEqual(SENSOR_ROLES.map(role => role.id), ['motor', 'output', 'torque']);
+test('三类传感器与预驱独立配置，霍尔属于编码器类型且条件字段随方案变化', () => {
+  assert.deepEqual(SENSOR_ROLES.map(role => role.id), ['motor', 'output', 'torque', 'gate']);
+  assert.deepEqual(SENSOR_ROLES.map(role => role.capability), ['encoderCapability', 'outputEncoderCapability', 'torqueCapability', 'gateDriverCapability']);
   const value = sensors(createProject());
   assert.equal(sensorFieldVisible(field('motorEncoderType'), value), false);
   value.encoderCapability = 'present'; value.motorEncoderType = 'absolute';

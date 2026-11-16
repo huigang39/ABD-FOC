@@ -1,6 +1,7 @@
 import { getMcuCores } from '../deployment/mcu.mjs';
 import { moduleCore } from '../deployment/execution.mjs';
 import { icon } from '../../shared/ui/icons.mjs';
+import { pageHeading } from '../../shared/ui/page-heading.mjs';
 import { renderModuleToggles } from '../../shared/ui/module-tags.mjs';
 import { renderNativeBuild, renderNativeDebug, renderNativeFlash } from '../device/view.mjs';
 import { MODULES } from '../../core/catalog.mjs';
@@ -14,7 +15,7 @@ const optimizationLabels = {
   Os: 'Os · 代码体积', Oz: 'Oz · 更小体积',
 };
 const optimizationChoices = OPTIMIZATION_LEVELS.map(value => [value, optimizationLabels[value]]);
-const title = (name, description) => `<div class="page-heading"><div><h1>${esc(name)}</h1><p class="page-description">${esc(description)}</p></div></div>`;
+const title = (name, description) => pageHeading({ title: name, description });
 const effectiveValue = (moduleId, effective) => `<span data-live="optimization-${esc(moduleId)}">${esc(effective === 'unselected' ? '待选择' : effective)}</span>`;
 const optimizationEditor = (moduleId, setting) => edit('模块优化等级', setting, 'module-optimization', 'optimization', {
   id: moduleId, choices: [['inherit', '继承全局'], ...optimizationChoices],

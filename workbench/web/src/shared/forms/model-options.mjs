@@ -8,6 +8,7 @@ const entries = {
   board: [{ value: 'NEO', label: 'NEO' }],
   encoder: [{ value: 'MC_ENCODER_GW_OUTER', label: 'GW Outer' }, { value: 'MC_ENCODER_GW_INNER', label: 'GW Inner' }],
   torque: ['KW', 'LD', 'SMH', 'XH'].map(label => ({ value: `MC_TOR_SENSOR_${label}`, label })),
+  gateDriver: [{ value: 'DRV8353S', label: 'TI DRV8353S · SPI' }],
 };
 for (const options of Object.values(entries)) {
   options.forEach(Object.freeze);
@@ -25,6 +26,7 @@ export function optionGroupFor(scope, key) {
   if (['module', 'driver-hardware'].includes(scope)) {
     if (['motorEncoderModel', 'outputEncoderModel'].includes(key)) return 'encoder';
     if (key === 'torqueSensorModel') return 'torque';
+    if (key === 'gateDriverModel') return 'gateDriver';
   }
   return '';
 }

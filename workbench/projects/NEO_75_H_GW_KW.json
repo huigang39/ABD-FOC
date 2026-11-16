@@ -2699,7 +2699,7 @@
             "type": "u8",
             "count": 1,
             "unit": "",
-            "meaning": "通道编号：0 电机侧编码器，1 出轴侧编码器，2 力矩传感器"
+            "meaning": "通道编号：0 电机侧编码器，1 出轴侧编码器，2 力矩传感器，3 预驱（门极驱动）"
           },
           {
             "id": "hw-sensors-input-now_us",
@@ -2771,15 +2771,15 @@
             "id": "hw-sensors-output-value",
             "name": "value",
             "type": "f32",
-            "count": 3,
+            "count": 4,
             "unit": "",
-            "meaning": "主数据命令的通道换算值；0/1 为 rad，2 为所配置的力矩接口单位"
+            "meaning": "主数据命令的通道换算值；0/1 为 rad，2 为所配置的力矩接口单位；3 预留给预驱通道，无测量值"
           },
           {
             "id": "hw-sensors-output-raw",
             "name": "raw",
             "type": "u32",
-            "count": 3,
+            "count": 4,
             "unit": "",
             "meaning": "本次有效数值的原始位模式"
           },
@@ -2787,7 +2787,7 @@
             "id": "hw-sensors-output-sample_time_us",
             "name": "sample_time_us",
             "type": "u32",
-            "count": 3,
+            "count": 4,
             "unit": "us",
             "meaning": "最近一次通过校验的主数据接收时刻"
           },
@@ -2795,7 +2795,7 @@
             "id": "hw-sensors-output-sequence",
             "name": "sequence",
             "type": "u32",
-            "count": 3,
+            "count": 4,
             "unit": "",
             "meaning": "每收到一帧有效主数据递增"
           },
@@ -2803,25 +2803,25 @@
             "id": "hw-sensors-output-valid",
             "name": "valid",
             "type": "bool",
-            "count": 3,
+            "count": 4,
             "unit": "",
-            "meaning": "已收到有效主数据帧且未超时；失效后不得继续用于闭环"
+            "meaning": "已收到有效主数据帧且未超时；失效后不得继续用于闭环；3 号预驱通道无主数据，valid[3] 由故障状态判定"
           },
           {
             "id": "hw-sensors-output-error",
             "name": "error",
             "type": "u32",
-            "count": 3,
+            "count": 4,
             "unit": "",
-            "meaning": "位标志：1 配置，2 帧校验，4 数值，8 超时，16 传输，32 器件状态"
+            "meaning": "位标志：1 配置，2 帧校验，4 数值，8 超时，16 传输，32 器件状态；error[3] 承载预驱故障"
           },
           {
             "id": "hw-sensors-output-device_status",
             "name": "device_status",
             "type": "u32",
-            "count": 3,
+            "count": 4,
             "unit": "",
-            "meaning": "主数据或状态命令帧提取的器件状态字节，不按厂商解释"
+            "meaning": "主数据或状态命令帧提取的器件状态字节，不按厂商解释；device_status[3] 承载预驱故障状态"
           },
           {
             "id": "hw-sensors-output-tx_data",
@@ -2869,15 +2869,15 @@
             "id": "hw-sensors-state-rx_buffer",
             "name": "rx_buffer",
             "type": "u8",
-            "count": 192,
+            "count": 256,
             "unit": "byte",
-            "meaning": "三个通道各 64 字节的拼帧缓冲"
+            "meaning": "四个通道各 64 字节的拼帧缓冲"
           },
           {
             "id": "hw-sensors-state-rx_size",
             "name": "rx_size",
             "type": "u16",
-            "count": 3,
+            "count": 4,
             "unit": "byte",
             "meaning": "各通道已缓存字节数"
           },
@@ -2885,7 +2885,7 @@
             "id": "hw-sensors-state-last_tx_us",
             "name": "last_tx_us",
             "type": "u32",
-            "count": 3,
+            "count": 4,
             "unit": "us",
             "meaning": "最近一次成功提交发送的时刻"
           },
@@ -2893,7 +2893,7 @@
             "id": "hw-sensors-state-start_us",
             "name": "start_us",
             "type": "u32",
-            "count": 3,
+            "count": 4,
             "unit": "us",
             "meaning": "通道复位时刻，用于启动等待"
           },
@@ -2901,7 +2901,7 @@
             "id": "hw-sensors-state-tx_pending",
             "name": "tx_pending",
             "type": "bool",
-            "count": 3,
+            "count": 4,
             "unit": "",
             "meaning": "等待外设反馈发送提交结果"
           },
@@ -2909,7 +2909,7 @@
             "id": "hw-sensors-state-waiting_response",
             "name": "waiting_response",
             "type": "bool",
-            "count": 3,
+            "count": 4,
             "unit": "",
             "meaning": "请求已发送，等待应答或超时"
           },
@@ -2917,7 +2917,7 @@
             "id": "hw-sensors-state-command_started",
             "name": "command_started",
             "type": "bool",
-            "count": 12,
+            "count": 16,
             "unit": "",
             "meaning": "各命令是否已成功提交；主动上传与其他指令只发一次"
           },
@@ -2925,7 +2925,7 @@
             "id": "hw-sensors-state-received",
             "name": "received",
             "type": "bool",
-            "count": 3,
+            "count": 4,
             "unit": "",
             "meaning": "至少收到一帧有效主数据"
           },
@@ -2933,7 +2933,7 @@
             "id": "hw-sensors-state-rejected_frames",
             "name": "rejected_frames",
             "type": "u32",
-            "count": 3,
+            "count": 4,
             "unit": "",
             "meaning": "校验、数值或器件状态不合格的帧数"
           },
@@ -2941,7 +2941,7 @@
             "id": "hw-sensors-state-dropped_bytes",
             "name": "dropped_bytes",
             "type": "u32",
-            "count": 3,
+            "count": 4,
             "unit": "byte",
             "meaning": "寻找帧头或重同步时丢弃的字节数；空闲无流式命令时全部计入"
           },
@@ -2949,7 +2949,7 @@
             "id": "hw-sensors-state-active_command",
             "name": "active_command",
             "type": "i8",
-            "count": 3,
+            "count": 4,
             "unit": "",
             "meaning": "各通道在途命令下标；-1 空闲，空闲时按主动上传主数据命令流式解析"
           },
@@ -2957,7 +2957,7 @@
             "id": "hw-sensors-state-last_status_us",
             "name": "last_status_us",
             "type": "u32",
-            "count": 3,
+            "count": 4,
             "unit": "us",
             "meaning": "最近一次状态命令应答时刻，按执行周期轮询"
           }

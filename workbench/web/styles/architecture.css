@@ -42,12 +42,12 @@
   .architecture-role-strip span { margin-top: 0; }
 }
 /* 主页全景画布：信号与功率链。卡片自然高度，分组内垂直居中，避免挤压叠字。 */
-.architecture-overview { min-height: calc(100dvh - 104px); display: flex; flex-direction: column; gap: 12px; }
+.architecture-overview { display: flex; flex-direction: column; justify-content: center; gap: 12px; min-height: calc(100dvh - 132px); }
 .lifecycle-canvas { overflow-x: auto; }
 .canvas-flow {
-  display: grid; flex: 1; width: 100%; min-width: 960px;
+  display: grid; flex: none; width: 100%; min-width: 960px;
   grid-template-columns: 148px minmax(106px, 164px) minmax(420px, 1.6fr) 54px minmax(192px, 0.9fr);
-  grid-template-rows: auto 1fr 1fr auto;
+  grid-template-rows: auto auto auto auto;
   grid-template-areas:
     ".    sims   sims   .    ."
     "host host   driver gapD actuator"
@@ -57,7 +57,7 @@
 }
 /* 分组容器：虚线大块 + 顶部名称与快速选择；内部为链网格，节点自然高度居中。 */
 .canvas-group { position: relative; display: flex; flex-direction: column; justify-content: center; border: 1.5px dashed var(--line-strong); border-radius: 20px; padding: 22px 12px 12px; min-width: 0; }
-.canvas-group-label { position: absolute; top: -10px; left: 16px; display: flex; align-items: center; gap: 10px; background: var(--page); padding: 0 8px; }
+.canvas-group-label { position: absolute; top: -10px; left: 16px; display: flex; align-items: center; gap: 10px; background: var(--page); padding: 0 8px; white-space: nowrap; }
 .canvas-group-label b { font-size: 13px; color: var(--ink); }
 .canvas-group-label a { font-size: 10.5px; color: var(--primary); text-decoration: none; }
 .canvas-group-label a:hover { text-decoration: underline; }
@@ -91,8 +91,8 @@ a.chain-node:hover { border-color: var(--primary); background: var(--surface-hov
 .chain-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; min-height: 20px; }
 .chain-head strong { font-size: 15px; }
 .chain-status { flex: none; }
-.chain-visual { flex: 1; display: grid; place-items: center; min-height: 92px; }
-.chain-node .line-field { width: 100%; height: 92px; }
+.chain-visual { flex: 1; display: grid; place-items: center; min-height: 200px; }
+.chain-node .line-field { width: 100%; height: 200px; }
 .chain-embedded { padding: 5px 10px; border: 1px dashed var(--line-strong); border-radius: 999px; display: flex; justify-content: center; }
 .chain-embedded b { font-size: 11px; }
 /* 物理端：贴合实物的大图标（转子 / 齿轮），无边框。 */
@@ -101,6 +101,7 @@ a.chain-node:hover { border-color: var(--primary); background: var(--surface-hov
 .chain-physical strong { font-size: 14px; }
 .chain-glyph { display: grid; place-items: center; color: var(--ink); }
 .chain-glyph .chain-glyph-icon, .chain-glyph-icon { width: 76px; height: 76px; }
+.chain-glyph .ui-icon { stroke-width: 1.15; }
 .canvas-group-icon { width: 17px; height: 17px; color: var(--muted); }
 /* 链上连接：标签 + 双向轨道（单向时只留右箭头）。 */
 .canvas-link { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 0 4px; }
@@ -130,7 +131,9 @@ a.chain-node:hover { border-color: var(--primary); background: var(--surface-hov
 :root[data-theme="neumorphism"] .canvas-sim-items span, :root[data-theme="neumorphism"] .canvas-soon { background: var(--control-fill); box-shadow: var(--neu-sunken-sm); }
 /* 响应式缩放：窄屏收紧网格、字号与留白，画布保持完整链路。 */
 @media (max-width: 1240px) {
-  .canvas-flow { min-width: 880px; grid-template-columns: 132px minmax(96px, 148px) minmax(390px, 1.6fr) 48px minmax(178px, 0.9fr); }
+  .canvas-flow { min-width: 0; grid-template-columns: 132px minmax(96px, 128px) minmax(0, 1.9fr) 48px minmax(0, 0.8fr); }
+  .canvas-group-chain-layers { grid-template-columns: minmax(0, 1fr) 56px minmax(0, 1fr) 56px minmax(0, 1fr); }
+  .canvas-group-chain-physical { grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr); }
   .chain-node { padding: 10px 11px 9px; border-radius: 13px; }
   .chain-head strong { font-size: 13px; }
   .canvas-source-unit .canvas-source-card { flex-basis: 132px; }
@@ -138,6 +141,26 @@ a.chain-node:hover { border-color: var(--primary); background: var(--surface-hov
 }
 @media (max-width: 1024px) {
   .architecture-overview { min-height: 0; }
-  .canvas-flow { min-width: 820px; }
+  .lifecycle-canvas { overflow: visible; }
+  /* 窄屏改为纵向流：指令源 → 驱动器 → 三相 → 执行器，驱动器与执行器内部保持横向链路。 */
+  .canvas-flow {
+    min-width: 0; row-gap: 14px; column-gap: 22px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto;
+    grid-template-areas:
+      "sims sims"
+      "host dbg"
+      "driver driver"
+      "gapD gapD"
+      "actuator actuator"
+      "dyn dyn";
+  }
+  .canvas-sims { gap: 12px; padding: 0; }
+  .canvas-sims .canvas-sim { flex: 1 1 0; min-width: 0; }
+  .canvas-group-chain-layers { grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr) 44px minmax(0, 1fr); }
+  .canvas-group-chain-physical { grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr); }
+  .canvas-link[style*="gapD"] { flex-direction: column; align-items: stretch; gap: 6px; }
+  .canvas-link[style*="gapD"] > span { text-align: center; }
+  .canvas-source-card { flex-basis: 132px; }
+  .canvas-group { padding: 26px 16px 16px; }
   .chain-node .line-field { min-height: 40px; }
 }

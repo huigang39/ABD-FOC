@@ -2,7 +2,8 @@
 #define DRIVERS_H
 #include <stdbool.h>
 #include <stdint.h>
-#define DRIVER_CHANNELS 3u
+/* 通道 3 为预驱（门极驱动）：value[3] 预留无测量值，device_status[3]/error[3]/valid[3] 承载故障状态。 */
+#define DRIVER_CHANNELS 4u
 #define DRIVER_FRAME_BYTES 64u
 #define DRIVER_TX_BYTES 32u
 #define DRIVER_COMMANDS_MAX 4u

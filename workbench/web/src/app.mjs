@@ -55,6 +55,7 @@ import { renderOperation } from './features/operation/view.mjs';
 import { renderVersions } from './features/configuration/versions-view.mjs';
 import { renderModuleInterfaces } from './features/configuration/interfaces-view.mjs';
 import { createLineFields } from './shared/effects/line-field.mjs';
+import { pageHeading } from './shared/ui/page-heading.mjs';
 import { enhanceSelectMenus } from './shared/ui/select-menu.mjs';
 import { icon } from './shared/ui/icons.mjs';
 import { renderMemory, renderMemorySummary } from './features/deployment/flash-view.mjs';
@@ -289,9 +290,7 @@ function applyConfiguration(incoming) {
   } catch (error) { showError(`配置未更改：${error.message}`); return false; }
 }
 function pill(text, kind = 'neutral') { return `<span class="status-pill ${kind}">${escape(text)}</span>`; }
-function heading(title, description = '', eyebrow = '') {
-  return `<div class="page-heading"><div>${eyebrow ? `<p class="eyebrow">${escape(eyebrow)}</p>` : ''}<h1>${escape(title)}</h1>${description ? `<p class="page-description">${escape(description)}</p>` : ''}</div></div>`;
-}
+const heading = (title, description = '', crumbs = []) => pageHeading({ title, description, crumbs });
 
 function fieldHtml(field, value, scope, moduleId = '') {
   if(moduleId==='foc-observer'){const options=observerOutputOptions(field.key,project);if(options)field={...field,options};}
@@ -386,7 +385,7 @@ function render(formOnly = false) {
   const priority = { error: 0, pending: 1, warning: 2, info: 3 };
   issues = validateProject(project).sort((a,b) => priority[a.level] - priority[b.level]);
   const current = route();
-  $('#workspace-title').textContent = current.section === 'project' ? '工程' : ({architecture:'架构',equipment:'货架',debug:'调试',operation:'运行',performance:'测试'}[current.page] || 'ABD-FOC');
+  $('#workspace-title').textContent = current.section === 'project' ? '工程' : current.page === 'architecture' && !current.id ? '主页' : ({architecture:'架构',equipment:'货架',debug:'调试',operation:'运行',performance:'测试'}[current.page] || 'ABD-FOC');
   $('.workspace-icon use').setAttribute('href', `/assets/icons.svg#${({architecture:'overview',project:'settings',equipment:'shelf',debug:'wave',operation:'play',performance:'notebook'})[current.section] || 'overview'}`);
   $('#save-status').textContent = saveState;
   document.querySelectorAll('[data-nav]').forEach(a => a.classList.toggle('active', a.dataset.nav === current.section));
@@ -395,8 +394,8 @@ function render(formOnly = false) {
   const inspection = { ...nativeClient.state.inspection, current: gate.current, supported: gate.supported };
   let content;
   switch (current.page) {
-    case 'execution': content = `<nav class="breadcrumbs" aria-label="当前位置"><a href="#/project/hardware">硬件</a><span>/</span><a href="#/project/hardware?module=hw-platform&tab=config">内核</a><span>/</span><span aria-current="page">双核协作</span></nav>${heading('双核协作','分配模块执行内核，配置跨核数据交换。')}${renderExecution(project)}<div data-live="execution-issues">${issueNoticeButton(issues.filter(issue=>issue.id.startsWith('execution-')),{label:'内核配置检查'})}</div>`; break;
-    case 'memory': content = `<nav class="breadcrumbs" aria-label="当前位置"><a href="#/project/hardware">硬件层</a><span>/</span><a href="#/project/hardware?module=hw-platform&tab=config">内核</a><span>/</span><span aria-current="page">部署配置</span></nav>${heading('部署配置','按目标硬件分配 Flash 和 RAM。')}${renderMemory(project,issues,{sectorSizes})}${renderRam(project,issues)}`; break;
+    case 'execution': content = `${heading('双核协作','分配模块执行内核，配置跨核数据交换。',[{href:'#/project/hardware',label:'硬件'},{href:'#/project/hardware?module=hw-platform&tab=config',label:'内核'},{label:'双核协作'}])}${renderExecution(project)}<div data-live="execution-issues">${issueNoticeButton(issues.filter(issue=>issue.id.startsWith('execution-')),{label:'内核配置检查'})}</div>`; break;
+    case 'memory': content = `${heading('部署配置','按目标硬件分配 Flash 和 RAM。',[{href:'#/project/hardware',label:'硬件'},{href:'#/project/hardware?module=hw-platform&tab=config',label:'内核'},{label:'部署配置'}])}${renderMemory(project,issues,{sectorSizes})}${renderRam(project,issues)}`; break;
     case 'architecture': content = current.id ? renderArchitectureLayer(current.id,current.moduleId) : renderArchitectureOverview(project); break;
     case 'project': content = renderGuide(project,issues,current.id,{parameters:moduleParameters,moduleRoute,moduleExtras,interfaces:module=>renderModuleInterfaces(project,issues,module.id,current.interfaceId),selectedModuleId:current.moduleId,tab:current.tab,inspection,buildStatus:nativeClient.state.delivery?.projectId === project.id && nativeClient.state.delivery.fingerprint === configurationFingerprint(project) ? 'built' : nativeClient.state.job?.fingerprint === configurationFingerprint(project) ? nativeClient.state.job.status : '',flashStatus:{current:nativeClient.state.flashResult?.fingerprint===configurationFingerprint(project),programmed:nativeClient.state.flashResult?.programmed===true},profileVariant:nativeClient.state.profileVariant,saveStatus:saveState,configurationLocked:nativeClient.state.busy || nativeClient.state.debug.connected,buildHtml:current.id==='build'?renderValidation()+renderBuild(project,nativeClient.state)+renderRuntimeConfiguration(project, fieldHtml):'',flashHtml:current.id==='flash'?renderFlash(project,nativeClient.state):''}); break;
     case 'structures': content = renderStructures(project,issues,current.id,current.moduleId); break;

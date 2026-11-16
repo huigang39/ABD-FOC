@@ -38,9 +38,9 @@ export function renderResourceEditor(mcu,resources=[],{owner=''}={}) {
 /** A resource reference remains a string in the module contract, but is picked
  * from the board rather than accepting an unrelated peripheral name. */
 export function bindSensorField(field,parameters,resources=[]) {
-  const rateMatch=/^(motorEncoder|outputEncoder|torqueSensor)Bitrate$/.exec(field.key);
+  const rateMatch=/^(motorEncoder|outputEncoder|torqueSensor|gateDriver)Bitrate$/.exec(field.key);
   if(rateMatch){const r=resources.find(resource=>resource.id===parameters[rateMatch[1]+'Resource']);return {...field,type:'readout',displayValue:r?(r.settings.bitrate??r.settings.clockHz??'—'):'—',description:'通信速率由绑定的外设统一配置。'};}
-  const match=/^(motorEncoder|outputEncoder|torqueSensor)Resource$/.exec(field.key);
+  const match=/^(motorEncoder|outputEncoder|torqueSensor|gateDriver)Resource$/.exec(field.key);
   if(!match)return field;
   const candidates=sensorResources(resources,parameters[`${match[1]}Interface`]);
   return {...field,type:'select',label:'外设接口',options:candidates.map(resource=>({value:resource.id,label:`${resource.name||resource.instance} · ${resource.instance}${resource.kind==='uart'&&resource.settings.physical==='rs485'?' / RS-485':''}`})),description:candidates.length?'引用第二步已配置的外设与引脚。':'先在外设模块添加并配置对应接口。',sensorLayoutTrigger:true};

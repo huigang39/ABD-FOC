@@ -8,6 +8,7 @@ import { issueNoticeButton } from '../../shared/ui/issue-notices.mjs';
 import { getAssemblySummary, getDriverHardware, isAssemblyComplete } from './model.mjs';
 import { MODULES } from '../../core/catalog.mjs';
 import { icon } from '../../shared/ui/icons.mjs';
+import { pageHeading } from '../../shared/ui/page-heading.mjs';
 import { renderSensorConfig } from '../../modules/hardware/hw-drivers/view.mjs';
 import { renderAssemblyPerformance } from '../performance/view.mjs';
 
@@ -37,7 +38,7 @@ export function renderEquipment(project,issues,group='assemblies',id='',draft={a
 function equipmentHeader(project,group,firmwareState) {
   const complete=project.catalog.assemblies.filter(item=>isAssemblyComplete(project.catalog,item));
   const tab=key=>`<a class="${key===group?'active':''}" href="#/equipment/${key}"${key===group?' aria-current="page"':''}>${groups[key]}<span>${key==='assemblies'?complete.length:project.catalog[key].length}</span></a>`;
-  return `<div class="page-heading"><div><h1>货架</h1><p class="page-description">关节模组由执行器（电机 + 减速机）与驱动器组成。组件可在多个模组中复用。</p></div></div><nav class="equipment-tabs shelf-navigation" aria-label="货架分类"><div class="shelf-nav-group"><span class="shelf-nav-label">产品</span>${tab('assemblies')}</div><div class="shelf-nav-group shelf-components"><span class="shelf-nav-label">组件库</span>${tab('actuators')}${tab('drivers')}<a class="${group==='firmware'?'active':''}" href="#/equipment/firmware">固件<span>${firmwareState.bundles?.length||0}</span></a></div></nav>`;
+  return `${pageHeading({ title: '货架', description: '关节模组由执行器（电机 + 减速机）与驱动器组成。组件可在多个模组中复用。' })}<nav class="equipment-tabs shelf-navigation" aria-label="货架分类"><div class="shelf-nav-group"><span class="shelf-nav-label">产品</span>${tab('assemblies')}</div><div class="shelf-nav-group shelf-components"><span class="shelf-nav-label">组件库</span>${tab('actuators')}${tab('drivers')}<a class="${group==='firmware'?'active':''}" href="#/equipment/firmware">固件<span>${firmwareState.bundles?.length||0}</span></a></div></nav>`;
 }
 function equipmentList(project,group,list,selected) {
   const item=entry=>{

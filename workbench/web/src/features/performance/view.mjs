@@ -1,5 +1,6 @@
 import { numericInputAttributes } from '../../shared/forms/numeric-input.mjs';
 import { esc } from '../../shared/esc.mjs';
+import { pageHeading } from '../../shared/ui/page-heading.mjs';
 import { selectOptions } from '../../shared/forms/select-control.mjs';
 import { isAssemblyComplete } from '../equipment/model.mjs';
 import { getAssemblyTests, summarizePerformance } from './model.mjs';
@@ -99,7 +100,7 @@ export function renderPerformance(project, draft, selectedId = '') {
   const records = [...(project.performance?.records || [])].sort(newestFirst);
   const found = records.find(record => record.id === selectedId);
   const selected = found ? getAssemblyTests(project, found.assemblyId).find(record => record.id === found.id) || found : null;
-  return `<div class="page-heading"><div><h1>测试</h1><p class="page-description">录入关节模组的测量数据，保留曲线、工况与对应配置。</p></div>${button('新建记录', 'new', `data-assembly="${esc(selected?.assemblyId || draft.assemblyId)}"`)}</div><div class="performance-layout"><aside class="panel performance-history"><div class="design-toolbar"><h2>测量记录</h2><span class="muted">${records.length}</span></div>${records.length ? `<nav aria-label="测量记录">${records.map(record => `<a href="${route(record)}" class="performance-history-item ${record.id === selectedId ? 'active' : ''}" ${record.id === selectedId ? 'aria-current="page"' : ''}><span class="performance-kind">${record.kind === 'kt' ? 'Kt' : 'TN'}</span><strong>${esc(record.name || kindName(record.kind))}</strong><span>${esc(record.snapshot?.assembly?.name || '关节模组')}</span><small>${time(record.measuredAt)} · ${record.samples.length} 点</small></a>`).join('')}</nav>` : '<div class="performance-history-empty"><p>暂无测量记录。</p><span>保存后可按关节模组查看历史曲线。</span></div>'}</aside><div class="performance-main">${selected ? recordDetail(selected) : editor(project, draft)}</div></div>`;
+  return `${pageHeading({ title: '测试', description: '录入关节模组的测量数据，保留曲线、工况与对应配置。', actions: button('新建记录', 'new', `data-assembly="${esc(selected?.assemblyId || draft.assemblyId)}"`) })}<div class="performance-layout"><aside class="panel performance-history"><div class="design-toolbar"><h2>测量记录</h2><span class="muted">${records.length}</span></div>${records.length ? `<nav aria-label="测量记录">${records.map(record => `<a href="${route(record)}" class="performance-history-item ${record.id === selectedId ? 'active' : ''}" ${record.id === selectedId ? 'aria-current="page"' : ''}><span class="performance-kind">${record.kind === 'kt' ? 'Kt' : 'TN'}</span><strong>${esc(record.name || kindName(record.kind))}</strong><span>${esc(record.snapshot?.assembly?.name || '关节模组')}</span><small>${time(record.measuredAt)} · ${record.samples.length} 点</small></a>`).join('')}</nav>` : '<div class="performance-history-empty"><p>暂无测量记录。</p><span>保存后可按关节模组查看历史曲线。</span></div>'}</aside><div class="performance-main">${selected ? recordDetail(selected) : editor(project, draft)}</div></div>`;
 }
 
 /** Shelf summary always belongs to the complete actuator + driver assembly. */

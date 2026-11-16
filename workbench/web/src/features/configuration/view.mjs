@@ -17,6 +17,7 @@ import { modelSelect, optionGroupFor } from '../../shared/forms/model-options.mj
 import { selectOptions, isEmptyChoice, isBinaryChoice, binaryChoice } from '../../shared/forms/select-control.mjs';
 
 import { esc } from '../../shared/esc.mjs';
+import { breadcrumbs, pageHeading } from '../../shared/ui/page-heading.mjs';
 export { esc } from '../../shared/esc.mjs';
 export const rid = value => encodeURIComponent(String(value ?? ''));
 const moduleName = id => MODULES.find(m => m.id === id)?.title || id;
@@ -34,11 +35,11 @@ export function edit(label, value, scope, key, config = {}) {
 }
 const moduleOptions = () => [['', '待选择'], ...MODULES.map(m => [m.id, m.title])];
 const btn = (label, action, attrs='', kind='') => `<button class="button ${kind}" data-action="${action}" ${attrs}>${label}</button>`;
-const title = (name, description) => `<div class="page-heading"><div><h1>${name}</h1><p class="page-description">${description}</p></div></div>`;
+const title = (name, description) => pageHeading({ title: name, description });
 const states = {todo:'待配置',blocked:'存在冲突',configured:'配置完整'};
 const layerNames={app:'应用层',foc:'算法层',hardware:'硬件层'};
 const layerStep={app:'application',foc:'algorithm',hardware:'hardware'};
-function moduleBreadcrumb(module) { return `<div class="breadcrumbs"><a href="#/project/${layerStep[module.layer]}">${layerNames[module.layer]}</a><span>/</span><a href="#/project/${layerStep[module.layer]}?module=${rid(module.id)}&tab=config">${esc(module.title)}</a></div>`; }
+function moduleBreadcrumb(module) { return breadcrumbs([{ href: `#/project/${layerStep[module.layer]}`, label: layerNames[module.layer] }, { label: module.title }]); }
 function renderConfigurationToolbar(project, ctx) {
   const variant = ['KW', 'LD', 'SMH', 'XH'].includes(ctx.profileVariant) ? ctx.profileVariant : 'KW';
   return `<section class="configuration-toolbar" aria-label="配置文件"><label class="form-field configuration-name"><span class="field-label">配置名称</span><input class="field-input" data-scope="project" data-key="name" value="${esc(project.name)}" maxlength="80"><span class="configuration-save-status" data-live="configuration-save-status">${esc(ctx.saveStatus || '')}</span></label><div class="configuration-file-actions">${btn('导入配置', 'import', '', 'primary')}${btn('保存配置', 'save')}<details class="configuration-more" data-native-menu data-state-key="configuration-more"><summary class="button">更多</summary><div class="configuration-more-body"><div class="configuration-secondary-actions">${btn('导出配置', 'export')}${btn('新建空白配置', 'new-configuration')}</div><div class="configuration-preset"><strong>预置配置</strong><label class="form-field"><span class="field-label">NEO 75 · 力矩传感器</span><select class="field-select" id="neo75h-variant" data-native-field="profileVariant">${selectOptions(['KW','LD','SMH','XH'].map(value => [value, `${neo75hModelName(value)}${value === 'XH' ? ' · 待适配' : ''}`]), variant)}</select></label>${btn('使用预置配置', 'new-neo75h', ctx.configurationLocked ? 'disabled' : '')}</div></div></details></div></section>`;
@@ -123,7 +124,7 @@ export function renderStructures(project,issues,id,moduleId='') {
   const module=MODULES.find(m=>m.id===moduleId);
   const query=module?`?module=${rid(module.id)}`:'';
   const list=project.design.structures.filter(s=>!module||structureBinding(project,s.id)?.moduleId===module.id||s.owner===module.id||s.consumers.includes(module.id)), selected=list.find(s=>s.id===id)||list[0];
-  return `${module?moduleBreadcrumb(module):''}${title(module?`${esc(module.title)} · 数据结构`:'数据结构','分别定义模块输入、输出与状态。')}<div class="design-layout"><aside class="design-list"><div class="design-toolbar">${btn('新建共享结构','add-structure',`data-module="${esc(module?.id||'')}"`)}</div><div data-live="structure-list">${list.map(s=>{const binding=structureBinding(project,s.id);return `<a class="design-item ${s===selected?'active':''}" href="#/project/structures/${rid(s.id)}${query}"><strong>${esc(s.name||'未命名结构')}</strong><small>${binding?`${contractRoles[binding.role].label} · `:''}${esc(moduleName(binding?.moduleId||s.owner))} · ${s.fields.length} 个字段</small></a>`;}).join('')}</div></aside><section class="design-editor">${selected?structureEditor(selected,project,issues):'<div class="empty-state">还没有数据结构。</div>'}</section></div>`;
+  return `${module?moduleBreadcrumb(module):''}${title(module?`${module.title} · 数据结构`:'数据结构','分别定义模块输入、输出与状态。')}<div class="design-layout"><aside class="design-list"><div class="design-toolbar">${btn('新建共享结构','add-structure',`data-module="${esc(module?.id||'')}"`)}</div><div data-live="structure-list">${list.map(s=>{const binding=structureBinding(project,s.id);return `<a class="design-item ${s===selected?'active':''}" href="#/project/structures/${rid(s.id)}${query}"><strong>${esc(s.name||'未命名结构')}</strong><small>${binding?`${contractRoles[binding.role].label} · `:''}${esc(moduleName(binding?.moduleId||s.owner))} · ${s.fields.length} 个字段</small></a>`;}).join('')}</div></aside><section class="design-editor">${selected?structureEditor(selected,project,issues):'<div class="empty-state">还没有数据结构。</div>'}</section></div>`;
 }
 function structureEditor(s,project,issues) {
   const meta={id:s.id};

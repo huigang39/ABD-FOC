@@ -6,7 +6,7 @@
 static DriversInput input;
 static DriversOutput output;
 static DriversState state;
-static DriverConfig config[3];
+static DriverConfig config[DRIVER_CHANNELS];
 static void step(void){assert(drivers_step(config,&input,&output,&state)==0);}
 static void feed(unsigned ch,const uint8_t *data,unsigned length,uint32_t now){
     input=(DriversInput){.channel=ch,.now_us=now,.rx_length=length};
@@ -76,7 +76,7 @@ int main(void){
     feed(0,nan_value,4,2);assert(!output.valid[0]&&output.error[0]==DRIVER_ERROR_VALUE&&output.value[0]==3);
     feed(0,infinity,4,3);assert(!output.valid[0]&&output.error[0]==DRIVER_ERROR_VALUE);
     input=(DriversInput){.rx_length=65};assert(drivers_step(config,&input,&output,&state)==-1);
-    input=(DriversInput){.channel=3};assert(drivers_step(config,&input,&output,&state)==-1);
+    input=(DriversInput){.channel=DRIVER_CHANNELS};assert(drivers_step(config,&input,&output,&state)==-1);
 
     /* Config defense: command count cap and at most one data command per channel. */
     setup();config[0].command_count=DRIVER_COMMANDS_MAX+1u;input=(DriversInput){0};
@@ -119,5 +119,21 @@ int main(void){
     feed(0,other_reply,3,12);assert(!output.valid[0]&&output.sequence[0]==0&&output.device_status[0]==0);
     for(unsigned n=13;n<40;++n){input=(DriversInput){.now_us=n};step();assert(!output.tx_request);} /* one-shot: never sent again */
     input=(DriversInput){.request=true,.now_us=40};step();assert(output.tx_request&&output.tx_data[0]==0x10); /* data requests still work */
-    puts("driver runtime: request/response, startup upload, streaming, CRC, endian, signed values, status, command scheduling, timeout and bounds passed");
+
+    /* 第 4 通道为预驱：无主数据命令，仅状态轮询；故障字节写 device_status[3]，value[3] 永不写入。 */
+    setup();
+    config[3]=(DriverConfig){.enabled=true,.command_count=1,.timeout_us=100,.commands={{.purpose=DRIVER_PURPOSE_STATUS,.mode=DRIVER_REQUEST_RESPONSE,.request={0x02},.request_length=1,.header={0xbb},.header_length=1,.frame_length=4,.data_offset=1,.data_bits=8,.value_type=DRIVER_VALUE_UNSIGNED,.scale=1,.checksum=DRIVER_CHECK_NONE,.status_offset=1,.status_mask=0x80,.status_expected=0,.period_us=50}}};
+    input=(DriversInput){.channel=3,.now_us=10};step();assert(!output.tx_request); /* 轮询周期未到 */
+    input.now_us=50;step();assert(output.tx_request&&output.tx_channel==3&&output.tx_data[0]==0x02); /* 状态轮询按周期发出 */
+    input=(DriversInput){.channel=3,.tx_complete=true,.transport_status=0,.now_us=51};step();
+    const uint8_t gate_fault[]={0xbb,0x81,0,0},gate_ok[]={0xbb,0x01,0,0};
+    feed(3,gate_fault,4,52);
+    assert(output.device_status[3]==0x81&&(output.error[3]&DRIVER_ERROR_STATUS)&&!output.valid[3]);
+    assert(output.value[3]==0&&output.raw[3]==0&&output.sequence[3]==0&&output.sample_time_us[3]==0); /* 无主数据：测量输出永不写入 */
+    feed(3,gate_ok,4,53);
+    assert(output.device_status[3]==0x01&&!(output.error[3]&DRIVER_ERROR_STATUS)&&!output.valid[3]&&output.value[3]==0); /* 故障位解除，仍无测量值 */
+    input=(DriversInput){.channel=3,.now_us=103};step();assert(output.tx_request&&output.tx_data[0]==0x02); /* 到期再次轮询 */
+    input=(DriversInput){.channel=3,.tx_complete=true,.transport_status=0,.now_us=104};step();
+    feed(3,gate_ok,4,105);assert(output.device_status[3]==0x01&&!(output.error[3]&DRIVER_ERROR_STATUS));
+    puts("driver runtime: request/response, startup upload, streaming, CRC, endian, signed values, status, gate channel, command scheduling, timeout and bounds passed");
 }

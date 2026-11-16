@@ -5,6 +5,7 @@ import { icon, LAYER_ICONS, MODULE_ICONS } from '../../shared/ui/icons.mjs';
 import { getConfigurationSelection } from '../configuration/workspace.mjs';
 import { configurationStatus } from '../configuration/tree-view.mjs';
 import { getGuide } from '../configuration/guide.mjs';
+import { pageHeading } from '../../shared/ui/page-heading.mjs';
 
 const LAYERS = Object.freeze({
   app: {
@@ -29,7 +30,7 @@ const EXECUTION_NAMES = {
 };
 const ORDER = ['app', 'foc', 'hardware'];
 const layerModules = layer => MODULES.filter(module => module.layer === layer && module.id !== 'foc-feedback').sort((a, b) => a.order - b.order);
-const heading = (title, description) => `<div class="page-heading"><div><h1>${esc(title)}</h1><p class="page-description">${esc(description)}</p></div></div>`;
+const heading = (title, description, crumbs = []) => pageHeading({ title, description, crumbs });
 
 /** Architecture links always stay in the static module catalogue. */
 export function architectureModuleRoute(moduleId) {
@@ -54,7 +55,7 @@ export function renderArchitectureOverview(project = null) {
   // 物理端大图标：贴合实物（转子 / 齿轮组）。
   const physicalNode = (href, name, glyph, label) => `<a class="chain-node chain-physical" href="${href}" aria-label="${esc(label)}"><span class="chain-visual"><span class="chain-glyph">${glyph}</span></span><strong>${esc(name)}</strong></a>`;
   const motorGlyph = icon('rotor', 'chain-glyph-icon');
-  const gearGlyph = '<svg class="ui-icon chain-glyph-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="9" r="3.2"/><circle cx="16.5" cy="16.5" r="2.4"/><path d="M9 3.4v1.9M9 12.7v1.9M3.4 9h1.9M12.7 9h1.9M4.9 4.9l1.4 1.4M11.7 11.7l1.4 1.4M13.1 4.9l-1.4 1.4M6.3 11.7l-1.4 1.4M16.5 11.9v1.6M16.5 19.5v1.6M11.9 16.5h1.6M19.5 16.5h1.6"/></svg>';
+  const gearGlyph = icon('gear', 'chain-glyph-icon');
   // 指令源：上位机三条可选通行线（CAN / EtherCAT / Ethernet），调试器一条 J-Link；选中哪条亮哪条。
   const sourceLine = (value, label, checked = false) => `<label class="canvas-line"><input type="radio" name="canvas-source" value="${value}"${checked ? ' checked' : ''}><small>${label}</small><i></i></label>`;
   // 货架快速选择：复用配置工作台的 configuration-* 作用域，选完即应用；无工程时退回货架链接。
@@ -106,7 +107,7 @@ export function renderArchitectureLayer(layerId = 'hardware', moduleId = '') {
   const id = Object.hasOwn(LAYERS, layerId) ? layerId : 'hardware';
   const layer = LAYERS[id], modules = layerModules(id);
   const selected = modules.find(module => module.id === moduleId) || modules[0];
-  return `<section class="architecture-layer"><div class="breadcrumbs"><a href="#/architecture">架构</a><span>/</span><span>${layer.name}</span></div>${heading(layer.name, layer.summary)}
-    <div class="layer-layout layer-${id}"><section class="module-catalog" aria-label="${layer.name}的模块"><div class="layer-summary"><span>从基础到扩展，浏览模块职责</span><span>${modules.length} 个模块</span></div><div class="module-grid">${modules.map(module => `<a class="module-card${module.id === selected.id ? ' selected' : ''}" href="${architectureModuleRoute(module.id)}"${module.id === selected.id ? ' aria-current="page"' : ''}><div class="module-card-top"><span class="module-mark">${icon(MODULE_ICONS[module.id], 'module-icon')}</span><span class="module-number">${String(module.order).padStart(2, '0')}</span></div><strong class="module-title">${esc(module.title)}</strong><p class="module-summary">${esc(module.summary)}</p><div class="module-footer"><span>${esc(EXECUTION_NAMES[module.executionDomain] || '功能说明')}</span>${icon('arrow-right')}</div></a>`).join('')}</div><div class="learning-note"><strong>层级边界</strong><p>${layer.boundary}</p><a class="button small navigation-action" href="#/architecture">← 返回架构</a></div></section>
+  return `<section class="architecture-layer">${heading(layer.name, layer.summary, [{ href: '#/architecture', label: '主页' }, { label: layer.name }])}
+    <div class="layer-layout layer-${id}"><section class="module-catalog" aria-label="${layer.name}的模块"><div class="layer-summary"><span>从基础到扩展，浏览模块职责</span><span>${modules.length} 个模块</span></div><div class="module-grid">${modules.map(module => `<a class="module-card${module.id === selected.id ? ' selected' : ''}" href="${architectureModuleRoute(module.id)}"${module.id === selected.id ? ' aria-current="page"' : ''}><div class="module-card-top"><span class="module-mark">${icon(MODULE_ICONS[module.id], 'module-icon')}</span><span class="module-number">${String(module.order).padStart(2, '0')}</span></div><strong class="module-title">${esc(module.title)}</strong><p class="module-summary">${esc(module.summary)}</p><div class="module-footer"><span>${esc(EXECUTION_NAMES[module.executionDomain] || '功能说明')}</span>${icon('arrow-right')}</div></a>`).join('')}</div><div class="learning-note"><strong>层级边界</strong><p>${layer.boundary}</p><a class="button small navigation-action" href="#/architecture">← 返回主页</a></div></section>
     <aside class="inspector architecture-inspector" aria-labelledby="architecture-module-title"><div class="inspector-header"><span class="eyebrow">${esc(selected.id)}</span><h2 id="architecture-module-title">${esc(selected.title)}</h2></div><div class="inspector-body">${moduleDescription(selected)}</div></aside></div></section>`;
 }

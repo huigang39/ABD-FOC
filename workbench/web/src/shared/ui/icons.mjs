@@ -3,7 +3,7 @@ export const ICON_NAMES = new Set([
   'overview', 'guide', 'shelf', 'versions', 'link', 'check', 'build', 'wave',
   'play', 'pause', 'settings', 'folder', 'import', 'export', 'save', 'chip',
   'algorithm', 'application', 'clock', 'database', 'target', 'shield', 'cycle',
-  'rotor', 'eye', 'current', 'axes', 'board', 'pulse', 'services', 'grip',
+  'rotor', 'gear', 'eye', 'current', 'axes', 'board', 'pulse', 'services', 'grip',
   'plus', 'arrow-right', 'close', 'box', 'edit', 'copy', 'trash', 'motor',
 ]);
 

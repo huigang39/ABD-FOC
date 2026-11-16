@@ -56,7 +56,7 @@ export function createExampleProject(kind = 'encoder') {
     'foc-modulation': { method: 'svpwm', dutyMin: 0.02, dutyMax: 0.98 },
     'hw-platform': { architecture:'unselected', flashKiB:512, eraseKiB:4, firmwareReserveKiB:256 },
     'hw-board': { currentTopology:'three_shunt', busVoltageV:24, currentGain:0.05, pwmHz:20000, currentLoopDivider:1, adcBits:12, adcClockHz:20000000, deadtimeNs:300 },
-    'hw-drivers': { encoderCapability: kind === 'sensorless' ? 'absent' : 'present', encoderBits: kind === 'encoder' ? 16 : null, motorEncoderType: kind === 'hall' ? 'hall' : kind === 'encoder' ? 'absolute' : 'unselected', motorEncoderAngleDomain: kind === 'hall' ? 'electrical' : 'mechanical', outputEncoderCapability: 'absent', torqueCapability: 'absent' },
+    'hw-drivers': { encoderCapability: kind === 'sensorless' ? 'absent' : 'present', encoderBits: kind === 'encoder' ? 16 : null, motorEncoderType: kind === 'hall' ? 'hall' : kind === 'encoder' ? 'absolute' : 'unselected', motorEncoderAngleDomain: kind === 'hall' ? 'electrical' : 'mechanical', outputEncoderCapability: 'absent', torqueCapability: 'absent', gateDriverCapability: 'absent' },
     'hw-safety': { hardwareTripCapability: 'unconfirmed', resetOutputDisabled: true },
   };
   for (const [moduleId, values] of Object.entries(sample)) {
@@ -234,7 +234,7 @@ function migrateLegacyModuleParameters(project) {
   if (plain(assignments)) for (const id of MODULE_IDS) if (!Object.hasOwn(assignments,id)) assignments[id] = '';
 }
 
-/** 命令折叠退役的旧协议平铺参数名（三角色前缀 × 旧后缀）：对应 provenance 条目必须一并清理，否则 checkShape 与层快照 checkProvenance 拒绝载入。 */
+/** 命令折叠退役的旧协议平铺参数名（各角色前缀 × 旧后缀）：对应 provenance 条目必须一并清理，否则 checkShape 与层快照 checkProvenance 拒绝载入。 */
 const LEGACY_PROTOCOL_PARAM_NAMES = new Set(SENSOR_ROLES.flatMap(role => LEGACY_PROTOCOL_SUFFIXES.map(suffix => role.prefix + suffix)));
 
 /** hw-sensors 模块更名为 hw-drivers：折叠七个数据面的旧键；结构 id、字段 id 等不透明引用保持原值。 */

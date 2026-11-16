@@ -1,6 +1,7 @@
 import { edit, esc } from './view.mjs';
 import { LAYER_VERSION_IDS, getLayerVersionState, validateLayerVersions } from './versions.mjs';
 import { issueNoticeButton } from '../../shared/ui/issue-notices.mjs';
+import { pageHeading } from '../../shared/ui/page-heading.mjs';
 
 const layerNames = { hardware: '硬件层', foc: '算法层', app: '应用层' };
 const emptyDraft = () => ({ version: '', interfaceVersion: '', notes: '', requires: { hardware: '', foc: '', app: '' } });
@@ -15,7 +16,7 @@ export function renderVersions(project, drafts = {}) {
   const unknown = issues.some(issue => issue.level === 'pending');
   const compatibility = mismatches.length ? `${mismatches.length} 项接口声明不匹配` : !ready || selected.length < LAYER_VERSION_IDS.length || unknown ? '接口兼容性待声明' : '接口声明匹配 · 运行尚未验证';
   const combination = LAYER_VERSION_IDS.map(layer => `${layerNames[layer]} ${states[layer].release?.version || '未选择'}`).join(' · ');
-  return `<nav class="breadcrumbs" aria-label="当前位置"><a href="#/">结构总览</a><span>/</span><span aria-current="page">版本组合</span></nav><div class="page-heading"><div><h1>版本组合</h1><p class="page-description">各层独立保存配置版本，再选择需要的组合。</p></div></div>
+  return `${pageHeading({ title: '版本组合', description: '各层独立保存配置版本，再选择需要的组合。', crumbs: [{ href: '#/architecture', label: '主页' }, { label: '版本组合' }] })}
     <div class="version-combination"><div><strong>所选组合</strong><p>${esc(combination)}</p><span>${esc(compatibility)}</span></div><button type="button" class="button primary" data-action="apply-layer-combination" ${ready ? '' : 'disabled'}>应用所选组合</button></div>
     <div class="design-health" data-live="version-issues">${issueNoticeButton(allIssues, { label: '查看版本检查' })}</div>
     <p class="design-note">版本号可填写任意非空文本，如 beta、board-r2。接口要求按标识精确核对，留空表示未知。</p>

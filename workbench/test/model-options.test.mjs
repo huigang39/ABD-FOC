@@ -15,6 +15,8 @@ test('maintained model lists retain known planning choices and cannot be edited 
   assert.deepEqual(getModelOptions('mcu').map(option => option.value), [...new Set([...MCU_FAMILIES.map(family => family.prefix), 'STM32H745IIK6'])]);
   assert.deepEqual(getModelOptions('board'), [{ value: 'NEO', label: 'NEO' }]);
   assert.deepEqual(getModelOptions('torque').map(option => option.label), ['KW', 'LD', 'SMH', 'XH']);
+  assert.deepEqual(getModelOptions('gateDriver'), [{ value: 'DRV8353S', label: 'TI DRV8353S · SPI' }]);
+  assert.throws(() => getModelOptions('gateDriver').push({ value: 'new', label: 'new' }), TypeError);
   assert.throws(() => getModelOptions('board').push({ value: 'new', label: 'new' }), TypeError);
   assert.throws(() => { getModelOptions('board')[0].value = 'new'; }, TypeError);
   for (const group of ['other', '__proto__', null]) assert.throws(() => getModelOptions(group), /未知型号分组/);
@@ -23,10 +25,10 @@ test('maintained model lists retain known planning choices and cannot be edited 
 test('all driver and sensor model fields use the same fixed selects with no editor', () => {
   const project = createProject(), driver = createDriver();
   Object.assign(driver, { mcu: 'STM32H745IIK6', board: 'NEO' });
-  Object.assign(driver.hardware['hw-drivers'], { encoderCapability: 'present', outputEncoderCapability: 'present', torqueCapability: 'present', motorEncoderModel: 'MC_ENCODER_GW_OUTER', outputEncoderModel: 'MC_ENCODER_GW_INNER', torqueSensorModel: 'MC_TOR_SENSOR_KW' });
+  Object.assign(driver.hardware['hw-drivers'], { encoderCapability: 'present', outputEncoderCapability: 'present', torqueCapability: 'present', gateDriverCapability: 'present', motorEncoderModel: 'MC_ENCODER_GW_OUTER', outputEncoderModel: 'MC_ENCODER_GW_INNER', torqueSensorModel: 'MC_TOR_SENSOR_KW', gateDriverModel: 'DRV8353S' });
   project.catalog.drivers.push(driver);
   const html = renderEquipment(project, [], 'drivers', driver.id);
-  for (const [scope, key, group] of [['driver', 'mcu', 'mcu'], ['driver', 'board', 'board'], ['driver-hardware', 'motorEncoderModel', 'encoder'], ['driver-hardware', 'outputEncoderModel', 'encoder'], ['driver-hardware', 'torqueSensorModel', 'torque']]) {
+  for (const [scope, key, group] of [['driver', 'mcu', 'mcu'], ['driver', 'board', 'board'], ['driver-hardware', 'motorEncoderModel', 'encoder'], ['driver-hardware', 'outputEncoderModel', 'encoder'], ['driver-hardware', 'torqueSensorModel', 'torque'], ['driver-hardware', 'gateDriverModel', 'gateDriver']]) {
     const matches = [...html.matchAll(/<(input|select)\b([^>]*)>/g)].filter(([, , attrs]) => attrs.includes(`data-edit="${scope}"`) && attrs.includes(`data-key="${key}"`));
     assert.equal(matches.length, 1, key);
     assert.equal(matches[0][1], 'select');
@@ -35,6 +37,7 @@ test('all driver and sensor model fields use the same fixed selects with no edit
   }
   assert.doesNotMatch(html, /edit-options|编辑选项|option-editor/);
   assert.equal(optionGroupFor('driver', 'name'), '');
+  assert.equal(optionGroupFor('module', 'gateDriverModel'), 'gateDriver');
 });
 
 test('an unknown current value is preserved and escaped but cannot become a selectable option', () => {
