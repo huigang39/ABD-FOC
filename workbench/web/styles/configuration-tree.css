@@ -2,6 +2,9 @@
 .configuration-tree ul { margin: 0; padding: 0; list-style: none; }
 .configuration-tree-heading { display: flex; align-items: center; gap: 6px; padding: 8px 10px 14px; color: var(--muted); font-size: 11px; }
 .configuration-tree-item + .configuration-tree-item { margin-top: 4px; }
+/* 行内主链占满、行尾槽等宽：状态徽标在有/无箭头的行都对齐同一竖列。 */
+.configuration-tree-item { display: flex; align-items: center; }
+.configuration-tree-item > .guide-step, .configuration-tree-item > details { flex: 1; min-width: 0; }
 .configuration-tree summary { display: flex; align-items: center; list-style: none; border-radius: 9px; }
 .configuration-tree summary::-webkit-details-marker { display: none; }
 /* 行首不放折叠箭头：序号徽标对齐行首，展开指示只保留右侧一枚。 */
@@ -13,7 +16,9 @@
 .configuration-tree .step-index { width: 24px; height: 24px; font-size: 10px; }
 .configuration-tree .step-copy { flex: 1; }
 .tree-progress { font: 10px var(--mono); color: var(--subtle); }
-.tree-chevron { flex: 0 0 30px; height: 36px; display: grid; place-items: center; cursor: pointer; }
+.tree-chevron { flex: 0 0 28px; height: 36px; display: grid; place-items: center; cursor: pointer; }
+.tree-chevron-blank { cursor: default; }
+.tree-chevron-blank::before { content: none; }
 .tree-chevron::before { content: ''; width: 7px; height: 7px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; opacity: .55; transform: rotate(-45deg); transform-origin: 70% 70%; transition: transform var(--motion), opacity var(--motion); }
 .configuration-tree details[open] > summary .tree-chevron::before { opacity: .85; transform: rotate(45deg); }
 .configuration-tree .configuration-tree-children { margin: 4px 0 10px 21px; padding-left: 11px; border-left: 1px solid var(--line); }
@@ -22,7 +27,7 @@
 .module-sequence { flex: 0 0 16px; color: var(--subtle); font: 10px var(--mono); font-weight: 400; white-space: nowrap; }
 .tree-module-number { flex: 0 0 18px; display: inline-grid; place-items: center; width: 18px; height: 18px; border: 1px solid var(--line-strong); border-radius: 50%; color: var(--subtle); background: var(--surface); font: 9px var(--mono); white-space: nowrap; }
 .module-sequence { display: inline-block; margin-right: 9px; font-size: 11px; }
-.configuration-module-branch > summary .tree-chevron { flex-basis: 24px; }
+.configuration-module-branch > summary .tree-chevron { flex-basis: 28px; }
 .configuration-module-branch > summary:has(.active) { background: var(--soft); }
 .configuration-module-branch > summary .configuration-status { flex-basis: 17px; width: 17px; height: 17px; }
 .configuration-tree .configuration-module-pages { margin: 0 0 7px 24px; padding: 2px 0 2px 12px; border-left: 1px solid var(--line); }

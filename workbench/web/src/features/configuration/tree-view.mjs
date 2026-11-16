@@ -11,6 +11,8 @@ export function moduleNumber(step, moduleId) {
   return ordinal(step.modules.indexOf(moduleId));
 }
 const chevron = '<span class="tree-chevron" aria-hidden="true"></span>';
+// 无子项的行也保留同宽的行尾占位，让状态徽标在所有行落在同一竖列。
+const chevronBlank = '<span class="tree-chevron tree-chevron-blank" aria-hidden="true"></span>';
 
 export function renderConfigurationTree(guide, activeStep, activeModule = '', activeTab = 'config') {
   const moduleBranch = (item, step) => {
@@ -23,7 +25,7 @@ export function renderConfigurationTree(guide, activeStep, activeModule = '', ac
     const active = step.id === activeStep, children = step.children || [], included = children.filter(child => child.state !== 'disabled');
     const progress = children.length ? `${included.filter(child=>child.state==='configured').length}/${included.length}` : '';
     const link = `<a class="guide-step ${active ? 'active' : ''} ${step.state}" href="#/project/${step.id}" data-tree-step="${step.id}" ${active ? 'aria-current="step"' : ''}><span class="step-index">${String(index+1).padStart(2,'0')}</span><span class="step-copy"><strong>${esc(step.title)}</strong></span>${progress ? `<span class="tree-progress" aria-label="${included.filter(child=>child.state==='configured').length} 个模块配置检查通过，共 ${included.length} 个">${progress}</span>` : ''}${configurationStatus(step)}</a>`;
-    if (!children.length) return `<li class="configuration-tree-item">${link}</li>`;
+    if (!children.length) return `<li class="configuration-tree-item">${link}${chevronBlank}</li>`;
     const branch = children.map(child=>moduleBranch(child,step)).join('');
     return `<li class="configuration-tree-item"><details data-tree-branch data-state-key="tree-${step.id}" ${active?'open':''}><summary>${link}${chevron}</summary><ul class="configuration-tree-children">${branch}</ul></details></li>`;
   }).join('')}</ul></nav>`;
