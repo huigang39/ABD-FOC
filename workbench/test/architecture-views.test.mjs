@@ -18,30 +18,34 @@ function assertReadOnly(html) {
 
 test('architecture overview is the signal-and-power chain canvas for the joint module lifecycle', () => {
   const html = renderArchitectureOverview();
-  // 链节点顺序：应用 → 算法 → 硬件 → 电机 → 减速机。
-  assert.deepEqual([...html.matchAll(/chain-node chain-(app|foc|hardware|physical)"[^>]*>\s*<span class="chain-head"><strong>([^<]+)/g)].map(match => match[2]), ['应用', '算法', '硬件', '电机', '减速机']);
+  // 链节点顺序：应用 → 算法 → 硬件（物理端为图标节点，另测）。
+  assert.deepEqual([...html.matchAll(/chain-node chain-(app|foc|hardware)"[^>]*>\s*<span class="chain-head"><strong>([^<]+)/g)].map(match => match[2]), ['应用', '算法', '硬件']);
   assert.deepEqual([...html.matchAll(/data-mark="([^"]+)"/g)].map(match => match[1]), ['app', 'foc', 'hardware']);
-  // 指令源单选与接口标注：上位机（以太网 · CAN · RS485）与调试器（J-Link）。
-  assert.equal((html.match(/name="canvas-source"/g) || []).length, 2);
-  assert.match(html, /以太网 · CAN · RS485/);
-  assert.match(html, /J-Link/);
+  // 指令源四条可选通行线：CAN / EtherCAT / Ethernet / J-Link，标签即文字。
+  assert.equal((html.match(/name="canvas-source"/g) || []).length, 4);
+  for (const bus of ['CAN', 'EtherCAT', 'Ethernet', 'J-Link']) assert.match(html, new RegExp(`<small>${bus}</small>`));
   // 层间交换语义落在链上连接标签。
   assert.match(html, /控制给定 \/ 反馈快照/);
   assert.match(html, /调制提交 \/ 同步采样/);
   // 硬件与电机三相连接、电机连减速机；PCB 设计内嵌硬件层。
   assert.match(html, /<small>U · V · W<\/small>/);
   assert.match(html, /PCB 设计/);
-  // 分组：应用+算法+硬件=驱动器，电机+减速机=执行器，均连货架。
+  // 分组：应用+算法+硬件=驱动器，电机+减速机=执行器，均带货架快速选择。
   assert.match(html, /<b>驱动器<\/b>/);
   assert.match(html, /<b>执行器<\/b>/);
   // 仿真卡：上方数字信号仿真 + 硬件仿真，底部动力学仿真。
   assert.match(html, /数字信号仿真/);
   assert.match(html, /硬件仿真/);
   assert.match(html, /动力学仿真/);
-  // 生命周期带：选型 → 工程 → 调试 → 测试。
-  for (const stage of ['货架', '工程', '调试', '测试']) assert.match(html, new RegExp(`>${stage}<`));
-  assert.deepEqual([...html.matchAll(/class="canvas-stage" href="([^"]+)"/g)].map(match => match[1]),
-    ['#/equipment', '#/project/actuator', '#/debug', '#/performance']);
+  // 极简画布：无模块词条、无模块计数、无生命周期带、无接口文字堆叠。
+  assert.doesNotMatch(html, /layer-capabilities/);
+  assert.doesNotMatch(html, /个模块/);
+  assert.doesNotMatch(html, /canvas-stage/);
+  assert.doesNotMatch(html, /以太网/);
+  // 物理端为贴合实物的大图标节点（转子 / 齿轮），不再是文字框。
+  assert.match(html, /icons\.svg#rotor/);
+  assert.match(html, /aria-label="电机 · 货架执行器"/);
+  assert.match(html, /aria-label="减速机 · 货架执行器"/);
   // 双击指令源进入对应页面。
   assert.match(html, /ondblclick="location\.hash='#\/project\/protocol'"/);
   assert.match(html, /ondblclick="location\.hash='#\/debug'"/);
