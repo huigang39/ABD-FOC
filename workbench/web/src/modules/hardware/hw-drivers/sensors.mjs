@@ -1,4 +1,4 @@
-import { sensorProtocolFields, sensorProtocolVisible, sensorProtocolIssues } from './protocol.mjs';
+import { createDriverCommand, sensorCommandIssues } from './protocol.mjs';
 /** Device names are shelf metadata; wire behavior comes only from protocol fields. */
 const options = entries => entries.map(([value,label])=>({value,label}));
 const states = options([['unconfirmed','待确定'],['present','启用'],['absent','禁用']]);
@@ -22,7 +22,7 @@ export const SENSOR_PARAMS = SENSOR_ROLES.flatMap(role=>{
     field(role,p+'Model','器件型号','text',{description:'用于记录选型，不参与代码分支；通信行为由下方帧格式配置决定。'}),
     select(role,p+'Interface','通信方式',interfaces,{sensorRequired:true,sensorLayoutTrigger:true}),
     field(role,p+'Resource','外设接口','text',{sensorRequired:true,sensorLayoutTrigger:true,description:'引用 PCBA 已分配的外设与引脚。'}),
-    ...sensorProtocolFields(role),
+    field(role,p+'Commands','接收命令','command-list',{defaultValue:[],hidden:true}),
     ...(encoder?[
       select(role,p+'AngleDomain','输出角度语义',options([['unselected','待选择'],['mechanical','机械角度'],['electrical','电角度']]),{sensorRequired:true}),
       field(role,role.id==='motor'?'encoderBits':'outputEncoderBits','有效分辨率','integer',{unit:'bit',min:1,max:64,when:'absolute',sensorRequired:true,advanced:true}),
@@ -54,7 +54,6 @@ export function sensorFieldVisible(field,parameters) {
   if(field.key===role.capability)return true;
   if(parameters[role.capability]!=='present')return false;
   const p=role.prefix;
-  if(field.sensorGroup==='protocol')return sensorProtocolVisible(field,parameters,role);
   if(field.when==='hall')return parameters[p+'Type']==='hall';
   if(field.when==='linear_hall')return parameters[p+'Type']==='hall'&&parameters[p+'HallMode']==='linear';
   if(field.when==='absolute'||field.when==='incremental')return parameters[p+'Type']===field.when;
@@ -64,6 +63,25 @@ export function sensorFieldVisible(field,parameters) {
   return true;
 }
 export function sensorFieldRequired(field,parameters) { return field.required || Boolean(field.sensorRequired&&sensorFieldVisible(field,parameters)); }
+/** 旧协议平铺键后缀：折叠为一条主数据命令后必须全部删除（exactKeys）。 */
+const LEGACY_PROTOCOL_SUFFIXES=['TransferMode','RequestHex','StartHex','StartupDelayUs','HeaderHex','FooterHex','FrameBytes','DataOffset','DataType','DataBits','ByteOrder','ValueScale','ValueOffset','Checksum','ChecksumStart','StatusOffset','StatusMask','StatusExpected'];
+/** 任一旧键存在且命令数组缺主数据命令时折叠一条 data 命令；旧键随后无条件删除；幂等。 */
+function foldLegacyProtocolCommands(parameters) {
+  for(const role of SENSOR_ROLES) {
+    const p=role.prefix,legacy=LEGACY_PROTOCOL_SUFFIXES.map(suffix=>p+suffix);
+    const commands=Array.isArray(parameters[p+'Commands'])?parameters[p+'Commands']:null;
+    if(legacy.some(key=>Object.hasOwn(parameters,key))&&!(commands||[]).some(command=>command?.purpose==='data')) {
+      const pick=suffix=>parameters[p+suffix];
+      const mode=pick('TransferMode')==='active_upload'?'active_upload':'request_response';
+      parameters[p+'Commands']=[Object.assign(createDriverCommand('data',`${role.id}-data`),{mode,
+        requestHex:String(pick(mode==='active_upload'?'StartHex':'RequestHex')??''),periodUs:null,startupDelayUs:pick('StartupDelayUs')??0,
+        headerHex:String(pick('HeaderHex')??''),footerHex:String(pick('FooterHex')??''),frameBytes:pick('FrameBytes')??null,dataOffset:pick('DataOffset')??null,
+        dataType:pick('DataType')??'unselected',dataBits:pick('DataBits')??null,byteOrder:pick('ByteOrder')??'unselected',valueScale:pick('ValueScale')??null,valueOffset:pick('ValueOffset')??0,
+        checksum:pick('Checksum')??'unselected',checksumStart:pick('ChecksumStart')??0,statusOffset:pick('StatusOffset')??null,statusMask:pick('StatusMask')??0,statusExpected:pick('StatusExpected')??0})];
+    }
+    for(const key of legacy)delete parameters[key];
+  }
+}
 export function migrateSensorParameters(parameters,{hallAngle=false}={}) {
   if(!parameters||typeof parameters!=='object'||Array.isArray(parameters))return;
   if(!Object.hasOwn(parameters,'motorEncoderType')) {
@@ -72,6 +90,7 @@ export function migrateSensorParameters(parameters,{hallAngle=false}={}) {
       parameters.encoderCapability=parameters.hallCapability??'unconfirmed';
     }
   }
+  foldLegacyProtocolCommands(parameters);
   for(const field of SENSOR_PARAMS)if(!Object.hasOwn(parameters,field.key))parameters[field.key]=structuredClone(field.defaultValue);
 }
 export function sensorIssues(parameters) {
@@ -79,7 +98,7 @@ export function sensorIssues(parameters) {
   const add=(id,level,title,message,key)=>issues.push({id:'sensor-'+id,level,title,message,moduleId:'hw-drivers',paramKey:key});
   for(const role of SENSOR_ROLES) {
     const p=role.prefix;
-    issues.push(...sensorProtocolIssues(parameters,role));
+    issues.push(...sensorCommandIssues(parameters,role));
     if(parameters[role.capability]!=='present')continue;
     for(const field of SENSOR_PARAMS.filter(f=>f.sensorRole===role.id&&sensorFieldRequired(f,parameters))) {
       const v=parameters[field.key];

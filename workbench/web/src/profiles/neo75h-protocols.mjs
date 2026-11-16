@@ -1,12 +1,14 @@
 /** Wire-format data for the shelf. Generated code never branches on these labels. */
-const angle={TransferMode:'request_response',RequestHex:'3B',StartHex:'',StartupDelayUs:200000,HeaderHex:'3B',FooterHex:'',FrameBytes:9,DataType:'unsigned',DataBits:24,ByteOrder:'little',ValueOffset:0,Checksum:'xor8',ChecksumStart:0,StatusOffset:7,StatusMask:0,StatusExpected:0};
-const upload={TransferMode:'active_upload',RequestHex:'',StartupDelayUs:200000,DataType:'float32',DataBits:32,ByteOrder:'little',ValueScale:1,ValueOffset:0,ChecksumStart:0,FooterHex:'',StatusOffset:null,StatusMask:0,StatusExpected:0};
+import { createDriverCommand } from '../modules/hardware/hw-drivers/protocol.mjs';
+const dataCommand=(id,values)=>Object.assign(createDriverCommand('data',id),values);
+const angle=(id,dataOffset,valueScale)=>dataCommand(id,{mode:'request_response',requestHex:'3B',startupDelayUs:200000,headerHex:'3B',footerHex:'',frameBytes:9,dataOffset,dataType:'unsigned',dataBits:24,byteOrder:'little',valueScale,valueOffset:0,checksum:'xor8',checksumStart:0,statusOffset:7,statusMask:0,statusExpected:0});
+const upload=(id,values)=>dataCommand(id,{mode:'active_upload',startupDelayUs:200000,dataType:'float32',dataBits:32,byteOrder:'little',valueScale:1,valueOffset:0,checksumStart:0,footerHex:'',statusOffset:null,statusMask:0,statusExpected:0,...values});
 const torque={
-  KW:{...upload,StartHex:'48 AA 85 7F 14 D4',HeaderHex:'48 AA',FrameBytes:8,DataOffset:2,Checksum:'crc16_modbus'},
-  LD:{...upload,StartHex:'55 AA 01 00 03 51 09 01 5A CC 33',HeaderHex:'55 AA',FooterHex:'CC 33',FrameBytes:14,DataOffset:7,Checksum:'xor8',ChecksumStart:3},
-  SMH:{...upload,StartHex:'1F 10 01 9A 00 01 02 00 03 6A CB',HeaderHex:'8A',FrameBytes:6,DataOffset:2,DataType:'signed',DataBits:24,ValueScale:0.01,Checksum:'xor8',StatusOffset:1,StatusMask:255},
+  KW:upload('torque-data',{requestHex:'48 AA 85 7F 14 D4',headerHex:'48 AA',frameBytes:8,dataOffset:2,checksum:'crc16_modbus'}),
+  LD:upload('torque-data',{requestHex:'55 AA 01 00 03 51 09 01 5A CC 33',headerHex:'55 AA',footerHex:'CC 33',frameBytes:14,dataOffset:7,checksum:'xor8',checksumStart:3}),
+  SMH:upload('torque-data',{requestHex:'1F 10 01 9A 00 01 02 00 03 6A CB',headerHex:'8A',frameBytes:6,dataOffset:2,dataType:'signed',dataBits:24,valueScale:0.01,checksum:'xor8',statusOffset:1,statusMask:255}),
 };
-const prefix=(p,values)=>Object.fromEntries(Object.entries(values).map(([key,value])=>[p+key,value]));
+const prefix=(p,commands)=>({[p+'Commands']:commands});
 export function neo75hProtocols(variant){
-  return {...prefix('motorEncoder',{...angle,DataOffset:1,ValueScale:2*Math.PI/131072}),...prefix('outputEncoder',{...angle,DataOffset:4,ValueScale:2*Math.PI/524288}),...(torque[variant]?prefix('torqueSensor',torque[variant]):{})};
+  return {...prefix('motorEncoder',[angle('motor-data',1,2*Math.PI/131072)]),...prefix('outputEncoder',[angle('output-data',4,2*Math.PI/524288)]),...(torque[variant]?prefix('torqueSensor',[torque[variant]]):{})};
 }

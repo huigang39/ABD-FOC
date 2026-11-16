@@ -21,7 +21,7 @@ import { createConfigurationTreeState } from './features/configuration/tree-stat
 import { bindHardwareField } from './modules/hardware/hw-platform/options.mjs';
 import { fieldHelp, installFieldHelp } from './shared/ui/field-help.mjs';
 import { syncSensorResource } from './modules/hardware/hw-board/validation.mjs';
-import { bindSensorField, renderResourceEditor, renderTripEditor, renderSensorTransport } from './features/configuration/hardware-view.mjs';
+import { bindSensorField, renderResourceEditor, renderTripEditor, renderSensorTransport, renderCommandEditor } from './features/configuration/hardware-view.mjs';
 import { createResource, selectResourceInstance } from './modules/hardware/hw-board/resources.mjs';
 import { createTripPath } from './modules/hardware/hw-safety/paths.mjs';
 import { renderArchitectureOverview, renderArchitectureLayer } from './features/architecture/view.mjs';
@@ -47,6 +47,8 @@ import { createActuator, createDriver, createJointModule, createBinding, applyAs
 import { renderGuide, renderStructures, renderFaults, renderProtocol } from './features/configuration/view.mjs';
 import { renderEquipment } from './features/equipment/view.mjs';
 import { renderSensorConfig } from './modules/hardware/hw-drivers/view.mjs';
+import { SENSOR_ROLES } from './modules/hardware/hw-drivers/sensors.mjs';
+import { createDriverCommand, COMMAND_PURPOSES, DRIVER_COMMANDS_MAX } from './modules/hardware/hw-drivers/protocol.mjs';
 import { syncMcuArchitecture } from './features/deployment/mcu.mjs';
 import { renderBuild, renderDebug, renderFlash } from './features/build/view.mjs';
 import { renderOperation } from './features/operation/view.mjs';
@@ -336,7 +338,7 @@ function moduleParameters(module) {
   }
   if(module.id==='hw-platform')config=targetForm()+renderPlatformConfiguration(project.target.mcu,params,fields,renderField,{project})+`<div class="memory-summary"><div>${icon('chip')}<span><strong>双核协作</strong></span></div><a class="button small" href="#/project/execution">配置分工 ${icon('arrow-right')}</a></div>`;
   if(module.id==='hw-board')config=fieldHtml(TARGET_FIELDS.find(field=>field.key==='board'),project.target.board,'target')+fields.filter(field=>!field.group).map(renderField).join('')+renderResourceEditor(project.target.mcu,resources)+`<section class="hardware-field-group" id="peripheral-timing"><h3>采样与 PWM</h3><div class="profile-form">${fields.filter(field=>field.group==='timing').map(renderField).join('')}</div></section>`;
-  if(module.id==='hw-drivers')config=renderSensorConfig(params,field=>renderField(bindSensorField(field,params,resources)),{renderTransport:role=>renderSensorTransport(params,role,resources,{mcu:project.target.mcu})});
+  if(module.id==='hw-drivers')config=renderSensorConfig(params,field=>renderField(bindSensorField(field,params,resources)),{renderTransport:role=>renderSensorTransport(params,role,resources,{mcu:project.target.mcu}),renderCommands:role=>renderCommandEditor(role,params[role.prefix+'Commands']||[])});
   if(module.id==='foc-lifecycle')config+=renderAlgorithmPaths(project);
   if(module.id==='hw-safety')config=renderCoreExceptions(project,renderField)+renderTripEditor(params.tripPaths||[],resources,{mcu:project.target.mcu});
   return `${config}
@@ -545,6 +547,28 @@ function handleDesignAction(action,data) {
       else {const index=list.findIndex(item=>item.id===id);if(index>=0)list.splice(index,1);}
     });return true;
   }
+  if(['add-driver-command','remove-driver-command'].includes(action)) {
+    try {
+      change(next=>{
+        const owner=data.owner||'';
+        const hardware=owner?next.catalog.drivers.find(driver=>driver.id===owner)?.hardware:Object.fromEntries(Object.entries(next.instances).map(([moduleId,instance])=>[moduleId,instance.parameters]));
+        if(!hardware)throw new Error('驱动器不存在。');
+        const role=SENSOR_ROLES.find(role=>role.id===data.role);
+        if(!role)throw new Error('未知驱动通道。');
+        const key=role.prefix+'Commands', commands=hardware['hw-drivers'][key]??(hardware['hw-drivers'][key]=[]);
+        if(action==='add-driver-command') {
+          if(commands.length>=DRIVER_COMMANDS_MAX)throw new Error(`每个通道最多 ${DRIVER_COMMANDS_MAX} 条命令。`);
+          const purpose=COMMAND_PURPOSES.some(([value])=>value===data.purpose)?data.purpose:'other';
+          if(purpose==='data'&&commands.some(command=>command.purpose==='data'))throw new Error('每个通道最多一条主数据指令。');
+          commands.push(createDriverCommand(purpose));
+        } else {
+          const index=commands.findIndex(command=>command.id===data.id);
+          if(index>=0)commands.splice(index,1);
+        }
+      });
+    } catch(error) { showError(error.message); }
+    return true;
+  }
   if(action==='add-binding') { change(next=>next.catalog.drivers.find(x=>x.id===id)?.bindings.push(createBinding()));return true; }
   const removals={
     'remove-layer-interface':next=>next.design.layerInterfaces,
@@ -615,6 +639,26 @@ function handleDesignEdit(input) {
       },input.tagName==='INPUT'&&valueType!=='boolean');
       // Several device drivers may expose the same physical bus settings.
       if(scope==='pcba-resource')for(const peer of document.querySelectorAll('[data-edit="pcba-resource"]'))if(peer!==input&&peer.dataset.id===id&&peer.dataset.key===key&&peer.dataset.section===section&&(peer.dataset.owner||'')===(owner||'')){peer.value=input.value;peer.closest('[data-select-menu]')?.updateTrigger?.();}
+    }catch(error){input.setCustomValidity(error.message);input.reportValidity();}
+    return;
+  }
+
+  if(input.dataset.edit==='driver-command') {
+    try {
+      const {id,role:roleId,owner='',key,valueType}=input.dataset;
+      const numeric=['number','integer'].includes(valueType);
+      let value=numeric?(readNumericInput(input)):input.value;
+      if(numeric&&(input.validity.badInput||value!==null&&(!Number.isFinite(value)||valueType==='integer'&&!Number.isSafeInteger(value))))throw new Error('请输入有效数值。');
+      input.setCustomValidity('');
+      change(next=>{
+        const hardware=owner?next.catalog.drivers.find(driver=>driver.id===owner)?.hardware:Object.fromEntries(Object.entries(next.instances).map(([moduleId,instance])=>[moduleId,instance.parameters]));
+        const role=SENSOR_ROLES.find(role=>role.id===roleId);
+        const commands=hardware?.['hw-drivers']?.[role?.prefix+'Commands']||[];
+        const command=commands.find(command=>command.id===id);
+        if(!command)throw new Error('命令不存在，请重新选择。');
+        if(key==='purpose'&&value==='data'&&command.purpose!=='data'&&commands.some(item=>item.purpose==='data'))throw new Error('每个通道最多一条主数据指令。');
+        command[key]=value;
+      },input.tagName==='INPUT');
     }catch(error){input.setCustomValidity(error.message);input.reportValidity();}
     return;
   }

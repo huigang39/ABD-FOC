@@ -268,6 +268,9 @@ function migrateDriverModule(project) {
     rename(snapshot?.driver?.hardware,'hw-sensors','hw-drivers');
     rename(snapshot?.build?.moduleOptimizations,'hw-sensors','hw-drivers');
     for(const layer of Object.values(snapshot?.layers||{}))rename(layer?.configuration,'hw-sensors','hw-drivers');
+    // 测试快照按当前参数键做 exactKeys 校验：命令折叠与货架、工程实例同一配方。
+    if(plain(snapshot?.driver?.hardware?.['hw-drivers']))migrateSensorParameters(snapshot.driver.hardware['hw-drivers']);
+    if(plain(snapshot?.layers?.hardware?.configuration?.['hw-drivers']?.parameters))migrateSensorParameters(snapshot.layers.hardware.configuration['hw-drivers'].parameters);
   }
 }
 

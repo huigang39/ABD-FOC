@@ -17,6 +17,15 @@ export function driverConfigurationIssues(parameters){
     }
     const timeout=parameters[role.prefix+'TimeoutUs'];
     if(!Number.isInteger(timeout)||timeout<=0||timeout>=0x80000000)issues.push({paramKey:role.prefix+'TimeoutUs',message:'数据有效期必须为 1–2147483647 μs 的整数。'});
+    // 本阶段 C 引擎仍是单命令 DriverConfig：主数据命令必须完整，状态/其他命令待引擎更新。
+    const commands=Array.isArray(parameters[role.prefix+'Commands'])?parameters[role.prefix+'Commands']:[];
+    const data=commands.find(command=>command?.purpose==='data');
+    if(!data)issues.push({paramKey:role.prefix+'Commands',message:`${role.title}缺少主数据指令，无法生成接收解析。`});
+    else{
+      const missing=[['requestHex','请求指令'],['frameBytes','接收帧长'],['dataOffset','数据起始位置'],['dataType','数值格式'],['dataBits','数值位宽'],['byteOrder','字节顺序'],['valueScale','数值倍率']].filter(([key])=>data[key]==null||data[key]==='unselected'||key==='requestHex'&&data.mode==='request_response'&&!String(data[key]||'').trim()).map(([,label])=>label);
+      if(missing.length)issues.push({paramKey:role.prefix+'Commands',message:`${role.title}的主数据指令尚未配置：${missing.join('、')}。`});
+    }
+    for(const command of commands)if(command?.purpose!=='data')issues.push({paramKey:role.prefix+'Commands',message:'状态/其他指令需在固件引擎更新后使用。'});
   }
   return issues;
 }
@@ -24,8 +33,8 @@ export function driverDescriptors(parameters){
   const issues=driverConfigurationIssues(parameters);if(issues.length)throw Error(issues.map(i=>i.message).join('\n'));
   return SENSOR_ROLES.map(role=>{
     const p=role.prefix;if(parameters[role.capability]==='absent')return {enabled:false};
-    const get=s=>parameters[p+s];
-    return {enabled:true,mode:get('TransferMode'),request:bytes(get(get('TransferMode')==='active_upload'?'StartHex':'RequestHex')),header:bytes(get('HeaderHex')),footer:bytes(get('FooterHex')),frame_length:get('FrameBytes'),data_offset:get('DataOffset'),data_bits:get('DataBits'),value_type:get('DataType'),big_endian:get('ByteOrder')==='big',scale:number(get('ValueScale')),offset:number(get('ValueOffset')),checksum:get('Checksum'),checksum_start:get('Checksum')==='none'?0:get('ChecksumStart'),status_offset:get('StatusOffset')??-1,status_mask:get('StatusMask'),status_expected:get('StatusExpected'),timeout_us:get('TimeoutUs'),startup_delay_us:get('StartupDelayUs')};
+    const data=parameters[p+'Commands'].find(command=>command.purpose==='data');
+    return {enabled:true,mode:data.mode,request:bytes(data.requestHex),header:bytes(data.headerHex),footer:bytes(data.footerHex),frame_length:data.frameBytes,data_offset:data.dataOffset,data_bits:data.dataBits,value_type:data.dataType,big_endian:data.byteOrder==='big',scale:number(data.valueScale),offset:number(data.valueOffset),checksum:data.checksum,checksum_start:data.checksum==='none'?0:data.checksumStart,status_offset:data.statusOffset??-1,status_mask:data.statusMask,status_expected:data.statusExpected,timeout_us:parameters[p+'TimeoutUs'],startup_delay_us:data.startupDelayUs};
   });
 }
 const enums={mode:{request_response:'DRIVER_REQUEST_RESPONSE',active_upload:'DRIVER_ACTIVE_UPLOAD'},value_type:{unsigned:'DRIVER_VALUE_UNSIGNED',signed:'DRIVER_VALUE_SIGNED',float32:'DRIVER_VALUE_FLOAT32'},checksum:{none:'DRIVER_CHECK_NONE',xor8:'DRIVER_CHECK_XOR8',sum8:'DRIVER_CHECK_SUM8',crc16_modbus:'DRIVER_CHECK_MODBUS'}};

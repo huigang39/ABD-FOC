@@ -3,6 +3,7 @@ import { checkAlgorithmPaths } from '../modules/algorithm/foc-lifecycle/paths.mj
 import { checkCoreConfigShape } from '../modules/hardware/hw-platform/cores.mjs';
 import { checkResourceShape } from '../modules/hardware/hw-board/resources.mjs';
 import { checkTripShape } from '../modules/hardware/hw-safety/paths.mjs';
+import { checkDriverCommandShape } from '../modules/hardware/hw-drivers/protocol.mjs';
 import { select, choices, unset } from '../modules/shared/fields.mjs';
 export { MODULES, MODULE_IDS } from '../modules/registry.mjs';
 /** Shared module metadata for project configuration and reusable driver profiles. */
@@ -27,6 +28,7 @@ export function checkParameter(value, parameter, location) {
     case 'core-config': checkCoreConfigShape(value); break;
     case 'resource-list': checkResourceShape(value); break;
     case 'trip-list': checkTripShape(value); break;
+    case 'command-list': checkDriverCommandShape(value); break;
     case 'number': if (typeof value !== 'number' || !Number.isFinite(value)) parameterError(`${location} 必须是有限数字或 null。`); break;
     case 'integer': if (!Number.isSafeInteger(value)) parameterError(`${location} 必须是安全整数或 null。`); break;
     case 'boolean': if (typeof value !== 'boolean') parameterError(`${location} 必须是布尔值或 null。`); break;
