@@ -4,6 +4,8 @@
 .configuration-tree-item + .configuration-tree-item { margin-top: 4px; }
 .configuration-tree summary { display: flex; align-items: center; list-style: none; border-radius: 9px; }
 .configuration-tree summary::-webkit-details-marker { display: none; }
+/* 行首不放折叠箭头：序号徽标对齐行首，展开指示只保留右侧一枚。 */
+.configuration-tree details > summary::before { content: none; }
 .configuration-tree summary .guide-step { flex: 1; min-width: 0; padding-right: 3px; }
 .configuration-tree summary:hover { background: var(--surface-hover); }
 .configuration-tree .guide-step { align-items: center; gap: 9px; padding: 10px; background: transparent; border: 0; font-size: 12px; }
