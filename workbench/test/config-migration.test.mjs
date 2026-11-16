@@ -5,6 +5,8 @@ import { MODULES } from '../web/src/core/catalog.mjs';
 import { createField, createMessage, createStructure, configurationFingerprint } from '../web/src/core/contracts.mjs';
 import { createLayerInterface, getModuleContractRole, validateModuleContracts } from '../web/src/core/module-contracts.mjs';
 import { saveLayerVersion, applyLayerVersion, layerMatchesRelease } from '../web/src/features/configuration/versions.mjs';
+import { createActuator, createDriver, createJointModule } from '../web/src/features/equipment/model.mjs';
+import { createPerformanceDraft, savePerformanceRecord } from '../web/src/features/performance/model.mjs';
 import { calibrationEnabled } from '../web/src/modules/application/app-calibration/validation.mjs';
 
 const compensationId = 'foc-compensation';
@@ -338,4 +340,55 @@ test('旧保护未知参数和非法兼容记录不会在删除旧实例时被�
   assert.throws(() => parseProject(JSON.stringify(unknown)), /未知字段/);
   const invalid = previousProject(); invalid.compatibility = { focSafety: [{ conflicts: ['unknown'], provenance: {} }] };
   assert.throws(() => parseProject(JSON.stringify(invalid)), /conflicts/);
+});
+
+test('旧模块名 hw-sensors 的七个数据面载入时折叠为 hw-drivers，不透明引用保持原值', () => {
+  let project = createExampleProject();
+  project.catalog.actuators.push(createActuator('执行器甲'));
+  project.catalog.drivers.push(createDriver('驱动器甲'));
+  const assembly = createJointModule(project, { actuatorId: project.catalog.actuators[0].id, driverId: project.catalog.drivers[0].id });
+  project.catalog.assemblies.push(assembly); project.catalog.activeAssemblyId = assembly.id;
+  project.execution.assignments['hw-drivers'] = 'cm7';
+  project.design.faults.find(fault => fault.id === 'feedback-invalid').source = 'hw-drivers';
+  project.design.structures.find(structure => structure.id === 'sample-frame').consumers.push('hw-drivers');
+  project = saveLayerVersion(project, { layer: 'hardware', version: 'driver-rename/β' });
+  const draft = createPerformanceDraft(project, assembly.id);
+  draft.measuredAt = '2026-11-15'; draft.samples = [{ currentA: 1, torqueNm: 2, series: '甲' }];
+  project = savePerformanceRecord(project, draft);
+  const structureRefs = { ...project.design.moduleContracts['hw-drivers'] };
+  const swap = object => { if (Object.hasOwn(object, 'hw-drivers')) { object['hw-sensors'] = object['hw-drivers']; delete object['hw-drivers']; } };
+  const swapProvenance = provenance => { for (const key of Object.keys(provenance)) if (key.startsWith('hw-drivers.')) { provenance[`hw-sensors.${key.slice(11)}`] = provenance[key]; delete provenance[key]; } };
+  swap(project.instances); swap(project.execution.assignments); swapProvenance(project.provenance);
+  for (const driver of project.catalog.drivers) swap(driver.hardware);
+  swap(project.design.moduleContracts);
+  for (const structure of project.design.structures) {
+    if (structure.owner === 'hw-drivers') structure.owner = 'hw-sensors';
+    structure.consumers = structure.consumers.map(id => id === 'hw-drivers' ? 'hw-sensors' : id);
+  }
+  for (const item of project.design.layerInterfaces) { if (item.fromModule === 'hw-drivers') item.fromModule = 'hw-sensors'; if (item.toModule === 'hw-drivers') item.toModule = 'hw-sensors'; }
+  for (const fault of project.design.faults) if (fault.source === 'hw-drivers') fault.source = 'hw-sensors';
+  const release = project.layerVersions.releases[0];
+  swap(release.snapshot.instances); swapProvenance(release.snapshot.provenance);
+  const record = project.performance.records[0];
+  swap(record.snapshot.driver.hardware);
+  for (const layer of Object.values(record.snapshot.layers)) swap(layer.configuration);
+  const loaded = parseProject(JSON.stringify(project));
+  assert.equal(Object.hasOwn(loaded.instances, 'hw-sensors'), false);
+  assert.equal(loaded.instances['hw-drivers'].parameters.encoderCapability, 'present');
+  assert.equal(loaded.execution.assignments['hw-drivers'], 'cm7');
+  assert.equal(Object.keys(loaded.provenance).some(key => key.startsWith('hw-sensors.')), false);
+  assert.equal(loaded.provenance['hw-drivers.encoderBits'], 'example');
+  assert.equal(Object.hasOwn(loaded.catalog.drivers[0].hardware, 'hw-drivers'), true);
+  assert.deepEqual(loaded.design.moduleContracts['hw-drivers'], structureRefs);
+  assert.equal(loaded.design.structures.some(structure => structure.owner === 'hw-sensors'), false);
+  assert.ok(loaded.design.structures.find(structure => structure.id === 'sample-frame').consumers.includes('hw-drivers'));
+  assert.equal(loaded.design.layerInterfaces.find(item => item.id === 'link-encoders').fromModule, 'hw-drivers');
+  assert.equal(loaded.design.faults.find(fault => fault.id === 'feedback-invalid').source, 'hw-drivers');
+  const restored = loaded.layerVersions.releases[0].snapshot;
+  assert.equal(Object.hasOwn(restored.instances, 'hw-drivers'), true);
+  assert.equal(Object.keys(restored.provenance).some(key => key.startsWith('hw-sensors.')), false);
+  const saved = loaded.performance.records[0].snapshot;
+  assert.equal(Object.hasOwn(saved.driver.hardware, 'hw-drivers'), true);
+  assert.equal(Object.hasOwn(saved.layers.hardware.configuration, 'hw-drivers'), true);
+  assert.deepEqual(parseProject(serializeProject(loaded)), loaded);
 });

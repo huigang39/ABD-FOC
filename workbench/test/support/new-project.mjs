@@ -10,6 +10,6 @@ export function newModuleProject(){
   set('app-calibration',{procedures:[],enabledProcedures:[]});
   set('foc-lifecycle',{referenceTimeoutMs:10});
   set('foc-compensation',{frictionModel:'coulomb_viscous',frictionSource:'stored',viscousNmPerRadS:0.1,coulombNm:0.2,transitionRadS:0.1,maxCompensationNm:1});
-  set('hw-sensors',{motorEncoderTimeoutUs:500,outputEncoderTimeoutUs:500,torqueSensorTimeoutUs:5000,torqueSensorRangeNm:50});
+  set('hw-drivers',{motorEncoderTimeoutUs:500,outputEncoderTimeoutUs:500,torqueSensorTimeoutUs:5000,torqueSensorRangeNm:50});
   return p;
 }

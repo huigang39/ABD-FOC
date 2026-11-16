@@ -2,7 +2,7 @@
 export const DRIVER_CHANNELS = 3;
 export const DRIVER_FRAME_BYTES = 64;
 export const DRIVER_TX_BYTES = 32;
-const fields=(role,rows)=>rows.map(([name,type,count,unit,meaning])=>({id:`hw-sensors-${role}-${name}`,name,type,count,unit,meaning}));
+const fields=(role,rows)=>rows.map(([name,type,count,unit,meaning])=>({id:`hw-drivers-${role}-${name}`,name,type,count,unit,meaning}));
 export const DRIVER_CONTRACTS = {
   input: {name:'DriversInput',rate:'event',fields:fields('input',[
     ['channel','u8',1,'','通道编号：0 电机侧编码器，1 出轴侧编码器，2 力矩传感器'],

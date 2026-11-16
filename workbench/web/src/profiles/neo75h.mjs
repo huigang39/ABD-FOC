@@ -831,7 +831,7 @@ export const NEO75H_PARAMETER_MAP = Object.freeze({
   'app-motion.profileVelocityWindowRadS': 'sw.ctrl.profile.outshaft_vel_window',
   'app-motion.profileTorqueWindowNm': 'sw.ctrl.profile.tor_window',
   'app-motion.profileTargetTimeMs': 'sw.ctrl.profile.target_time_ms',
-  'hw-sensors.torqueSensorBitrate': 'hw.tor_sensor.sensor.baudrate',
+  'hw-drivers.torqueSensorBitrate': 'hw.tor_sensor.sensor.baudrate',
 });
 
 function variantKey(variant) {
@@ -880,7 +880,7 @@ export function neo75hParameterOwner(path) {
   if (['hw.timer.pwm_duty_min', 'hw.timer.pwm_duty_max'].includes(path)) return 'foc-modulation';
   if (path.startsWith('hw.comm.')) return 'app-comms';
   if (path.startsWith('hw.timer.') || /^(hw\.(cur_sample|volt_sample|ntc)\.adc\.)/.test(path)) return 'hw-board';
-  if (path.startsWith('hw.encoder.') || path.startsWith('hw.tor_sensor.') || path.startsWith('hw.ntc.') || path.startsWith('mech.ntc.')) return 'hw-sensors';
+  if (path.startsWith('hw.encoder.') || path.startsWith('hw.tor_sensor.') || path.startsWith('hw.ntc.') || path.startsWith('mech.ntc.')) return 'hw-drivers';
   if (['hw.volt_sample.bus_volt_max', 'hw.volt_sample.bus_volt_min', 'hw.volt_sample.power_off_bus_volt_min'].includes(path)) return 'app-safety';
   if (path.startsWith('hw.')) return 'hw-board';
   if (['mech.motor.ld', 'mech.motor.lq', 'mech.motor.rs', 'mech.motor.psi', 'mech.motor.cur_rated', 'mech.motor.cur_peak', 'sw.ctrl.cur_ctrl', 'sw.ctrl.cur_loop_bandwidth', 'sw.ctrl.fw_v_bus_ratio', 'sw.ctrl.freq_div.fw'].includes(path) || /^sw\.ctrl\.(id_pi|iq_pi|id_adrc|iq_adrc|fw_pi)\./.test(path)) return 'foc-current';
@@ -959,7 +959,7 @@ export function applyNeo75hProfile(project, variant = 'KW') {
     outputEncoderCapability: 'present', outputEncoderType: 'absolute', outputEncoderVendor: 'gongwang', outputEncoderModel: 'GW 内圈', outputEncoderInterface: 'uart', outputEncoderResource: 'USART2', outputEncoderAngleDomain: 'mechanical', outputEncoderBitrate: num('hw.encoder.outshaft.baudrate'), outputEncoderTiming: 'fast',
     torqueCapability: 'present', torqueSensorModel: profile.variant, torqueSensorInterface: 'uart', torqueSensorResource: 'USART3', torqueSensorUnit: 'nm', torqueSensorBitrate: num('hw.tor_sensor.sensor.baudrate'), torqueSensorTiming: 'periodic', torqueSensorRateHz: num('hw.timer.pwm_freq') / num('sw.ctrl.freq_div.tor_sensor'),
   };
-  set('hw-sensors', sensor);
+  set('hw-drivers', sensor);
   const resource=(id,name,kind,pins,settings)=>({id,name,kind,instance:kind==='gpio'?'GPIO':id,pins,settings});
   set('hw-board',{resources:[
     resource('HRTIM1','三相功率输出','pwm',{A1:'PC6',A2:'PC7',B1:'PC8',B2:'PA8',C1:'PA9',C2:'PA10'},{mode:'pwm',alignment:'center',polarity:'high'}),

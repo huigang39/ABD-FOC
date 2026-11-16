@@ -20,6 +20,6 @@ export const MODULE_ICONS = {
   'foc-lifecycle': 'shield', 'foc-feedback': 'rotor', 'foc-observer': 'eye',
   'foc-current': 'current', 'foc-modulation': 'axes', 'foc-safety': 'shield',
   'foc-compensation': 'settings',
-  'hw-platform': 'chip', 'hw-board': 'board', 'hw-sensors': 'target',
+  'hw-platform': 'chip', 'hw-board': 'board', 'hw-drivers': 'target',
   'hw-safety': 'shield',
 };

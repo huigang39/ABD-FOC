@@ -4,7 +4,7 @@ import { coreCapabilities } from '../modules/hardware/hw-platform/cores.mjs';
 import { validateSchedule } from '../features/configuration/schedule.mjs';
 import { validateModuleConfiguration } from '../modules/validation.mjs';
 import { createPerformance, checkPerformanceShape } from '../features/performance/model.mjs';
-import { sensorFieldVisible, migrateSensorParameters } from '../modules/hardware/hw-sensors/sensors.mjs';
+import { sensorFieldVisible, migrateSensorParameters } from '../modules/hardware/hw-drivers/sensors.mjs';
 import { identifyMcu } from '../features/deployment/mcu.mjs';
 import { createLayerVersions, checkLayerVersionsShape, validateLayerVersions, checkCompatibilityShape, migrateLegacySafetyState } from '../features/configuration/versions.mjs';
 import { createOperation, checkOperationShape } from '../features/operation/model.mjs';
@@ -56,7 +56,7 @@ export function createExampleProject(kind = 'encoder') {
     'foc-modulation': { method: 'svpwm', dutyMin: 0.02, dutyMax: 0.98 },
     'hw-platform': { architecture:'unselected', flashKiB:512, eraseKiB:4, firmwareReserveKiB:256 },
     'hw-board': { currentTopology:'three_shunt', busVoltageV:24, currentGain:0.05, pwmHz:20000, currentLoopDivider:1, adcBits:12, adcClockHz:20000000, deadtimeNs:300 },
-    'hw-sensors': { encoderCapability: kind === 'sensorless' ? 'absent' : 'present', encoderBits: kind === 'encoder' ? 16 : null, motorEncoderType: kind === 'hall' ? 'hall' : kind === 'encoder' ? 'absolute' : 'unselected', motorEncoderAngleDomain: kind === 'hall' ? 'electrical' : 'mechanical', outputEncoderCapability: 'absent', torqueCapability: 'absent' },
+    'hw-drivers': { encoderCapability: kind === 'sensorless' ? 'absent' : 'present', encoderBits: kind === 'encoder' ? 16 : null, motorEncoderType: kind === 'hall' ? 'hall' : kind === 'encoder' ? 'absolute' : 'unselected', motorEncoderAngleDomain: kind === 'hall' ? 'electrical' : 'mechanical', outputEncoderCapability: 'absent', torqueCapability: 'absent' },
     'hw-safety': { hardwareTripCapability: 'unconfirmed', resetOutputDisabled: true },
   };
   for (const [moduleId, values] of Object.entries(sample)) {
@@ -234,8 +234,44 @@ function migrateLegacyModuleParameters(project) {
   if (plain(assignments)) for (const id of MODULE_IDS) if (!Object.hasOwn(assignments,id)) assignments[id] = '';
 }
 
+/** hw-sensors 模块更名为 hw-drivers：折叠七个数据面的旧键；结构 id、字段 id 等不透明引用保持原值。 */
+function migrateDriverModule(project) {
+  if(!plain(project))return;
+  const rename=(object,from,to)=>{if(plain(object)&&Object.hasOwn(object,from)){if(!Object.hasOwn(object,to))object[to]=object[from];delete object[from];}};
+  const renameProvenance=provenance=>{if(!plain(provenance))return;for(const key of Object.keys(provenance))if(key.startsWith('hw-sensors.')){const next=`hw-drivers.${key.slice('hw-sensors.'.length)}`;if(!Object.hasOwn(provenance,next))provenance[next]=provenance[key];delete provenance[key];}};
+  rename(project.instances,'hw-sensors','hw-drivers');
+  rename(project.execution?.assignments,'hw-sensors','hw-drivers');
+  renameProvenance(project.provenance);
+  if(Array.isArray(project.catalog?.drivers))for(const driver of project.catalog.drivers)rename(driver?.hardware,'hw-sensors','hw-drivers');
+  const design=project.design;
+  if(plain(design)) {
+    rename(design.moduleContracts,'hw-sensors','hw-drivers');
+    for(const structure of design.structures||[])if(plain(structure)) {
+      if(structure.owner==='hw-sensors')structure.owner='hw-drivers';
+      if(Array.isArray(structure.consumers))structure.consumers=[...new Set(structure.consumers.map(id=>id==='hw-sensors'?'hw-drivers':id))];
+    }
+    for(const item of design.layerInterfaces||[])if(plain(item)) {
+      if(item.fromModule==='hw-sensors')item.fromModule='hw-drivers';
+      if(item.toModule==='hw-sensors')item.toModule='hw-drivers';
+    }
+    for(const fault of design.faults||[])if(plain(fault)&&fault.source==='hw-sensors')fault.source='hw-drivers';
+  }
+  for(const release of project.layerVersions?.releases||[]) {
+    const snapshot=release?.snapshot;
+    if(!plain(snapshot))continue;
+    rename(snapshot.instances,'hw-sensors','hw-drivers');
+    renameProvenance(snapshot.provenance);
+  }
+  for(const record of project.performance?.records||[]) {
+    const snapshot=record?.snapshot;
+    rename(snapshot?.driver?.hardware,'hw-sensors','hw-drivers');
+    for(const layer of Object.values(snapshot?.layers||{}))rename(layer?.configuration,'hw-sensors','hw-drivers');
+  }
+}
+
 function migrateInputs(project) {
   if(!plain(project)||![1,2].includes(project.schemaVersion))return;
+  migrateDriverModule(project);
   Object.assign(project, migrateLegacySafetyState(project));
   const compensation=MODULE_MAP.get('foc-compensation');
   if(plain(project.instances)&&compensation&&!Object.hasOwn(project.instances,compensation.id))project.instances[compensation.id]={enabled:false,...(project.schemaVersion===2?{runtimeEnabled:false}:{}),parameters:Object.fromEntries(compensation.params.map(param=>[param.key,structuredClone(param.defaultValue)]))};
@@ -250,12 +286,12 @@ function migrateInputs(project) {
     else if(plain(project.execution?.assignments)&&!Object.hasOwn(project.execution.assignments,'foc-compensation'))project.execution.assignments['foc-compensation']='';
   }
   if (plain(project.design)) project.design = ensureModuleContracts(project.design);
-  const sensors=project.instances?.['hw-sensors']?.parameters, feedback=project.instances?.['foc-feedback']?.parameters;
+  const sensors=project.instances?.['hw-drivers']?.parameters, feedback=project.instances?.['foc-feedback']?.parameters;
   const hallAngle=feedback?.angleSource==='hall';
   migrateSensorParameters(sensors,{hallAngle});
   if(hallAngle)feedback.angleSource='encoder';
   if(Array.isArray(project.catalog?.drivers))for(const driver of project.catalog.drivers){
-    if(driver?.hardware?.['hw-sensors'])migrateSensorParameters(driver.hardware['hw-sensors']);
+    if(driver?.hardware?.['hw-drivers'])migrateSensorParameters(driver.hardware['hw-drivers']);
     migrateMemoryLayoutValues(driver?.memoryLayout);
     const coreConfigs=driver?.hardware?.['hw-platform']?.coreConfigs;
     if(plain(coreConfigs))for(const core of Object.values(coreConfigs)) {
@@ -269,7 +305,7 @@ function migrateInputs(project) {
     migrateCalibration(instances);
     migrateObserverChildren(instances);
     if(plain(instances))migrateLegacyModuleParameters({instances,execution:{}});
-    if(instances?.['hw-sensors'])migrateSensorParameters(instances['hw-sensors'].parameters);
+    if(instances?.['hw-drivers'])migrateSensorParameters(instances['hw-drivers'].parameters);
     if(instances?.['foc-feedback']?.parameters?.angleSource==='hall')instances['foc-feedback'].parameters.angleSource='encoder';
     migrateMemoryLayoutValues(release?.snapshot?.memoryLayout);
   }
@@ -349,7 +385,7 @@ export function validateProject(project) {
       const v = instance.parameters[param.key];
       if (param.hidden || param.architectureOnly && param.architectureOnly !== value('hw-platform','architecture')) continue;
       // Sensor detail requirements belong to sensorIssues; capability selectors stay here.
-      if (module.id === 'hw-sensors' && !sensorFieldVisible(param, instance.parameters)) continue;
+      if (module.id === 'hw-drivers' && !sensorFieldVisible(param, instance.parameters)) continue;
       if (module.id === 'foc-compensation') continue;
       if (module.id === 'hw-platform' && param.group==='memory' && project.memory?.layout.banks.length > 0) continue;
       const required = param.required && !(module.id === 'hw-platform' && param.key === 'architecture');
@@ -367,7 +403,7 @@ export function validateProject(project) {
   if (value('app-motion', 'commandSource') === 'communication' && !enabled('app-comms')) add('communication-module-required', 'error', '通信命令依赖通信模块', '当前命令来源为通信，但通信协议模块已关闭。', 'app-comms');
   else if (value('app-motion', 'commandSource') === 'communication' && !running('app-comms')) add('communication-runtime-required', 'error', '通信命令需要运行通信模块', '通信模块虽已编译包含，但其运行开关关闭。', 'app-comms');
   const requireCapability = (key, label, owner, paramKey) => {
-    const cap = value('hw-sensors', key);
+    const cap = value('hw-drivers', key);
     if (cap === 'absent') add(`capability-${key}-${owner}`, 'error', `${label}依赖未满足`, `当前配置声明不具备${label}，请更改相关功能或硬件能力。`, owner, paramKey);
     else if (cap !== 'present') add(`capability-${key}-${owner}`, 'pending', `${label}能力待确认`, `相关功能需要${label}；目前没有确认其存在。`, owner, paramKey);
   };
@@ -383,7 +419,7 @@ export function validateProject(project) {
   if (supported.includes('torque_feedback') || active === 'torque_feedback') requireCapability('torqueCapability', '力矩传感器', 'app-motion', 'supportedModes');
   if (running('app-calibration')) {
     const procedures = (value('app-calibration', 'procedures') || []).filter(procedure=>calibrationEnabled(project,procedure));
-    if (procedures.includes('hall')) {requireCapability('encoderCapability', '电机侧编码器', 'app-calibration', 'procedures');if(value('hw-sensors','motorEncoderType')!=='hall')add('hall-calibration-type','error','霍尔校准需要霍尔编码器','在电机侧编码器中选择霍尔方案。','app-calibration','procedures');}
+    if (procedures.includes('hall')) {requireCapability('encoderCapability', '电机侧编码器', 'app-calibration', 'procedures');if(value('hw-drivers','motorEncoderType')!=='hall')add('hall-calibration-type','error','霍尔校准需要霍尔编码器','在电机侧编码器中选择霍尔方案。','app-calibration','procedures');}
     if (procedures.some(p => ['electrical_zero', 'hall', 'friction'].includes(p)) && !positive(value('app-calibration', 'maxCurrentA'))) add('calibration-current', 'pending', '校准激励限值待确定', '运动校准需要独立、受限的激励边界。', 'app-calibration', 'maxCurrentA');
     if(procedures.length)add('calibration-results', 'pending', '校准结果尚未获得', '这里只配置校准流程，没有设备实测结果；首次校准按独立进入条件执行。', 'app-calibration');
   }

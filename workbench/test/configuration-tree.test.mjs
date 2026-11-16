@@ -89,7 +89,7 @@ test('modules have stable sequence numbers and independently collapsible configu
   assert.match(html,/<span class="module-sequence">02<\/span>/);
   assert.match(html,/href="#\/project\/hardware\?module=hw-board&tab=data" data-tree-tab="data" aria-current="page"/);
   assert.doesNotMatch(html,/tree-group-|class="tree-module-number">\d+\.\d+/);
-  assert.deepEqual([...html.matchAll(/data-tree-module="(hw-[^"]+)"/g)].map(match=>match[1]),['hw-platform','hw-board','hw-sensors','hw-safety']);
+  assert.deepEqual([...html.matchAll(/data-tree-module="(hw-[^"]+)"/g)].map(match=>match[1]),['hw-platform','hw-board','hw-drivers','hw-safety']);
   const algorithm=renderGuide(p,[],'algorithm',{selectedModuleId:'foc-observer'});
   assert.match(algorithm,/<span class="tree-module-number">03<\/span><span class="tree-module-title">观测器/);
 });

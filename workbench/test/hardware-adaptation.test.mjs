@@ -15,7 +15,7 @@ const errors=p=>validateHardware(p).filter(issue=>issue.level==='error');
 test('NEO board resource references resolve and preserve the two encoders sharing USART2',()=>{
   const p=createNeo75hProject();
   assert.deepEqual(errors(p),[]);
-  const sensors=p.instances['hw-sensors'].parameters;
+  const sensors=p.instances['hw-drivers'].parameters;
   assert.equal(sensors.motorEncoderResource,sensors.outputEncoderResource);
   assert.equal(hardware(p).filter(r=>r.instance==='USART2').length,1);
   assert.equal(hardware(p).find(r=>r.id==='DRV8353_NFAULT').pins.IO,'PD1');
@@ -35,12 +35,12 @@ test('deleting a bound interface and changing its type fail validation without c
   const p=createNeo75hProject();
   hardware(p).splice(hardware(p).findIndex(r=>r.id==='USART2'),1);
   assert.equal(errors(p).filter(issue=>issue.title.includes('PCBA 接口不存在')).length,2);
-  assert.equal(p.instances['hw-sensors'].parameters.motorEncoderResource,'USART2');
-  const q=createNeo75hProject();q.instances['hw-sensors'].parameters.motorEncoderInterface='spi';
+  assert.equal(p.instances['hw-drivers'].parameters.motorEncoderResource,'USART2');
+  const q=createNeo75hProject();q.instances['hw-drivers'].parameters.motorEncoderInterface='spi';
   assert(errors(q).some(issue=>issue.title.includes('接口类型不匹配')));
 });
 test('sensor selectors filter PCBA resources and communication rate has one editable owner',()=>{
-  const p=createNeo75hProject(), sensors=p.instances['hw-sensors'].parameters;
+  const p=createNeo75hProject(), sensors=p.instances['hw-drivers'].parameters;
   const bound=bindSensorField({key:'motorEncoderResource'},sensors,hardware(p));
   assert.deepEqual(bound.options.map(o=>o.value),['USART2','USART3']);
   hardware(p).find(r=>r.id==='USART2').settings.bitrate=1000000;

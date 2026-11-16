@@ -25,7 +25,7 @@ test('source values populate the selected actuator with correct SI conversions',
 
 test('torque variants do not change the motor or encoder identity', () => {
   for (const [variant, bitrate] of [['KW', 256000], ['LD', 256000], ['SMH', 2500000], ['XH', null]]) {
-    const project = createNeo75hProject(variant), sensors = project.instances['hw-sensors'].parameters;
+    const project = createNeo75hProject(variant), sensors = project.instances['hw-drivers'].parameters;
     assert.equal(getNeo75hProjectVariant(project), variant);
     assert.equal(sensors.torqueSensorModel, variant);
     assert.equal(sensors.torqueSensorBitrate, bitrate);
@@ -43,7 +43,7 @@ test('unknown ratings are not filled from protection limits or unrelated values'
   assert.equal(driver.adcClockHz, null);
   assert.equal(actuator.motor.torqueConstantNmA, null);
   assert.equal(actuator.reducer.efficiency, null);
-  assert.equal(project.instances['hw-sensors'].parameters.torqueSensorRangeNm, null);
+  assert.equal(project.instances['hw-drivers'].parameters.torqueSensorRangeNm, null);
   assert(getNeo75hProfile('XH').unknowns.some(item => item.key === 'torqueSensorBitrate'));
   assert.equal(getNeo75hProfile('XH').sourceOverrides['hw.tor_sensor.sensor.baudrate'], null);
 });

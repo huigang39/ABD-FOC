@@ -41,7 +41,7 @@ test('内核配置工厂为每模块保留空分配，严格检查结构且不�
   value.assignments['hw-board'] = 'cm7'; value.ipc.sharedAddress = 0;
   assert.equal(other.assignments['hw-board'], ''); assert.equal(other.ipc.sharedAddress, null);
   const corruptions = [
-    p => { p.unknown = true; }, p => { delete p.assignments['hw-sensors']; },
+    p => { p.unknown = true; }, p => { delete p.assignments['hw-drivers']; },
     p => { p.assignments['unknown-module'] = 'cm7'; }, p => { p.assignments['hw-board'] = null; },
     p => { p.ipc.sharedAddress = Infinity; }, p => { p.ipc.sharedSizeKiB = '4'; },
     p => { p.ipc.cachePolicy = 'coherent'; }, p => { p.ipc.notification = 'interrupt'; },
@@ -106,7 +106,7 @@ test('同步快环按编译模块检查同核，运行开关不会掩盖观测�
   assert.ok(has(value, 'fast-loop-split', 'error'));
   value.instances['foc-observer'].enabled = false;
   assert.equal(has(value, 'fast-loop-split'), false);
-  value.execution.assignments['hw-sensors'] = 'cm4';
+  value.execution.assignments['hw-drivers'] = 'cm4';
   assert.ok(has(value, 'fast-loop-split', 'error'));
 });
 

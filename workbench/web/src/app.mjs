@@ -46,7 +46,7 @@ import { configurationFingerprint, createStructure, createField, createFault, cr
 import { createActuator, createDriver, createJointModule, createBinding, applyAssembly, applyDriver, captureDriverHardware, getDriverHardware, setDriverHardwareParameter, validateEquipment } from './features/equipment/model.mjs';
 import { renderGuide, renderStructures, renderFaults, renderProtocol } from './features/configuration/view.mjs';
 import { renderEquipment } from './features/equipment/view.mjs';
-import { renderSensorConfig } from './modules/hardware/hw-sensors/view.mjs';
+import { renderSensorConfig } from './modules/hardware/hw-drivers/view.mjs';
 import { syncMcuArchitecture } from './features/deployment/mcu.mjs';
 import { renderBuild, renderDebug, renderFlash } from './features/build/view.mjs';
 import { renderOperation } from './features/operation/view.mjs';
@@ -336,7 +336,7 @@ function moduleParameters(module) {
   }
   if(module.id==='hw-platform')config=targetForm()+renderPlatformConfiguration(project.target.mcu,params,fields,renderField,{project})+`<div class="memory-summary"><div>${icon('chip')}<span><strong>双核协作</strong></span></div><a class="button small" href="#/project/execution">配置分工 ${icon('arrow-right')}</a></div>`;
   if(module.id==='hw-board')config=fieldHtml(TARGET_FIELDS.find(field=>field.key==='board'),project.target.board,'target')+fields.filter(field=>!field.group).map(renderField).join('')+renderResourceEditor(project.target.mcu,resources)+`<section class="hardware-field-group" id="peripheral-timing"><h3>采样与 PWM</h3><div class="profile-form">${fields.filter(field=>field.group==='timing').map(renderField).join('')}</div></section>`;
-  if(module.id==='hw-sensors')config=renderSensorConfig(params,field=>renderField(bindSensorField(field,params,resources)),{renderTransport:role=>renderSensorTransport(params,role,resources,{mcu:project.target.mcu})});
+  if(module.id==='hw-drivers')config=renderSensorConfig(params,field=>renderField(bindSensorField(field,params,resources)),{renderTransport:role=>renderSensorTransport(params,role,resources,{mcu:project.target.mcu})});
   if(module.id==='foc-lifecycle')config+=renderAlgorithmPaths(project);
   if(module.id==='hw-safety')config=renderCoreExceptions(project,renderField)+renderTripEditor(params.tripPaths||[],resources,{mcu:project.target.mcu});
   return `${config}
@@ -609,7 +609,7 @@ function handleDesignEdit(input) {
         if(scope==='pcba-resource'&&key==='instance'){selectResourceInstance(target,owner?next.catalog.drivers.find(driver=>driver.id===owner).mcu:next.target.mcu,value);return;}
         if(scope==='pcba-resource'&&section==='pins'&&value==='none')value='';
         (section?target[section]:target)[key]=value;
-        if(scope==='pcba-resource'&&section==='settings')syncSensorResource(hardware['hw-sensors'],hardware['hw-board'].resources);
+        if(scope==='pcba-resource'&&section==='settings')syncSensorResource(hardware['hw-drivers'],hardware['hw-board'].resources);
         if(scope==='trip-path'&&key==='compiled'&&!value)target.enabled=false;
         if(scope==='trip-path'&&key==='route'&&value==='interrupt')target.filterCycles=0;
       },input.tagName==='INPUT'&&valueType!=='boolean');
@@ -709,7 +709,7 @@ function handleDesignEdit(input) {
       if(scope==='build')target=next.build;
       if(scope==='operation')target=next.operation;
       if(scope==='actuator'){target=next.catalog.actuators.find(x=>x.id===id);if(section)target=target?.[section];}
-      if(scope==='driver-hardware'){const driver=next.catalog.drivers.find(x=>x.id===id);setDriverHardwareParameter(driver,section,key,value);if(section==='hw-sensors'&&key.endsWith('Resource'))syncSensorResource(driver.hardware[section],driver.hardware['hw-board'].resources||[],key.slice(0,-8));return;}
+      if(scope==='driver-hardware'){const driver=next.catalog.drivers.find(x=>x.id===id);setDriverHardwareParameter(driver,section,key,value);if(section==='hw-drivers'&&key.endsWith('Resource'))syncSensorResource(driver.hardware[section],driver.hardware['hw-board'].resources||[],key.slice(0,-8));return;}
       if(scope==='driver')target=next.catalog.drivers.find(x=>x.id===id);
       if(scope==='binding')target=next.catalog.drivers.find(x=>x.id===id)?.bindings.find(x=>x.id===child);
       if(scope==='assembly')target=next.catalog.assemblies.find(x=>x.id===id);
@@ -864,7 +864,7 @@ document.addEventListener('change', event => {
   else value = input.value;
   change(next => {
     if (scope === 'target') { next.target[key] = value; if(key==='mcu'||key==='vendor'){const hardware=Object.fromEntries(MODULES.filter(m=>m.layer==='hardware').map(m=>[m.id,next.instances[m.id].parameters]));syncMcuArchitecture(next.target,hardware,{replaceCores:key==='mcu'});} }
-    else { next.instances[moduleId].parameters[key] = value; if(moduleId==='hw-sensors'&&key.endsWith('Resource'))syncSensorResource(next.instances[moduleId].parameters,next.instances['hw-board'].parameters.resources||[],key.slice(0,-8)); if(moduleId==='app-calibration'&&key==='procedures')next.instances[moduleId].parameters.enabledProcedures=next.instances[moduleId].parameters.enabledProcedures.filter(item=>value.includes(item)); next.provenance[`${moduleId}.${key}`] = 'user'; }
+    else { next.instances[moduleId].parameters[key] = value; if(moduleId==='hw-drivers'&&key.endsWith('Resource'))syncSensorResource(next.instances[moduleId].parameters,next.instances['hw-board'].parameters.resources||[],key.slice(0,-8)); if(moduleId==='app-calibration'&&key==='procedures')next.instances[moduleId].parameters.enabledProcedures=next.instances[moduleId].parameters.enabledProcedures.filter(item=>value.includes(item)); next.provenance[`${moduleId}.${key}`] = 'user'; }
   }, !['select','multiselect'].includes(field.type)&&!field.sensorLayoutTrigger&&!(scope==='target'&&key==='mcu')&&!(moduleId==='app-calibration'&&key==='procedures')&&!(moduleId==='app-state'&&key==='stateMachine'));
   if(scope==='target'){const vendor=$('[data-scope="target"][data-key="vendor"]');if(vendor){vendor.value=project.target.vendor;vendor.closest('[data-select-menu]')?.updateTrigger?.();}}
 });

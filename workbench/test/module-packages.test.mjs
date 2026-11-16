@@ -9,8 +9,8 @@ import { createDesign } from '../web/src/core/contracts.mjs';
 import { ensureModuleContracts, getModuleContract, CONTRACT_ROLES } from '../web/src/core/module-contracts.mjs';
 import { validateModuleConfiguration } from '../web/src/modules/validation.mjs';
 import { renderModuleExtras } from '../web/src/modules/presentation.mjs';
-import { renderSensorConfig } from '../web/src/modules/hardware/hw-sensors/view.mjs';
-import { SENSOR_ROLES } from '../web/src/modules/hardware/hw-sensors/sensors.mjs';
+import { renderSensorConfig } from '../web/src/modules/hardware/hw-drivers/view.mjs';
+import { SENSOR_ROLES } from '../web/src/modules/hardware/hw-drivers/sensors.mjs';
 
 const root = new URL('../web/src/modules/', import.meta.url);
 const layerNames = { hardware: 'hardware', algorithm: 'foc', application: 'app' };
@@ -137,7 +137,7 @@ test('模块附加页面可以无 DOM 渲染，重复输出一致且不更改项
 });
 
 test('传感器页面沿用三个角色，并按当前配置筛选字段而不修改参数和定义', () => {
-  const parameters = createProject().instances['hw-sensors'].parameters;
+  const parameters = createProject().instances['hw-drivers'].parameters;
   for (const role of SENSOR_ROLES) parameters[role.capability] = 'absent';
   const before = structuredClone(parameters), fields = [];
   const html = renderSensorConfig(freeze(parameters), field => {

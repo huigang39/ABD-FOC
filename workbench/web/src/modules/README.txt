@@ -19,7 +19,7 @@ registry.mjs 只负责显式注册与固定顺序，../core/catalog.mjs 对上�
 - application/app-calibration/validation.mjs：校准项目及运行许可校验。
 - application/app-runtime/cia402.mjs：CiA 402 定义与校验。
 - hardware/hw-platform/targets.mjs、cores.mjs：芯片内核元数据、各核参数与约束校验。
-- hardware/hw-sensors/sensors.mjs、protocol.mjs：驱动通道、通信帧字段、条件显示与帧边界校验。
+- hardware/hw-drivers/sensors.mjs、protocol.mjs：驱动通道、通信帧字段、条件显示与帧边界校验。
 - view.mjs：专用界面；简单模块直接使用公共参数表单，不复制一份通用界面。
 
 validation.mjs 汇总模块校验；presentation.mjs 注册专用视图。

@@ -1,6 +1,6 @@
 import {readFileSync} from 'node:fs';
-import {SENSOR_ROLES,SENSOR_PARAMS,sensorFieldRequired,sensorIssues} from '../../web/src/modules/hardware/hw-sensors/sensors.mjs';
-import {SERIAL_INTERFACES} from '../../web/src/modules/hardware/hw-sensors/protocol.mjs';
+import {SENSOR_ROLES,SENSOR_PARAMS,sensorFieldRequired,sensorIssues} from '../../web/src/modules/hardware/hw-drivers/sensors.mjs';
+import {SERIAL_INTERFACES} from '../../web/src/modules/hardware/hw-drivers/protocol.mjs';
 import {moduleStructures,renderStructure} from './contracts.mjs';
 const bytes=text=>(String(text||'').match(/[\da-f]{2}/gi)||[]).map(v=>parseInt(v,16));
 const number=value=>{if(typeof value!=='number'||!Number.isFinite(value)||!Number.isFinite(Math.fround(value)))throw Error('驱动参数必须为有限数值。');return value;};
@@ -41,8 +41,8 @@ function initializer(d){
   return '    {'+values.join(',')+'}';
 }
 export function renderDrivers(project){
-  const descriptors=driverDescriptors(project.instances['hw-sensors'].parameters);
-  const header=readFileSync(new URL('./modules/drivers.h',import.meta.url),'utf8').replace('@CONTRACTS@',moduleStructures(project,'hw-sensors').map(renderStructure).join('\n'));
+  const descriptors=driverDescriptors(project.instances['hw-drivers'].parameters);
+  const header=readFileSync(new URL('./modules/drivers.h',import.meta.url),'utf8').replace('@CONTRACTS@',moduleStructures(project,'hw-drivers').map(renderStructure).join('\n'));
   const source=readFileSync(new URL('./modules/drivers.c',import.meta.url),'utf8')+'\nconst DriverConfig driver_config[DRIVER_CHANNELS] = {\n'+descriptors.map(initializer).join(',\n')+'\n};\n';
   return {header,source,descriptors};
 }

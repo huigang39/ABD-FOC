@@ -16,7 +16,7 @@ export default {
   "runtimeSwitchable": false,
   "executionDomain": "fast",
   "dependencies": [
-    "hw-sensors",
+    "hw-drivers",
     "hw-board"
   ],
   contracts: CONTRACTS,

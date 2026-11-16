@@ -1,14 +1,14 @@
 import { validateCoreConfigs, coreRoles } from '../hw-platform/cores.mjs';
 import { resourceIssues, sensorResources } from './resources.mjs';
 import { tripIssues } from '../hw-safety/paths.mjs';
-import { SENSOR_ROLES } from '../hw-sensors/sensors.mjs';
+import { SENSOR_ROLES } from '../hw-drivers/sensors.mjs';
 import { hardwareFieldOptions } from '../hw-platform/options.mjs';
 
 export function validateHardware(project) {
   const p=project.instances['hw-platform'].parameters;
   const resources=project.instances['hw-board'].parameters.resources||[];
   const paths=project.instances['hw-safety'].parameters.tripPaths||[];
-  const sensors=project.instances['hw-sensors'].parameters;
+  const sensors=project.instances['hw-drivers'].parameters;
   const owner=project.execution?.assignments?.['hw-safety']||coreRoles(project.target.mcu,project).control;
   const issues=[...resourceIssues(project.target.mcu,resources),...validateCoreConfigs(project.target.mcu,p,project),...tripIssues(paths,resources,{architecture:p.architecture,irqPriorityBits:p.coreConfigs?.[owner]?.irqPriorityBits})];
   const add=(id,level,title,message,moduleId='hw-platform',paramKey='')=>issues.push({id:`hardware-${id}`,level,title,message,moduleId,paramKey});
@@ -21,11 +21,11 @@ export function validateHardware(project) {
     const key=role.prefix+'Resource', reference=sensors[key], type=sensors[role.prefix+'Interface'];
     if(!reference)continue; // Existing required-field validation supplies the empty-field issue.
     const resource=resources.find(resource=>resource.id===reference);
-    if(!resource)add(`${role.id}-resource`,'error',`${role.title}的 PCBA 接口不存在`,'选择第二步已配置的外设资源。','hw-sensors',key);
-    else if(!sensorResources(resources,type).some(resource=>resource.id===reference))add(`${role.id}-interface`,'error',`${role.title}的接口类型不匹配`,'传感器协议与绑定外设、电气接口必须一致。','hw-sensors',key);
+    if(!resource)add(`${role.id}-resource`,'error',`${role.title}的 PCBA 接口不存在`,'选择第二步已配置的外设资源。','hw-drivers',key);
+    else if(!sensorResources(resources,type).some(resource=>resource.id===reference))add(`${role.id}-interface`,'error',`${role.title}的接口类型不匹配`,'传感器协议与绑定外设、电气接口必须一致。','hw-drivers',key);
     else {
       const rate=resource.settings.bitrate??resource.settings.clockHz;
-      if(rate!=null&&sensors[role.prefix+'Bitrate']!=null&&rate!==sensors[role.prefix+'Bitrate'])add(`${role.id}-bitrate`,'error',`${role.title}与 PCBA 接口速率不一致`,'重新选择接口以带入 PCBA 的通信速率。','hw-sensors',key);
+      if(rate!=null&&sensors[role.prefix+'Bitrate']!=null&&rate!==sensors[role.prefix+'Bitrate'])add(`${role.id}-bitrate`,'error',`${role.title}与 PCBA 接口速率不一致`,'重新选择接口以带入 PCBA 的通信速率。','hw-drivers',key);
     }
   }
   return issues;

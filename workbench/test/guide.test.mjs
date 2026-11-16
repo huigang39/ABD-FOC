@@ -19,9 +19,9 @@ function configuredProject() {
   Object.assign(coreConfigs.cm7,{clockHz:400000000,systemTickHz:1000,controlIrqPriority:'realtime',floatAbi:'hard',instructionCache:'enabled',dataCache:'enabled'});
   Object.assign(coreConfigs.cm4,{clockHz:200000000,systemTickHz:1000,communicationIrqPriority:'high',floatAbi:'hard'});
   Object.assign(project.instances['hw-platform'].parameters,{architecture:'arm',clockSource:'external',oscillatorHz:25000000,busClockHz:200000000,timerClockHz:200000000,coreConfigs});
-  Object.assign(project.instances['hw-sensors'].parameters,neo75hProtocols('KW'));
+  Object.assign(project.instances['hw-drivers'].parameters,neo75hProtocols('KW'));
   project.instances['hw-safety'].parameters.hardwareTripCapability = 'present';
-  Object.assign(project.instances['hw-sensors'].parameters, { motorEncoderInterface: 'spi', motorEncoderResource: 'SPI2', motorEncoderTiming: 'fast', motorEncoderTimeoutUs: 100 });
+  Object.assign(project.instances['hw-drivers'].parameters, { motorEncoderInterface: 'spi', motorEncoderResource: 'SPI2', motorEncoderTiming: 'fast', motorEncoderTimeoutUs: 100 });
   project.instances['hw-board'].parameters.resources=[
     {...createResource('spi','SPI2'),instance:'SPI2',pins:{SCK:'PB13',MISO:'PB14',MOSI:'PB15',NSS:'PB12'},settings:{clockHz:1000000,mode:'0',wordBits:8}},
     {...createResource('pwm','PWM'),instance:'HRTIM1',pins:{A1:'PC6',A2:'PC7',B1:'PC8',B2:'PA8',C1:'PA9',C2:'PA10'},settings:{alignment:'center',polarity:'high'}},
@@ -117,14 +117,14 @@ test('previous commissioning records are preserved but do not determine configur
 
 test('编码器分辨率按所选硬件类型检查，不由观测器运行开关隐去', () => {
   const project = configuredProject();
-  project.instances['hw-sensors'].parameters.encoderBits = null;
+  project.instances['hw-drivers'].parameters.encoderBits = null;
   project.instances['foc-observer'].enabled = true;
   project.instances['foc-observer'].runtimeEnabled = false;
   project.instances['foc-observer'].parameters.startupStrategy = 'encoder_assist';
   assert.equal(getGuide(project).steps.find(step => step.id === 'hardware').state, 'todo');
   project.instances['foc-observer'].runtimeEnabled = true;
   assert.equal(getGuide(project).steps.find(step => step.id === 'hardware').state, 'todo');
-  Object.assign(project.instances['hw-sensors'].parameters, { motorEncoderType: 'hall', motorEncoderHallMode: 'digital' });
+  Object.assign(project.instances['hw-drivers'].parameters, { motorEncoderType: 'hall', motorEncoderHallMode: 'digital' });
   assert.equal(getGuide(project).steps.find(step => step.id === 'hardware').state, 'configured');
 });
 

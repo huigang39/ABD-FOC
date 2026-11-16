@@ -15,7 +15,7 @@ async function fixture(t){const outputRoot=await mkdtemp(join(tmpdir(),'abd-new-
 test('all modules own nonempty input/output/state layouts which match their new C implementations',()=>{
   const p=newModuleProject();for(const m of MODULES){assert.deepEqual(checkRuntimeLayout(p,m),[]);for(const role of ['input','output','state'])assert(m.contracts[role].fields.length>0);}
   const r=inspectFirmwareSupport(p);assert.equal(r.sourceReady,true);assert.equal(r.supported,false);assert(r.integrationIssues.some(i=>i.code==='platform-port'));
-  p.design.structures.find(s=>s.id===p.design.moduleContracts['hw-sensors'].input).fields=[];
+  p.design.structures.find(s=>s.id===p.design.moduleContracts['hw-drivers'].input).fields=[];
   assert(inspectFirmwareSupport(p).sourceIssues.some(i=>i.code==='contracts'));assert.equal(inspectFirmwareSupport(p).sourceReady,false);
 });
 test('new generator emits exactly one C/header pair per included module, no imported runtime or device branches',async t=>{
@@ -34,7 +34,7 @@ test('compiler exclusion removes the module, runtime exclusion retains independe
   const header=job.manifest.generatedFiles.find(f=>f.moduleId==='foc-compensation'&&f.kind==='h');assert.match(await readFile(header.path,'utf8'),/FRICTION_RUNTIME_DEFAULT false/);
 });
 test('device manufacturer and model names do not select or alter generated protocol implementation',()=>{
-  const p=newModuleProject(),a=renderDrivers(p);p.instances['hw-sensors'].parameters.motorEncoderVendor='other';p.instances['hw-sensors'].parameters.motorEncoderModel='Arbitrary Encoder';p.instances['hw-sensors'].parameters.torqueSensorModel='My Sensor';
+  const p=newModuleProject(),a=renderDrivers(p);p.instances['hw-drivers'].parameters.motorEncoderVendor='other';p.instances['hw-drivers'].parameters.motorEncoderModel='Arbitrary Encoder';p.instances['hw-drivers'].parameters.torqueSensorModel='My Sensor';
   assert.deepEqual(renderDrivers(p),a);
 });
 test('generated C runs with address/undefined behavior sanitizers across driver and module scenarios',async t=>{

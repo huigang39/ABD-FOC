@@ -34,7 +34,7 @@ export function inspectFirmwareSupport(project){
     if(!project.instances?.[module.id]?.enabled)continue;
     if(!MODULE_CODE[module.id]){sourceIssues.push(issue('implementation',`${module.title}尚无新的模块实现。`,module.id));continue;}
     for(const message of checkRuntimeLayout(project,module))sourceIssues.push(issue('contracts',message,`design.moduleContracts.${module.id}`));
-    if(module.id==='hw-sensors')for(const problem of driverConfigurationIssues(project.instances[module.id].parameters))sourceIssues.push(issue('driver-config',problem.message,`${module.id}.${problem.paramKey||''}`));
+    if(module.id==='hw-drivers')for(const problem of driverConfigurationIssues(project.instances[module.id].parameters))sourceIssues.push(issue('driver-config',problem.message,`${module.id}.${problem.paramKey||''}`));
     try{moduleConfig(project,module.id);for(const [key,value] of Object.entries(MODULE_CODE[module.id].values?.(project)||{}))parameters[`${module.id}.${key}`]=value;}catch(error){sourceIssues.push(issue('implementation',error.message,module.id));}
     applied.push({path:module.id,target:`firmware/${{hardware:'hardware',foc:'algorithm',app:'application'}[module.layer]}/${MODULE_CODE[module.id].name}`,value:'独立模块源码与数据结构'});
   }

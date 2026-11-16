@@ -1,7 +1,7 @@
 /** Typed signal identities: unit alone is insufficient to establish compatibility. */
 export const SIGNALS = [
- {id:'sensor.motor_angle',label:'电机侧编码器机械角度',quantity:'motor-angle',unit:'rad',module:'hw-sensors',sensorRole:'motor'},
- {id:'sensor.output_angle',label:'出轴侧编码器机械角度',quantity:'output-angle',unit:'rad',module:'hw-sensors',sensorRole:'output'},
+ {id:'sensor.motor_angle',label:'电机侧编码器机械角度',quantity:'motor-angle',unit:'rad',module:'hw-drivers',sensorRole:'motor'},
+ {id:'sensor.output_angle',label:'出轴侧编码器机械角度',quantity:'output-angle',unit:'rad',module:'hw-drivers',sensorRole:'output'},
  {id:'feedback.angle',label:'已换算的电角度',quantity:'electrical-angle',unit:'rad',module:'foc-feedback',sensorRole:'motor'},
  {id:'feedback.speed',label:'电机侧机械速度',quantity:'motor-speed',unit:'rad/s',module:'foc-feedback',sensorRole:'motor'},
  {id:'load_torque.torque',label:'电机侧扰动转矩',quantity:'motor-disturbance-torque',unit:'N·m',child:'load_torque'},

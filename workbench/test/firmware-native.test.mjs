@@ -45,7 +45,7 @@ test('structure descriptions do not change runtime layout but fields, units and 
   const p=newModuleProject();for(const s of p.design.structures)s.description='用户备注 α/β';
   const before=structuredClone(p);assert.deepEqual(inspectFirmwareSupport(p).sourceIssues,[]);assert.deepEqual(p,before);
   for(const mutate of [s=>s.fields[0].type='f64',s=>s.fields[0].name+='_changed',s=>s.fields[0].count+=1,s=>s.fields[0].unit='unexpected',s=>s.owner='hw-board']) {
-    const changed=structuredClone(p);mutate(changed.design.structures.find(s=>s.id===changed.design.moduleContracts['hw-sensors'].input));
+    const changed=structuredClone(p);mutate(changed.design.structures.find(s=>s.id===changed.design.moduleContracts['hw-drivers'].input));
     assert(inspectFirmwareSupport(changed).sourceIssues.some(i=>i.code==='contracts'));
   }
 });
@@ -53,7 +53,7 @@ test('invalid control and incomplete XH wire values are explicitly rejected', ()
   const p=newModuleProject();p.instances['foc-current'].parameters.bandwidthHz=0;
   assert(inspectFirmwareSupport(p).sourceIssues.some(i=>i.code==='validation'));
   const xh=inspectFirmwareSupport(createNeo75hProject('XH'));
-  assert(xh.sourceIssues.some(i=>i.code==='driver-config'&&i.path.startsWith('hw-sensors.torqueSensor')));
+  assert(xh.sourceIssues.some(i=>i.code==='driver-config'&&i.path.startsWith('hw-drivers.torqueSensor')));
 });
 test('unsupported control functions never use an old code fallback', () => {
   for(const [id,key,value] of [['app-state','stateMachine','cia402'],['app-motion','supportedModes',['position']]]) {

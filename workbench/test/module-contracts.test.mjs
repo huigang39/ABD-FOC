@@ -9,10 +9,10 @@ const has = (project, id, level) => validateModuleContracts(project).some(issue 
 const dataField = (id, name = 'angle') => ({ ...createField(id), name, type: 'f32', count: 1, unit: 'rad', meaning: '有效机械角度' });
 function fixture() {
   const project = createProject();
-  const source = getModuleContract(project.design, 'hw-sensors', 'output');
+  const source = getModuleContract(project.design, 'hw-drivers', 'output');
   const target = getModuleContract(project.design, 'foc-feedback', 'input');
   source.fields=[dataField('angle-source')]; target.fields=[dataField('angle-target')];
-  const item = { ...createLayerInterface('sensor-feedback'), name: '采样 → 角度反馈', fromModule: 'hw-sensors', toModule: 'foc-feedback', sourceStructure: source.id, targetStructure: target.id, version: 'β/接口甲', rate: 'fast', handoff: 'snapshot', fieldMap: [{ ...createInterfaceMapping('angle-map'), sourceField: 'angle-source', targetField: 'angle-target' }] };
+  const item = { ...createLayerInterface('sensor-feedback'), name: '采样 → 角度反馈', fromModule: 'hw-drivers', toModule: 'foc-feedback', sourceStructure: source.id, targetStructure: target.id, version: 'β/接口甲', rate: 'fast', handoff: 'snapshot', fieldMap: [{ ...createInterfaceMapping('angle-map'), sourceField: 'angle-source', targetField: 'angle-target' }] };
   project.design.layerInterfaces = [item];
   return { project, source, target, item };
 }
@@ -37,7 +37,7 @@ test('十七模块分别拥有输入输出状态，51个新结构名有效唯一
   }
   assert.equal(new Set(refs).size, 51);
   assert.equal(new Set(design.structures.map(structure => structure.name)).size, 58);
-  assert.equal(getModuleContract(design, 'hw-sensors', 'state').name, 'DriversState');
+  assert.equal(getModuleContract(design, 'hw-drivers', 'state').name, 'DriversState');
   assert.equal(getModuleContractRole(design, 'sample-frame'), null);
 });
 
@@ -45,12 +45,12 @@ test('新增迁移纯函数幂等，避开已有名称与ID冲突，保留用户
   const design = createDesign();
   delete design.moduleContracts; delete design.layerInterfaces;
   design.structures = design.structures.slice(0, 7);
-  design.structures.push({ ...createStructure('hw-sensors-input'), name: 'DriversInput', owner: 'app-motion', fields: [dataField('legacy-field')] });
+  design.structures.push({ ...createStructure('hw-drivers-input'), name: 'DriversInput', owner: 'app-motion', fields: [dataField('legacy-field')] });
   const before = structuredClone(design), next = ensureModuleContracts(design);
   assert.deepEqual(design, before);
   assert.deepEqual(next.structures.slice(0, 8), design.structures);
-  assert.equal(getModuleContract(next, 'hw-sensors', 'input').id, 'hw-sensors-input-2');
-  assert.equal(getModuleContract(next, 'hw-sensors', 'input').name, 'DriversInput2');
+  assert.equal(getModuleContract(next, 'hw-drivers', 'input').id, 'hw-drivers-input-2');
+  assert.equal(getModuleContract(next, 'hw-drivers', 'input').name, 'DriversInput2');
   assert.deepEqual(ensureModuleContracts(next), next);
   next.structures[0].fields[0].name = 'changed';
   assert.notEqual(design.structures[0].fields[0].name, 'changed');
@@ -62,15 +62,15 @@ test('新增迁移纯函数幂等，避开已有名称与ID冲突，保留用户
 
 test('后续载入不重建被删除的角色结构，不重置角色字段与编辑名称', () => {
   const project = createProject();
-  const output = getModuleContract(project.design, 'hw-sensors', 'output');
+  const output = getModuleContract(project.design, 'hw-drivers', 'output');
   output.name = 'UserOwnedSensorData'; output.fields.push(dataField('preserved'));
-  const missing = project.design.moduleContracts['hw-sensors'].input;
+  const missing = project.design.moduleContracts['hw-drivers'].input;
   project.design.structures = project.design.structures.filter(structure => structure.id !== missing);
   const restored = parseProject(serializeProject(project));
-  assert.equal(getModuleContract(restored.design, 'hw-sensors', 'input'), null);
-  assert.equal(restored.design.moduleContracts['hw-sensors'].input, missing);
-  assert.ok(has(restored, 'hw-sensors-input-unknown', 'error'));
-  assert.deepEqual(getModuleContract(restored.design, 'hw-sensors', 'output'), output);
+  assert.equal(getModuleContract(restored.design, 'hw-drivers', 'input'), null);
+  assert.equal(restored.design.moduleContracts['hw-drivers'].input, missing);
+  assert.ok(has(restored, 'hw-drivers-input-unknown', 'error'));
+  assert.deepEqual(getModuleContract(restored.design, 'hw-drivers', 'output'), output);
 });
 
 test('空结构只按已包含模块聚合一次待设计提示，不重复48条空字段告警', () => {
@@ -82,19 +82,19 @@ test('空结构只按已包含模块聚合一次待设计提示，不重复48条
   assert.equal(issues.filter(issue => issue.level === 'error').length, 0);
   assert.equal(has(project, 'foc-observer-fields'), false);
   assert.equal(validateDesign(project).filter(issue => /structure-\d+-fields-empty/.test(issue.id)).length, 0);
-  for (const role of CONTRACT_ROLES) getModuleContract(project.design, 'hw-sensors', role).fields.push(dataField(role));
-  assert.equal(has(project, 'hw-sensors-fields'), false);
+  for (const role of CONTRACT_ROLES) getModuleContract(project.design, 'hw-drivers', role).fields.push(dataField(role));
+  assert.equal(has(project, 'hw-drivers-fields'), false);
   const all = validateProject(project);
   assert.equal(new Set(all.map(issue => issue.id)).size, all.length);
 });
 
 test('角色不可共用结构或改变所有者，但合法类型的冲突草案可保存', () => {
   const project = createProject();
-  const refs = project.design.moduleContracts['hw-sensors'];
+  const refs = project.design.moduleContracts['hw-drivers'];
   refs.input = refs.output;
-  getModuleContract(project.design, 'hw-sensors', 'output').owner = 'foc-feedback';
-  assert.ok(has(project, 'hw-sensors-output-shared', 'error'));
-  assert.ok(has(project, 'hw-sensors-output-owner', 'error'));
+  getModuleContract(project.design, 'hw-drivers', 'output').owner = 'foc-feedback';
+  assert.ok(has(project, 'hw-drivers-output-shared', 'error'));
+  assert.ok(has(project, 'hw-drivers-output-owner', 'error'));
   assert.deepEqual(parseProject(serializeProject(project)), project);
 });
 
@@ -124,7 +124,7 @@ test('模块接口允许同层连接，且结构必须对应所选模块的输�
   const { project, item } = fixture();
   item.toModule = 'hw-board'; item.targetStructure = project.design.moduleContracts['hw-board'].input;
   assert.equal(has(project, 'interface-0-same-layer', 'error'), false);
-  item.toModule = 'hw-sensors'; item.targetStructure = project.design.moduleContracts['hw-sensors'].input;
+  item.toModule = 'hw-drivers'; item.targetStructure = project.design.moduleContracts['hw-drivers'].input;
   assert.ok(has(project, 'interface-0-same-module', 'error'));
   item.toModule = 'foc-feedback'; item.targetStructure = project.design.moduleContracts['foc-feedback'].output;
   assert.ok(has(project, 'interface-0-target-role', 'error'));
@@ -138,12 +138,12 @@ test('模块接口允许同层连接，且结构必须对应所选模块的输�
 
 test('内部状态不能作为任何层间端点、其他模块消费结构或协议载荷', () => {
   const { project, item } = fixture();
-  const state = getModuleContract(project.design, 'hw-sensors', 'state');
+  const state = getModuleContract(project.design, 'hw-drivers', 'state');
   state.consumers.push('foc-feedback');
   item.sourceStructure = state.id;
   item.targetStructure = getModuleContract(project.design, 'foc-feedback', 'state').id;
   project.design.protocol.messages[0].payload = state.id;
-  assert.ok(has(project, 'hw-sensors-state-exposed', 'error'));
+  assert.ok(has(project, 'hw-drivers-state-exposed', 'error'));
   assert.ok(has(project, 'interface-0-source-state', 'error'));
   assert.ok(has(project, 'interface-0-target-state', 'error'));
   assert.ok(has(project, 'message-0-state', 'error'));
@@ -193,9 +193,9 @@ test('新增严格shape拒绝未知模块、local旧角色、非法枚举和映�
   const { project } = fixture();
   for (const mutate of [
     design => { design.moduleContracts.other = {}; },
-    design => { design.moduleContracts['hw-sensors'].local = 'somewhere'; },
-    design => { design.moduleContracts['hw-sensors'].state = null; },
-    design => { delete design.moduleContracts['hw-sensors'].input; },
+    design => { design.moduleContracts['hw-drivers'].local = 'somewhere'; },
+    design => { design.moduleContracts['hw-drivers'].state = null; },
+    design => { delete design.moduleContracts['hw-drivers'].input; },
     design => { design.layerInterfaces = null; },
     design => { design.layerInterfaces[0].rate = 'realtime'; },
     design => { design.layerInterfaces[0].handoff = 'magic'; },
@@ -213,7 +213,7 @@ test('模块结构和层间映射改动都使已有配置指纹过期', () => {
   const { project } = fixture();
   const fingerprint = configurationFingerprint(project);
   for (const mutate of [
-    design => { getModuleContract(design, 'hw-sensors', 'state').fields.push(dataField('state-value')); },
+    design => { getModuleContract(design, 'hw-drivers', 'state').fields.push(dataField('state-value')); },
     design => { design.layerInterfaces[0].handoff = 'call'; },
     design => { design.layerInterfaces[0].fieldMap[0].targetField = 'changed'; },
   ]) { const changed = structuredClone(project); mutate(changed.design); assert.notEqual(configurationFingerprint(changed), fingerprint); }

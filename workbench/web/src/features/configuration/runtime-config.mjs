@@ -3,7 +3,7 @@ import { childParameterVisible } from '../../modules/algorithm/foc-observer/chai
 import { signalChoices, observerOutputOptions } from '../../modules/algorithm/signals.mjs';
 import { edit } from './view.mjs';
 import { parameterVisible } from '../../modules/shared/visibility.mjs';
-import { SENSOR_ROLES } from '../../modules/hardware/hw-sensors/sensors.mjs';
+import { SENSOR_ROLES } from '../../modules/hardware/hw-drivers/sensors.mjs';
 import { MODULES } from '../../core/catalog.mjs';
 import { esc } from '../../shared/esc.mjs';
 

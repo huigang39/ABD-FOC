@@ -8,7 +8,7 @@ import { getGuide } from '../web/src/features/configuration/guide.mjs';
 
 test('four hardware modules own their complete parameter sets and their own three contracts',()=>{
   const p=createNeo75hProject(), modules=MODULES.filter(m=>m.layer==='hardware');
-  assert.deepEqual(modules.map(m=>[m.id,m.title]),[['hw-platform','内核'],['hw-board','外设'],['hw-sensors','驱动'],['hw-safety','异常']]);
+  assert.deepEqual(modules.map(m=>[m.id,m.title]),[['hw-platform','内核'],['hw-board','外设'],['hw-drivers','驱动'],['hw-safety','异常']]);
   const ids=new Set(modules.flatMap(m=>Object.values(p.design.moduleContracts[m.id])));
   assert.equal(ids.size,12);
   assert.equal(p.instances['hw-platform'].parameters.coreConfigs.cm7.clockHz,400000000);

@@ -47,7 +47,7 @@ test('发布结果按链路区分，跨域或未编译的选择会被拒绝',()=
 });
 test('链路编译时要求对应编码器已配置',()=>{
  const {p}=fixture();
- p.instances['hw-sensors'].parameters.encoderCapability='absent';p.instances['hw-sensors'].parameters.outputEncoderCapability='absent';
+ p.instances['hw-drivers'].parameters.encoderCapability='absent';p.instances['hw-drivers'].parameters.outputEncoderCapability='absent';
  const issues=algorithmChildrenIssues(p);
  assert.ok(issues.some(e=>e.id==='algorithm-routing-encoder_tracking_motor-source-encoder'));
  assert.ok(issues.some(e=>e.id==='algorithm-routing-encoder_tracking_output-source-encoder'));

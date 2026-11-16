@@ -18,10 +18,10 @@ const links = [
   ['command-valid','命令有效性','app-comms','app-safety','snapshot','control',[['valid','command_valid']]],
   ['running','运行状态','app-state','app-safety','snapshot','control',[['run_permitted','enabled']]],
   ['stop','故障停机','app-safety','app-state','snapshot','control',[['stop_request','fault']]],
-  ['tracking-motor','电机侧机械角度','hw-sensors','foc-observer','snapshot','fast',[['value[0]','encoder_motor_angle'],['valid[0]','encoder_motor_valid'],['sample_time_us[0]','encoder_motor_time_us']]],
-  ['tracking-output','出轴侧机械角度','hw-sensors','foc-observer','snapshot','fast',[['value[1]','encoder_output_angle'],['valid[1]','encoder_output_valid'],['sample_time_us[1]','encoder_output_time_us']]],
+  ['tracking-motor','电机侧机械角度','hw-drivers','foc-observer','snapshot','fast',[['value[0]','encoder_motor_angle'],['valid[0]','encoder_motor_valid'],['sample_time_us[0]','encoder_motor_time_us']]],
+  ['tracking-output','出轴侧机械角度','hw-drivers','foc-observer','snapshot','fast',[['value[1]','encoder_output_angle'],['valid[1]','encoder_output_valid'],['sample_time_us[1]','encoder_output_time_us']]],
   ['observer','已换算电角度','foc-feedback','foc-observer','call','fast',[['electrical_angle','measured_angle'],['valid','valid']]],
-  ['encoders','编码器反馈','hw-sensors','foc-feedback','snapshot','fast',[['value[0]','motor_angle'],['value[1]','output_angle'],['valid[0]','motor_valid'],['valid[1]','output_valid'],['sample_time_us[0]','sample_time_us']]],
+  ['encoders','编码器反馈','hw-drivers','foc-feedback','snapshot','fast',[['value[0]','motor_angle'],['value[1]','output_angle'],['valid[0]','motor_valid'],['valid[1]','output_valid'],['sample_time_us[0]','sample_time_us']]],
 ];
 
 export function createDefaultInterfaces(design) {
@@ -44,6 +44,6 @@ export function resolveFieldReference(structure, reference) {
   const index=Number(match[2]);
   if(field.count<=1||index>=field.count)return null;
   // Generic driver channels 0/1 are explicitly defined as radians by DriversOutput.
-  const unit=structure.owner==='hw-sensors' && field.name==='value' && index<2 ? 'rad' : field.unit;
+  const unit=structure.owner==='hw-drivers' && field.name==='value' && index<2 ? 'rad' : field.unit;
   return {...field,id:reference,name:`${field.name}[${index}]`,count:1,unit,elementOf:field.id,index};
 }

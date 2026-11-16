@@ -2,14 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createNeo75hProject } from '../web/src/profiles/neo75h.mjs';
 import { parseProject, serializeProject, validateProject } from '../web/src/core/model.mjs';
-import { SENSOR_PARAMS, sensorFieldVisible, sensorIssues } from '../web/src/modules/hardware/hw-sensors/sensors.mjs';
-import { renderSensorConfig } from '../web/src/modules/hardware/hw-sensors/view.mjs';
+import { SENSOR_PARAMS, sensorFieldVisible, sensorIssues } from '../web/src/modules/hardware/hw-drivers/sensors.mjs';
+import { renderSensorConfig } from '../web/src/modules/hardware/hw-drivers/view.mjs';
 import { renderSensorTransport } from '../web/src/features/configuration/hardware-view.mjs';
 import { captureDriverHardware, applyDriver } from '../web/src/features/equipment/model.mjs';
 import { saveLayerVersion, applyLayerVersion } from '../web/src/features/configuration/versions.mjs';
 import { driverDescriptors, driverConfigurationIssues } from '../native/generator/drivers.mjs';
 import { newModuleProject } from './support/new-project.mjs';
-const params = p => p.instances['hw-sensors'].parameters;
+const params = p => p.instances['hw-drivers'].parameters;
 const visible = (p, key) => sensorFieldVisible(SENSOR_PARAMS.find(f => f.key === 'motorEncoder'+key), params(p));
 function framed(p) { Object.assign(params(p), { motorEncoderTransferMode:'request_response', motorEncoderRequestHex:'01 03', motorEncoderHeaderHex:'AA 55', motorEncoderFooterHex:'', motorEncoderFrameBytes:8, motorEncoderDataOffset:2, motorEncoderDataType:'unsigned', motorEncoderDataBits:32, motorEncoderByteOrder:'little', motorEncoderValueScale:0.0001, motorEncoderValueOffset:0, motorEncoderChecksum:'crc16_modbus', motorEncoderChecksumStart:0, motorEncoderStatusOffset:null, motorEncoderStatusMask:0 }); return p; }
 test('all serial drivers expose frame configuration and exactly two transfer modes', () => {

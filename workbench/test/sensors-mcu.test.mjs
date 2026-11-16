@@ -1,12 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SENSOR_ROLES, SENSOR_PARAMS, sensorFieldVisible, sensorFieldRequired } from '../web/src/modules/hardware/hw-sensors/sensors.mjs';
+import { SENSOR_ROLES, SENSOR_PARAMS, sensorFieldVisible, sensorFieldRequired } from '../web/src/modules/hardware/hw-drivers/sensors.mjs';
 import { identifyMcu, syncMcuArchitecture } from '../web/src/features/deployment/mcu.mjs';
 import { createProject, createExampleProject, parseProject, serializeProject, validateProject } from '../web/src/core/model.mjs';
 import { createDriver, applyDriver, applyAssembly, createActuator, createAssembly, getDriverHardware, hardwareMatchesDriver, getAssemblySummary } from '../web/src/features/equipment/model.mjs';
 import { saveLayerVersion } from '../web/src/features/configuration/versions.mjs';
 
-const sensors = project => project.instances['hw-sensors'].parameters;
+const sensors = project => project.instances['hw-drivers'].parameters;
 const field = key => SENSOR_PARAMS.find(item => item.key === key);
 const has = (project, id, level) => validateProject(project).some(issue => issue.id === id && (!level || issue.level === level));
 
@@ -36,7 +36,7 @@ test('三类传感器独立配置，霍尔属于编码器类型且条件字段�
 test('每个传感器缺失参数仅报告一项 pending，厂商和型号仅作记录，不作为协议实现条件', () => {
   const project = createExampleProject();
   sensors(project).motorEncoderVendor = 'gongwang';
-  const pending = validateProject(project).filter(issue => issue.level === 'pending' && issue.moduleId === 'hw-sensors');
+  const pending = validateProject(project).filter(issue => issue.level === 'pending' && issue.moduleId === 'hw-drivers');
   assert.equal(pending.filter(issue => issue.paramKey === 'motorEncoderInterface').length, 1);
   assert.equal(pending.filter(issue => issue.paramKey === 'motorEncoderTimeoutUs').length, 1);
   assert.equal(pending.filter(issue => issue.paramKey === 'motorEncoderModel').length, 0);
@@ -60,9 +60,9 @@ test('输出轴机械角、线性霍尔采样通道与数据有效期具有独�
 test('停用传感器保留条件参数，但不以未启用方案阻塞当前配置', () => {
   const project = createExampleProject('sensorless');
   sensors(project).outputEncoderBits = 0;
-  assert.equal(has(project, 'range-hw-sensors-outputEncoderBits'), false);
+  assert.equal(has(project, 'range-hw-drivers-outputEncoderBits'), false);
   sensors(project).outputEncoderCapability = 'present'; sensors(project).outputEncoderType = 'absolute';
-  assert.ok(has(project, 'range-hw-sensors-outputEncoderBits', 'error'));
+  assert.ok(has(project, 'range-hw-drivers-outputEncoderBits', 'error'));
   project.instances['app-motion'].parameters.positionFeedback = 'output_encoder';
   sensors(project).outputEncoderCapability = 'absent';
   assert.ok(has(project, 'capability-outputEncoderCapability-app-motion', 'error'));
@@ -73,6 +73,7 @@ test('旧 Hall 角度与传感器迁移为编码器接口中的 Hall 方案，�
     const old = createExampleProject('hall');
     old.schemaVersion = schemaVersion;
     old.instances['foc-feedback'].parameters.angleSource = 'hall';
+    old.instances['hw-sensors'] = old.instances['hw-drivers']; delete old.instances['hw-drivers'];
     old.instances['hw-sensors'].parameters = { encoderCapability: 'absent', encoderBits: null, hallCapability: 'present', torqueCapability: 'absent' };
     old.provenance = { 'foc-feedback.angleSource': 'user', 'hw-sensors.hallCapability': 'user' };
     if (schemaVersion === 1) {
@@ -85,7 +86,7 @@ test('旧 Hall 角度与传感器迁移为编码器接口中的 Hall 方案，�
     assert.equal(sensors(loaded).encoderCapability, 'present');
     assert.equal(sensors(loaded).motorEncoderHallMode, 'unselected');
     assert.equal(sensors(loaded).motorEncoderTimeoutUs, null);
-    assert.deepEqual(loaded.provenance, old.provenance);
+    assert.deepEqual(loaded.provenance, { 'foc-feedback.angleSource': 'user', 'hw-drivers.hallCapability': 'user' });
     assert.deepEqual(parseProject(serializeProject(old)), loaded);
   }
 });
@@ -152,6 +153,6 @@ test('导入、驱动器应用与版本快照对同一 MCU 使用一致派生架
 test('传感器资源与通道的纯空格文本仍属于待填写', () => {
   const project=createExampleProject('hall');
   Object.assign(sensors(project), {encoderCapability:'present',motorEncoderType:'hall',motorEncoderHallMode:'linear',motorEncoderResource:'  ',motorEncoderSinResource:'  ',motorEncoderCosResource:'\t'});
-  const pending=validateProject(project).filter(issue=>issue.level==='pending'&&issue.moduleId==='hw-sensors');
+  const pending=validateProject(project).filter(issue=>issue.level==='pending'&&issue.moduleId==='hw-drivers');
   for(const key of ['motorEncoderResource','motorEncoderSinResource','motorEncoderCosResource'])assert.equal(pending.filter(issue=>issue.paramKey===key).length,1);
 });

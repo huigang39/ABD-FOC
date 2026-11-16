@@ -152,9 +152,9 @@ test('通信来源与校准模式检查各自可选模块的条件依赖', () =>
 
 test('传感器明确不具备时为冲突，未知时保留待确认', () => {
   const project = createExampleProject();
-  params(project, 'hw-sensors').encoderCapability = 'absent';
+  params(project, 'hw-drivers').encoderCapability = 'absent';
   assert.ok(has(project, 'capability-encoderCapability-foc-feedback', 'error'));
-  params(project, 'hw-sensors').encoderCapability = 'unconfirmed';
+  params(project, 'hw-drivers').encoderCapability = 'unconfirmed';
   assert.ok(has(project, 'capability-encoderCapability-foc-feedback', 'pending'));
   params(project, 'app-motion').supportedModes.push('torque_feedback');
   assert.ok(has(project, 'capability-torqueCapability-app-motion', 'error'));

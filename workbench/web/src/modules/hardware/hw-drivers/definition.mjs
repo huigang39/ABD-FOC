@@ -3,7 +3,7 @@ import { DRIVER_CONTRACTS } from './contracts.mjs';
 
 /** 传感器驱动：参数、职责、依赖与默认数据契约的唯一入口。 */
 export default {
-  "id": "hw-sensors",
+  "id": "hw-drivers",
   "layer": "hardware",
   "order": 3,
   "title": "驱动",

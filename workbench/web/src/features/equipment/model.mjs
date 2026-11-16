@@ -1,6 +1,6 @@
 import { validateHardware } from '../../modules/hardware/hw-board/validation.mjs';
 import { syncMcuArchitecture } from '../deployment/mcu.mjs';
-import { sensorFieldVisible, sensorIssues } from '../../modules/hardware/hw-sensors/sensors.mjs';
+import { sensorFieldVisible, sensorIssues } from '../../modules/hardware/hw-drivers/sensors.mjs';
 import { createMemoryLayout, createMemoryPlan, checkMemoryLayoutShape, validateMemory } from '../deployment/flash.mjs';
 /** Catalog v2 keeps legacy keys: actuators = motor + reducer, assemblies = actuator + driver.
  * Reusable design assets. No device access or verified hardware capabilities. */
@@ -224,13 +224,13 @@ export function validateEquipment(project) {
       for(const issue of validateMemory({...project,target:driver,memory}))if(issue.level==='error'&&!issue.id.startsWith('memory-region-'))add(`flash-${driver.id}-${issue.id}`,issue.id==='memory-target-mismatch'?'warning':'error',issue.title,issue.message,driver.id);
     }
     for(const issue of validateHardware({target:{mcu:driver.mcu},instances:Object.fromEntries(hardwareModules.map(module=>[module.id,{parameters:hardware[module.id]}]))}))if(issue.level==='error'||driver.id===catalog.activeDriverId)add(`hardware-${driver.id}-${issue.id}`,issue.level,issue.title,issue.message,driver.id);
-    for(const issue of sensorIssues(hardware['hw-sensors']))if(issue.level==='error'||driver.id===catalog.activeDriverId)add(`sensor-${driver.id}-${issue.id}`,issue.level,issue.title,issue.message,driver.id);
+    for(const issue of sensorIssues(hardware['hw-drivers']))if(issue.level==='error'||driver.id===catalog.activeDriverId)add(`sensor-${driver.id}-${issue.id}`,issue.level,issue.title,issue.message,driver.id);
     if (!driver.name.trim()) add(`name-${driver.id}`, 'pending', '驱动器名称待填写', '填写可区分的名称。', driver.id);
     for (const key of DRIVER_FIELDS) if(!(detailedFlash&&sharedHardware['hw-platform'].includes(key)))range(driver, key, driver.id, ['deadtimeNs', 'firmwareReserveKiB'].includes(key) ? 0 : Number.MIN_VALUE, Infinity, key === 'adcBits');
     for (const module of hardwareModules) for (const param of module.params) {
       if(detailedFlash&&module.id==='hw-platform'&&param.group==='memory')continue;
       if (param.hidden || param.architectureOnly && param.architectureOnly !== hardware['hw-platform'].architecture) continue;
-      if (module.id === 'hw-sensors' && !sensorFieldVisible(param, hardware[module.id])) continue;
+      if (module.id === 'hw-drivers' && !sensorFieldVisible(param, hardware[module.id])) continue;
       if (['number','integer'].includes(param.type)) range(hardware[module.id], param.key, driver.id, param.min ?? -Infinity, param.max ?? Infinity, param.type === 'integer');
     }
     if (getDriverHardware(driver)['hw-safety'].resetOutputDisabled !== true) add(`reset-${driver.id}`, 'error', '驱动器复位必须保持输出关闭', '硬件配置需要保留复位门控约束。', driver.id);

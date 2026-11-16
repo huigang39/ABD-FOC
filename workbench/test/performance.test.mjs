@@ -159,7 +159,7 @@ test('shape checks reject unknown or malicious imported fields and mismatched sn
     r => { r.snapshot.layers.foc.configuration['foc-current'].parameters.constructor = {}; },
     r => { r.samples[0].result = '<script>bad()</script>'; },
     r => { r.snapshot.build.command = 'rm -rf'; },
-    r => { r.snapshot.driver.hardware['hw-sensors'].fake = true; },
+    r => { r.snapshot.driver.hardware['hw-drivers'].fake = true; },
   ]) {
     const changed = structuredClone(record); mutate(changed);
     assert.throws(() => checkPerformanceRecordShape(changed));

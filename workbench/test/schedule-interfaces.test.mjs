@@ -21,7 +21,7 @@ test('默认接口带有精确映射，同层连接有效，数组元素按编�
   const link=p.design.layerInterfaces.find(link=>link.id==='link-encoders');
   const source=p.design.structures.find(s=>s.id===link.sourceStructure);
   assert.deepEqual(['name','count','unit'].map(key=>resolveFieldReference(source,link.fieldMap[0].sourceField)[key]),['value[0]',1,'rad']);
-  link.fieldMap[0].sourceField='hw-sensors-output-value[3]';
+  link.fieldMap[0].sourceField='hw-drivers-output-value[3]';
   assert(validateModuleContracts(p).some(issue=>issue.level==='error'&&issue.itemId===link.id));
 });
 

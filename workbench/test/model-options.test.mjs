@@ -23,7 +23,7 @@ test('maintained model lists retain known planning choices and cannot be edited 
 test('all driver and sensor model fields use the same fixed selects with no editor', () => {
   const project = createProject(), driver = createDriver();
   Object.assign(driver, { mcu: 'STM32H745IIK6', board: 'NEO' });
-  Object.assign(driver.hardware['hw-sensors'], { encoderCapability: 'present', outputEncoderCapability: 'present', torqueCapability: 'present', motorEncoderModel: 'MC_ENCODER_GW_OUTER', outputEncoderModel: 'MC_ENCODER_GW_INNER', torqueSensorModel: 'MC_TOR_SENSOR_KW' });
+  Object.assign(driver.hardware['hw-drivers'], { encoderCapability: 'present', outputEncoderCapability: 'present', torqueCapability: 'present', motorEncoderModel: 'MC_ENCODER_GW_OUTER', outputEncoderModel: 'MC_ENCODER_GW_INNER', torqueSensorModel: 'MC_TOR_SENSOR_KW' });
   project.catalog.drivers.push(driver);
   const html = renderEquipment(project, [], 'drivers', driver.id);
   for (const [scope, key, group] of [['driver', 'mcu', 'mcu'], ['driver', 'board', 'board'], ['driver-hardware', 'motorEncoderModel', 'encoder'], ['driver-hardware', 'outputEncoderModel', 'encoder'], ['driver-hardware', 'torqueSensorModel', 'torque']]) {

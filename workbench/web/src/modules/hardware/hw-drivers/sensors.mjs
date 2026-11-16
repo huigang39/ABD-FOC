@@ -76,7 +76,7 @@ export function migrateSensorParameters(parameters,{hallAngle=false}={}) {
 }
 export function sensorIssues(parameters) {
   const issues=[];
-  const add=(id,level,title,message,key)=>issues.push({id:'sensor-'+id,level,title,message,moduleId:'hw-sensors',paramKey:key});
+  const add=(id,level,title,message,key)=>issues.push({id:'sensor-'+id,level,title,message,moduleId:'hw-drivers',paramKey:key});
   for(const role of SENSOR_ROLES) {
     const p=role.prefix;
     issues.push(...sensorProtocolIssues(parameters,role));

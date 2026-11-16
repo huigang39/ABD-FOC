@@ -1,6 +1,6 @@
 import { validateCoreConfigs } from '../../modules/hardware/hw-platform/cores.mjs';
 import { calibrationEnabled } from '../../modules/application/app-calibration/validation.mjs';
-import { sensorFieldRequired } from '../../modules/hardware/hw-sensors/sensors.mjs';
+import { sensorFieldRequired } from '../../modules/hardware/hw-drivers/sensors.mjs';
 import { MODULES, TARGET_FIELDS } from '../../core/model.mjs';
 import { getConfigurationSelection } from './workspace.mjs';
 
@@ -32,7 +32,7 @@ function validField(field, value) {
 }
 
 function conditionalField(project, id, key) {
-  if(id==='hw-sensors')return sensorFieldRequired(MODULE_MAP.get(id).params.find(field=>field.key===key),project.instances[id].parameters);
+  if(id==='hw-drivers')return sensorFieldRequired(MODULE_MAP.get(id).params.find(field=>field.key===key),project.instances[id].parameters);
   if(id==='app-motion'&&key==='positionFeedback')return (parameter(project,id,'supportedModes')||[]).some(mode=>['position','impedance'].includes(mode));
   if (id === 'foc-observer' && key === 'startupStrategy') return parameter(project, 'foc-feedback', 'angleSource') === 'observer';
   if (id === 'app-calibration' && key === 'maxCurrentA') return ['electrical_zero', 'hall', 'friction'].some(item => calibrationEnabled(project,item));

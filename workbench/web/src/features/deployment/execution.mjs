@@ -97,7 +97,7 @@ export function validateExecution(project) {
   const unassigned = enabled.filter(module => !plan.assignments[module.id]);
   if (unassigned.length) add('modules-unassigned', 'pending', '模块运行内核待分配', `${unassigned.length} 个参与编译的模块尚未选择内核：${unassigned.map(module => module.title).join('、')}。`);
 
-  const fast = enabled.filter(module => module.layer === 'foc' || ['hw-board', 'hw-sensors'].includes(module.id));
+  const fast = enabled.filter(module => module.layer === 'foc' || ['hw-board', 'hw-drivers'].includes(module.id));
   const fastCores = new Set(fast.map(module => moduleCore(project, module.id)).filter(core => coreIds.has(core)));
   if (fastCores.size > 1) add('fast-loop-split', 'error', '电流环控制周期不能直接跨核拆分', '当前架构要求算法电流环、传感器驱动及采样与 PWM 在同一内核执行。跨核版本需要重新设计采样交接、观测器相位与执行预算。', 'foc-lifecycle');
 

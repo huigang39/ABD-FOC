@@ -25,7 +25,7 @@ export const ENTRYPOINTS = Object.freeze([
   entry('core.step', 'hw-platform', 'core_step', '内核服务', '平台启动与时基'),
   entry('peripherals.sample', 'hw-board', 'peripherals_sample', 'ADC 采样'),
   entry('peripherals.apply', 'hw-board', 'peripherals_apply', 'PWM 发波'),
-  entry('drivers.step', 'hw-sensors', 'drivers_step', '器件收发', '接收完成、采样请求与超时检查'),
+  entry('drivers.step', 'hw-drivers', 'drivers_step', '器件收发', '接收完成、采样请求与超时检查'),
   entry('protection.step', 'hw-safety', 'protection_step', '保护锁存', '硬件故障与复位请求'),
   entry('feedback.step', 'foc-feedback', 'feedback_step', '反馈解算'),
   entry('modulation.transform', 'foc-modulation', 'modulation_transform', '电流坐标变换'),
@@ -49,7 +49,7 @@ export const moduleEntries = id => ENTRYPOINTS.filter(item => item.moduleId === 
 export const EXTERNAL_INPUTS = {
   'hw-platform': { now_us:'平台单调时钟', boot_ready:'启动结果', reset_reason:'复位寄存器', clock_fault:'时钟监控' },
   'hw-board': { phase_current:'ADC 换算结果', bus_voltage:'ADC 换算结果', sample_time_us:'ADC 触发时间戳', sample_valid:'DMA 完整采样标志' },
-  'hw-sensors': { channel:'通道派发', now_us:'平台单调时钟', rx_data:'UART / SPI 接收缓冲', rx_length:'接收长度', request:'通道更新策略', tx_complete:'发送适配器回执', transport_status:'发送适配器状态', reset:'应用复位命令' },
+  'hw-drivers': { channel:'通道派发', now_us:'平台单调时钟', rx_data:'UART / SPI 接收缓冲', rx_length:'接收长度', request:'通道更新策略', tx_complete:'发送适配器回执', transport_status:'发送适配器状态', reset:'应用复位命令' },
   'hw-safety': { trip_flags:'比较器 / nFAULT / 刹车事件', reset_request:'应用复位命令', output_disabled:'实际 PWM 关断确认' },
   'foc-feedback': { electrical_offset:'编码器校准记录' },
   'foc-lifecycle': { reset_request:'应用复位命令', hardware_ready:'内核与外设就绪聚合', calibration_valid:'必要校准记录校验', fault_flags:'硬件与电流环故障按位聚合' },

@@ -6,7 +6,7 @@ const bounded=(value,label,low,high)=>{if(typeof value!=='number'||!Number.isFin
 export const MODULE_CODE = {
   'hw-platform':{name:'core',base:'Core'},
   'hw-board':{name:'peripherals',base:'Peripherals'},
-  'hw-sensors':{name:'drivers',base:'Drivers'},
+  'hw-drivers':{name:'drivers',base:'Drivers'},
   'hw-safety':{name:'protection',base:'Protection'},
   'foc-lifecycle':{name:'control',base:'Control',values:p=>{if(at(p,'foc-lifecycle','protectionPaths')?.some(path=>path.compiled))throw Error('自定义算法保护路径尚未接入生成器。');return {};}},
   'foc-feedback':{name:'feedback',base:'Feedback',config:'float pole_pairs, ratio; bool use_output_encoder;',values:p=>{

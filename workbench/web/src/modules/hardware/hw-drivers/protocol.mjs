@@ -35,7 +35,7 @@ export function sensorProtocolVisible(field,parameters,role) {
 export function sensorProtocolIssues(parameters,role) {
   const p=role.prefix, issues=[];
   if(parameters[role.capability]!=='present'||!SERIAL_INTERFACES.includes(parameters[p+'Interface']))return issues;
-  const add=(suffix,message)=>issues.push({id:`sensor-frame-${p}-${suffix}`,level:'error',title:`${role.title} · 帧格式无效`,message,moduleId:'hw-sensors',paramKey:p+suffix});
+  const add=(suffix,message)=>issues.push({id:`sensor-frame-${p}-${suffix}`,level:'error',title:`${role.title} · 帧格式无效`,message,moduleId:'hw-drivers',paramKey:p+suffix});
   const hexBytes=(key,limit)=>{
     const hex=parameters[p+key]||'';
     if(!/^(?:\s*[\da-f]{2})*\s*$/i.test(hex)){add(key,'请输入完整的十六进制字节，例如 AA 55。');return null;}

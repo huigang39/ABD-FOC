@@ -13,7 +13,7 @@ import foc_modulation from './algorithm/foc-modulation/definition.mjs';
 import foc_compensation from './algorithm/foc-compensation/definition.mjs';
 import hw_platform from './hardware/hw-platform/definition.mjs';
 import hw_board from './hardware/hw-board/definition.mjs';
-import hw_sensors from './hardware/hw-sensors/definition.mjs';
+import hw_drivers from './hardware/hw-drivers/definition.mjs';
 import hw_safety from './hardware/hw-safety/definition.mjs';
 
 function freezeDeep(value) {
@@ -37,7 +37,7 @@ export const MODULES = freezeDeep([
   foc_lifecycle,
   hw_platform,
   hw_board,
-  hw_sensors,
+  hw_drivers,
   hw_safety
 ]);
 export const MODULE_IDS = Object.freeze(MODULES.map(module => module.id));

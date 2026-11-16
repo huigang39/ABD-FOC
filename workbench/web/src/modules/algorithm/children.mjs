@@ -43,7 +43,7 @@ export function algorithmChildrenIssues(project) {
    for(const key of ['source','secondary'])if(routing[key]){
     const signal=SIGNALS.find(s=>s.id===routing[key]);
     if(!signal||!signalChoices(child.type,project).some(([id])=>id===signal.id)){report(key,'信号物理量不匹配。');continue;}
-    if(signal.sensorRole){const capability=signal.sensorRole==='output'?'outputEncoderCapability':'encoderCapability';if(project.instances['hw-sensors']?.parameters[capability]!=='present')report(key+'-encoder',signal.sensorRole==='output'?'此来源需要已配置的出轴侧编码器。':'此来源需要已配置的电机侧编码器。');}
+    if(signal.sensorRole){const capability=signal.sensorRole==='output'?'outputEncoderCapability':'encoderCapability';if(project.instances['hw-drivers']?.parameters[capability]!=='present')report(key+'-encoder',signal.sensorRole==='output'?'此来源需要已配置的出轴侧编码器。':'此来源需要已配置的电机侧编码器。');}
     const owner=signal.child?project.instances['foc-observer']:project.instances[signal.module];
     const source=signal.child?fixedAlgorithmChildren(project,'foc-observer').find(c=>c.type===signal.child):null;
     if(!owner?.enabled||(signal.child&&!source?.compiled))report(key,'输入来源没有编译。');

@@ -28,7 +28,7 @@ export async function writeNewProject(root,project){
     const info=MODULE_CODE[module.id],layer=LAYER[module.layer],folder=join(root,'firmware',layer,info.name);
     await mkdir(folder,{recursive:true});
     let header,source;
-    if(module.id==='hw-sensors')({header,source}=renderDrivers(project));
+    if(module.id==='hw-drivers')({header,source}=renderDrivers(project));
     else {
       const guard=`${info.name.toUpperCase()}_H`;
       header=`#ifndef ${guard}\n#define ${guard}\n#include <stdbool.h>\n#include <stdint.h>\n${moduleStructures(project,module.id).map(renderStructure).join('\n')}`;
