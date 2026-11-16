@@ -63,8 +63,8 @@ export function sensorFieldVisible(field,parameters) {
   return true;
 }
 export function sensorFieldRequired(field,parameters) { return field.required || Boolean(field.sensorRequired&&sensorFieldVisible(field,parameters)); }
-/** 旧协议平铺键后缀：折叠为一条主数据命令后必须全部删除（exactKeys）。 */
-const LEGACY_PROTOCOL_SUFFIXES=['TransferMode','RequestHex','StartHex','StartupDelayUs','HeaderHex','FooterHex','FrameBytes','DataOffset','DataType','DataBits','ByteOrder','ValueScale','ValueOffset','Checksum','ChecksumStart','StatusOffset','StatusMask','StatusExpected'];
+/** 旧协议平铺键后缀：折叠为一条主数据命令后必须全部删除（exactKeys）；provenance 清理复用同一列表。 */
+export const LEGACY_PROTOCOL_SUFFIXES=['TransferMode','RequestHex','StartHex','StartupDelayUs','HeaderHex','FooterHex','FrameBytes','DataOffset','DataType','DataBits','ByteOrder','ValueScale','ValueOffset','Checksum','ChecksumStart','StatusOffset','StatusMask','StatusExpected'];
 /** 任一旧键存在且命令数组缺主数据命令时折叠一条 data 命令；旧键随后无条件删除；幂等。 */
 function foldLegacyProtocolCommands(parameters) {
   for(const role of SENSOR_ROLES) {

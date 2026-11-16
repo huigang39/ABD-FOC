@@ -398,3 +398,35 @@ test('旧模块名 hw-sensors 的七个数据面载入时折叠为 hw-drivers，
   assert.equal(saved.build.moduleOptimizations['hw-drivers'], 'O2');
   assert.deepEqual(parseProject(serializeProject(loaded)), loaded);
 });
+
+test('旧协议平铺键折叠成命令后，对应 provenance 条目随载入清理（工程与层版本快照）', () => {
+  let project = createExampleProject();
+  project = saveLayerVersion(project, { layer: 'hardware', version: 'legacy-protocol/β' });
+  // 旧草稿：模块名还是 hw-sensors，协议字段还是平铺键；用户编辑过协议字段，provenance 留有对应条目。
+  const swap = object => { if (Object.hasOwn(object, 'hw-drivers')) { object['hw-sensors'] = object['hw-drivers']; delete object['hw-drivers']; } };
+  swap(project.instances);
+  const release = project.layerVersions.releases[0];
+  swap(release.snapshot.instances);
+  const sensors = project.instances['hw-sensors'].parameters;
+  sensors.motorEncoderRequestHex = '01 03'; sensors.motorEncoderFrameBytes = 8; sensors.motorEncoderChecksum = 'crc16_modbus';
+  release.snapshot.instances['hw-sensors'].parameters.torqueSensorStatusMask = 255; release.snapshot.instances['hw-sensors'].parameters.torqueSensorStatusExpected = 1;
+  project.provenance['hw-sensors.motorEncoderFrameBytes'] = 'user';
+  project.provenance['hw-sensors.motorEncoderChecksumStart'] = 'example';
+  release.snapshot.provenance['hw-sensors.torqueSensorStatusMask'] = 'user';
+  const loaded = parseProject(JSON.stringify(project));
+  assert.equal(Object.hasOwn(loaded.provenance, 'hw-drivers.motorEncoderFrameBytes'), false);
+  assert.equal(Object.hasOwn(loaded.provenance, 'hw-drivers.motorEncoderChecksumStart'), false);
+  assert.equal(Object.keys(loaded.layerVersions.releases[0].snapshot.provenance).some(path => path.endsWith('.torqueSensorStatusMask')), false);
+  assert.equal(Object.keys(loaded.provenance).some(path => path.startsWith('hw-sensors.')), false);
+  // 存活参数的 provenance 不受牵连，平铺值照常折叠为一条主数据命令。
+  assert.equal(loaded.provenance['hw-drivers.encoderBits'], 'example');
+  const commands = loaded.instances['hw-drivers'].parameters.motorEncoderCommands;
+  assert.equal(commands.some(command => command.purpose === 'data' && command.frameBytes === 8 && command.checksum === 'crc16_modbus'), true);
+  const snapshotCommands = loaded.layerVersions.releases[0].snapshot.instances['hw-drivers'].parameters.torqueSensorCommands;
+  assert.equal(snapshotCommands.some(command => command.purpose === 'data' && command.statusMask === 255 && command.statusExpected === 1), true);
+  assert.deepEqual(parseProject(serializeProject(loaded)), loaded);
+  // 更名后、命令化前中途保存的草稿（hw-drivers 前缀直挂）同样清理。
+  loaded.provenance['hw-drivers.motorEncoderValueScale'] = 'user';
+  const reloaded = parseProject(serializeProject(loaded));
+  assert.equal(Object.hasOwn(reloaded.provenance, 'hw-drivers.motorEncoderValueScale'), false);
+});

@@ -4,7 +4,7 @@ import { coreCapabilities } from '../modules/hardware/hw-platform/cores.mjs';
 import { validateSchedule } from '../features/configuration/schedule.mjs';
 import { validateModuleConfiguration } from '../modules/validation.mjs';
 import { createPerformance, checkPerformanceShape } from '../features/performance/model.mjs';
-import { sensorFieldVisible, migrateSensorParameters } from '../modules/hardware/hw-drivers/sensors.mjs';
+import { SENSOR_ROLES, LEGACY_PROTOCOL_SUFFIXES, sensorFieldVisible, migrateSensorParameters } from '../modules/hardware/hw-drivers/sensors.mjs';
 import { identifyMcu } from '../features/deployment/mcu.mjs';
 import { createLayerVersions, checkLayerVersionsShape, validateLayerVersions, checkCompatibilityShape, migrateLegacySafetyState } from '../features/configuration/versions.mjs';
 import { createOperation, checkOperationShape } from '../features/operation/model.mjs';
@@ -234,15 +234,20 @@ function migrateLegacyModuleParameters(project) {
   if (plain(assignments)) for (const id of MODULE_IDS) if (!Object.hasOwn(assignments,id)) assignments[id] = '';
 }
 
+/** 命令折叠退役的旧协议平铺参数名（三角色前缀 × 旧后缀）：对应 provenance 条目必须一并清理，否则 checkShape 与层快照 checkProvenance 拒绝载入。 */
+const LEGACY_PROTOCOL_PARAM_NAMES = new Set(SENSOR_ROLES.flatMap(role => LEGACY_PROTOCOL_SUFFIXES.map(suffix => role.prefix + suffix)));
+
 /** hw-sensors 模块更名为 hw-drivers：折叠七个数据面的旧键；结构 id、字段 id 等不透明引用保持原值。 */
 function migrateDriverModule(project) {
   if(!plain(project))return;
   const rename=(object,from,to)=>{if(plain(object)&&Object.hasOwn(object,from)){if(!Object.hasOwn(object,to))object[to]=object[from];delete object[from];}};
   const renameProvenance=provenance=>{if(!plain(provenance))return;for(const key of Object.keys(provenance))if(key.startsWith('hw-sensors.')){const next=`hw-drivers.${key.slice('hw-sensors.'.length)}`;if(!Object.hasOwn(provenance,next))provenance[next]=provenance[key];delete provenance[key];}};
+  const dropRetiredProtocolProvenance=provenance=>{if(!plain(provenance))return;for(const path of Object.keys(provenance)){const dot=path.indexOf('.');if(dot>0&&LEGACY_PROTOCOL_PARAM_NAMES.has(path.slice(dot+1))&&(path.startsWith('hw-sensors.')||path.startsWith('hw-drivers.')))delete provenance[path];}};
   rename(project.instances,'hw-sensors','hw-drivers');
   rename(project.execution?.assignments,'hw-sensors','hw-drivers');
   rename(project.build?.moduleOptimizations,'hw-sensors','hw-drivers');
   renameProvenance(project.provenance);
+  dropRetiredProtocolProvenance(project.provenance);
   if(Array.isArray(project.catalog?.drivers))for(const driver of project.catalog.drivers)rename(driver?.hardware,'hw-sensors','hw-drivers');
   const design=project.design;
   if(plain(design)) {
@@ -262,6 +267,7 @@ function migrateDriverModule(project) {
     if(!plain(snapshot))continue;
     rename(snapshot.instances,'hw-sensors','hw-drivers');
     renameProvenance(snapshot.provenance);
+    dropRetiredProtocolProvenance(snapshot.provenance);
   }
   for(const record of project.performance?.records||[]) {
     const snapshot=record?.snapshot;
