@@ -113,14 +113,23 @@ test('incomplete data command blocks source generation while empty upload startu
   motor(p)[0].frameBytes = 9; motor(p)[0].requestHex = '';
   assert(driverConfigurationIssues(params(p)).some(issue => issue.message.includes('请求指令')));
   Object.assign(motor(p)[0], { mode: 'active_upload', requestHex: '' });
-  assert.deepEqual(driverDescriptors(params(p))[0].request, []);
+  assert.deepEqual(driverDescriptors(params(p))[0].commands[0].request, []);
 });
-test('status and other commands wait for the firmware engine update', () => {
+test('status and other commands reach the engine once fully configured', () => {
   const p = newModuleProject();
-  motor(p).push(Object.assign(createDriverCommand('other', 'extra'), { periodUs: 1000000 }));
-  const issues = driverConfigurationIssues(params(p));
-  assert(issues.some(issue => issue.paramKey === 'motorEncoderCommands' && issue.message === '状态/其他指令需在固件引擎更新后使用。'));
-  assert(issues.every(issue => !issue.message.includes('尚未配置')));
+  motor(p).push(Object.assign(createDriverCommand('status', 'motor-status'), { requestHex: '3C', headerHex: '3B', frameBytes: 4, dataOffset: 1, dataType: 'unsigned', dataBits: 8, byteOrder: 'little', valueScale: 1, checksum: 'none', statusOffset: 1, statusMask: 0 }));
+  assert(driverConfigurationIssues(params(p)).some(issue => issue.paramKey === 'motorEncoderCommands' && issue.message === '状态指令需要发送指令与正整数执行周期。'));
+  motor(p)[1].periodUs = 100000;
+  assert.deepEqual(driverConfigurationIssues(params(p)), []);
+  const descriptor = driverDescriptors(params(p))[0];
+  assert.equal(descriptor.command_count, 2);
+  assert.equal(descriptor.commands[1].purpose, 'status');
+  assert.equal(descriptor.commands[1].period_us, 100000);
+  Object.assign(motor(p)[1], { purpose: 'other', periodUs: null });
+  assert.deepEqual(driverConfigurationIssues(params(p)), []);
+  motor(p)[1].frameBytes = null;
+  assert(driverConfigurationIssues(params(p)).some(issue => issue.message.includes('尚未配置')));
+  motor(p)[1].frameBytes = 4;
   params(p).torqueSensorCommands = [];
   assert(driverConfigurationIssues(params(p)).some(issue => issue.message.includes('缺少主数据指令')));
 });

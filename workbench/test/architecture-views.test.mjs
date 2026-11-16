@@ -4,7 +4,12 @@ import { MODULES } from '../web/src/modules/registry.mjs';
 import { architectureModuleRoute, renderArchitectureOverview, renderArchitectureLayer } from '../web/src/features/architecture/view.mjs';
 
 function assertReadOnly(html) {
-  assert.doesNotMatch(html.replace(/<button[^>]*class="field-help"[^>]*>.*?<\/button>/gs, '').replace(/<input type="radio"[^>]*>/g, ''), /<(?:input|textarea|select|button)\b|data-(?:action|edit|scope)=/);
+  // 画布允许两类无副作用控件：指令源单选 radio、货架快速选择下拉（configuration-* 作用域复用配置工作台）。
+  const stripped = html
+    .replace(/<button[^>]*class="field-help"[^>]*>.*?<\/button>/gs, '')
+    .replace(/<input type="radio"[^>]*>/g, '')
+    .replace(/<select class="field-select canvas-quick-select"[^>]*>.*?<\/select>/gs, '');
+  assert.doesNotMatch(stripped, /<(?:input|textarea|select|button)\b|data-(?:action|edit|scope)=/);
   assert.doesNotMatch(html, />参数配置(?: · \d+)?<|>参数编辑<|>配置接口|>已启用<|>未包含<|工作草案|当前项目/);
   for (const [, href] of html.matchAll(/href="([^"]+)"/g)) {
     assert.ok(href.startsWith('#/') || href.startsWith('/assets/icons.svg#'), href);
@@ -34,7 +39,7 @@ test('architecture overview is the signal-and-power chain canvas for the joint m
   assert.match(html, /硬件仿真/);
   assert.match(html, /动力学仿真/);
   // 生命周期带：选型 → 工程 → 调试 → 测试。
-  for (const stage of ['选型', '工程', '调试', '测试']) assert.match(html, new RegExp(`>${stage}<`));
+  for (const stage of ['货架', '工程', '调试', '测试']) assert.match(html, new RegExp(`>${stage}<`));
   assert.deepEqual([...html.matchAll(/class="canvas-stage" href="([^"]+)"/g)].map(match => match[1]),
     ['#/equipment', '#/project/actuator', '#/debug', '#/performance']);
   // 双击指令源进入对应页面。

@@ -13,7 +13,7 @@ import { MODULE_IDS as CATALOG_MODULE_IDS } from './catalog.mjs';
 import { getActiveActuator, getActiveDriver } from '../features/equipment/model.mjs';
 const MODULE_IDS = new Set(CATALOG_MODULE_IDS);
 const CHECK_IDS = ['build', 'timing', 'trip', 'calibration', 'closed_loop'];
-const BYTES = Object.freeze({ u8: 1, u16: 2, u32: 4, i16: 2, i32: 4, f32: 4, bool: 1 });
+const BYTES = Object.freeze({ u8: 1, i8: 1, u16: 2, u32: 4, i16: 2, i32: 4, f32: 4, bool: 1 });
 const uid = prefix => `${prefix}-${globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`}`;
 const fail = message => { throw new Error(message); };
 const plain = value => value !== null && typeof value === 'object' && !Array.isArray(value) && [Object.prototype, null].includes(Object.getPrototypeOf(value));

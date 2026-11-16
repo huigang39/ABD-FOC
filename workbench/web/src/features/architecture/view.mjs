@@ -2,6 +2,7 @@ import { renderObserverArchitecture } from '../../modules/algorithm/foc-observer
 import { MODULES } from '../../modules/registry.mjs';
 import { esc } from '../../shared/esc.mjs';
 import { icon, LAYER_ICONS, MODULE_ICONS } from '../../shared/ui/icons.mjs';
+import { getConfigurationSelection } from '../configuration/workspace.mjs';
 
 const LAYERS = Object.freeze({
   app: {
@@ -36,30 +37,37 @@ export function architectureModuleRoute(moduleId) {
 
 
 /** 主页全景画布：信号与功率链。指令源（上位机/调试器）→【驱动器：应用·算法·硬件(+PCB)】→ 三相 →【执行器：电机·减速机】；
- * 上方数字信号仿真与硬件仿真，底部动力学仿真横跨全图。 */
-export function renderArchitectureOverview() {
+ * 上方数字信号仿真与硬件仿真，底部动力学仿真横跨全图。带工程实例时，驱动器/执行器提供货架快速选择。 */
+export function renderArchitectureOverview(project = null) {
   const soon = '<span class="canvas-soon">规划中</span>';
   const simCard = (cls, title, items) => `<div class="canvas-sim ${cls}"><strong>${esc(title)}${soon}</strong><span class="canvas-sim-items">${items.map(item => `<span>${esc(item)}</span>`).join('')}</span></div>`;
   const chainNode = (id, extra = '') => `<a class="chain-node chain-${id}" href="#/architecture/${id}"><span class="chain-head"><strong>${LAYERS[id].name}</strong><small>${LAYERS[id].code}</small></span><span class="chain-summary">${LAYERS[id].summary}</span><span class="layer-capabilities">${layerModules(id).map(module => `<span>${esc(module.title)}</span>`).join('')}</span><canvas class="line-field" data-mark="${id}" aria-hidden="true"></canvas><span class="chain-foot"><strong>${layerModules(id).length} 个模块</strong>${icon('arrow-right', 'entry-arrow')}</span>${extra}</a>`;
   // 链上连接：标签在上、双向轨道在下（单向只留右箭头）；area 为空时由内部链网格排布。
   const link = (label, sub = '', oneWay = false, area = '') => `<div class="canvas-link${oneWay ? ' canvas-link-one' : ''}"${area ? ` style="grid-area:${area}"` : ''} aria-hidden="true"><span>${label}${sub ? `<small>${sub}</small>` : ''}</span><i></i></div>`;
+  // 货架快速选择：复用配置工作台的 configuration-* 作用域，选完即应用；无工程时退回货架链接。
+  const selection = project ? getConfigurationSelection(project) : null;
+  const quickSelect = (scope, items, selectedId, label) => items.length || selectedId
+    ? `<select class="field-select canvas-quick-select" data-edit="${scope}" aria-label="${esc(label)}"><option value="">${esc(label)}</option>${items.map(item => `<option value="${esc(item.id)}" ${item.id === selectedId ? 'selected' : ''}>${esc(item.name)}</option>`).join('')}</select>`
+    : `<a href="#/equipment/${scope === 'configuration-driver' ? 'drivers' : 'actuators'}">货架 →</a>`;
+  const driverPick = selection ? quickSelect('configuration-driver', project.catalog.drivers, selection.driver?.id, '选择驱动器') : '<a href="#/equipment/drivers">货架 →</a>';
+  const actuatorPick = selection ? quickSelect('configuration-actuator', project.catalog.actuators, selection.actuator?.id, '选择执行器') : '<a href="#/equipment/actuators">货架 →</a>';
   return `<section class="architecture-overview lifecycle-canvas" aria-label="关节模组信号与功率链全景">
     <div class="canvas-flow">
       <div class="canvas-sims" style="grid-area:sims">${simCard('canvas-sim-signal', '数字信号仿真', ['电流环', '观测器', '滤波器', '状态机'])}${simCard('canvas-sim-hardware', '硬件仿真', ['逆变功率级', '电机电气', '采样链'])}</div>
       <label class="canvas-source-unit" style="grid-area:host" title="单击选择指令来源 · 双击进入上位机" ondblclick="location.hash='#/project/protocol'"><input type="radio" name="canvas-source" value="host" checked><span class="canvas-source-card"><strong>上位机</strong><small>以太网 · CAN · RS485</small></span>${link('指令 / 遥测', '以太网 · CAN · RS485')}</label>
       <label class="canvas-source-unit" style="grid-area:dbg" title="单击选择指令来源 · 双击进入调试器" ondblclick="location.hash='#/debug'"><input type="radio" name="canvas-source" value="debugger"><span class="canvas-source-card"><strong>调试器</strong><small>SEGGER J-Link</small></span>${link('访问 / 监控', 'J-Link · SWD')}</label>
       <div class="canvas-group canvas-group-driver" style="grid-area:driver">
-        <span class="canvas-group-label"><b>驱动器</b><a href="#/equipment/drivers">货架 →</a></span>
+        <span class="canvas-group-label"><b>驱动器</b>${driverPick}</span>
         <div class="canvas-group-chain canvas-group-chain-layers">${chainNode('app')}${link('控制给定 / 反馈快照')}${chainNode('foc')}${link('调制提交 / 同步采样')}${chainNode('hardware', '<span class="chain-embedded"><b>PCB 设计</b></span>')}</div>
       </div>
       ${link('三相', 'U · V · W', true, 'gapD')}
       <div class="canvas-group canvas-group-actuator" style="grid-area:actuator">
-        <span class="canvas-group-label"><b>执行器</b><a href="#/equipment/actuators">货架 →</a></span>
+        <span class="canvas-group-label"><b>执行器</b>${actuatorPick}</span>
         <div class="canvas-group-chain canvas-group-chain-physical"><a class="chain-node chain-physical" href="#/equipment/actuators"><span class="chain-head"><strong>电机</strong></span><span class="chain-summary">三相永磁同步电机</span></a>${link('轴', '', true)}<a class="chain-node chain-physical" href="#/equipment/actuators"><span class="chain-head"><strong>减速机</strong></span><span class="chain-summary">行星 / 谐波减速</span></a></div>
       </div>
       <div class="canvas-dynamics" style="grid-area:dyn"><strong>动力学仿真${soon}</strong><span class="canvas-sim-items"><span>单摆</span><span>机械臂</span><span>负载等效</span></span></div>
     </div>
-    <div class="canvas-lifecycle" aria-label="生命周期">${[['选型', '货架 · 执行器与驱动', '#/equipment'], ['工程', '配置 · 生成 · 烧录', '#/project/actuator'], ['调试', 'J-Link 实时监控', '#/debug'], ['测试', '台架测量记录', '#/performance']].map(([title, note, href]) => `<a class="canvas-stage" href="${href}"><strong>${esc(title)}</strong><small>${esc(note)}</small></a>`).join('<span class="canvas-stage-arrow" aria-hidden="true">→</span>')}</div>
+    <div class="canvas-lifecycle" aria-label="生命周期">${[['货架', '执行器 · 驱动器', '#/equipment'], ['工程', '配置 · 生成 · 烧录', '#/project/actuator'], ['调试', 'J-Link 实时监控', '#/debug'], ['测试', '台架测量记录', '#/performance']].map(([title, note, href]) => `<a class="canvas-stage" href="${href}"><strong>${esc(title)}</strong><small>${esc(note)}</small></a>`).join('<span class="canvas-stage-arrow" aria-hidden="true">→</span>')}</div>
   </section>`;
 }
 

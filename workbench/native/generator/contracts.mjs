@@ -1,4 +1,4 @@
-const TYPES={u8:'uint8_t',u16:'uint16_t',u32:'uint32_t',i16:'int16_t',i32:'int32_t',f32:'float',bool:'bool'};
+const TYPES={u8:'uint8_t',i8:'int8_t',u16:'uint16_t',u32:'uint32_t',i16:'int16_t',i32:'int32_t',f32:'float',bool:'bool'};
 const RESERVED=new Set('auto break case char const continue default do double else enum extern float for goto if inline int long register restrict return short signed sizeof static struct switch typedef union unsigned void volatile while _Alignas _Alignof _Atomic _Bool _Complex _Generic _Imaginary _Noreturn _Static_assert _Thread_local'.split(' '));
 export function cIdentifier(value){return typeof value==='string'&&/^[A-Za-z][A-Za-z0-9_]*$/.test(value)&&!RESERVED.has(value);}
 const comment=text=>String(text||'').replace(/\*\//g,'* /').replace(/[\r\n]/g,' ');

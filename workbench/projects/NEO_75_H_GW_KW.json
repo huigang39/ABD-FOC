@@ -2773,7 +2773,7 @@
             "type": "f32",
             "count": 3,
             "unit": "",
-            "meaning": "通道换算值；0/1 为 rad，2 为所配置的力矩接口单位"
+            "meaning": "主数据命令的通道换算值；0/1 为 rad，2 为所配置的力矩接口单位"
           },
           {
             "id": "hw-sensors-output-raw",
@@ -2789,7 +2789,7 @@
             "type": "u32",
             "count": 3,
             "unit": "us",
-            "meaning": "最近一次通过校验的数据接收时刻"
+            "meaning": "最近一次通过校验的主数据接收时刻"
           },
           {
             "id": "hw-sensors-output-sequence",
@@ -2797,7 +2797,7 @@
             "type": "u32",
             "count": 3,
             "unit": "",
-            "meaning": "每收到一帧有效数值递增"
+            "meaning": "每收到一帧有效主数据递增"
           },
           {
             "id": "hw-sensors-output-valid",
@@ -2805,7 +2805,7 @@
             "type": "bool",
             "count": 3,
             "unit": "",
-            "meaning": "已收到有效帧且未超时；失效后不得继续用于闭环"
+            "meaning": "已收到有效主数据帧且未超时；失效后不得继续用于闭环"
           },
           {
             "id": "hw-sensors-output-error",
@@ -2821,7 +2821,7 @@
             "type": "u32",
             "count": 3,
             "unit": "",
-            "meaning": "按帧格式提取的器件状态字节，不按厂商解释"
+            "meaning": "主数据或状态命令帧提取的器件状态字节，不按厂商解释"
           },
           {
             "id": "hw-sensors-output-tx_data",
@@ -2914,12 +2914,12 @@
             "meaning": "请求已发送，等待应答或超时"
           },
           {
-            "id": "hw-sensors-state-started",
-            "name": "started",
+            "id": "hw-sensors-state-command_started",
+            "name": "command_started",
             "type": "bool",
-            "count": 3,
+            "count": 12,
             "unit": "",
-            "meaning": "启动上传或查询命令已成功提交"
+            "meaning": "各命令是否已成功提交；主动上传与其他指令只发一次"
           },
           {
             "id": "hw-sensors-state-received",
@@ -2927,7 +2927,7 @@
             "type": "bool",
             "count": 3,
             "unit": "",
-            "meaning": "至少收到一帧有效数据"
+            "meaning": "至少收到一帧有效主数据"
           },
           {
             "id": "hw-sensors-state-rejected_frames",
@@ -2943,7 +2943,23 @@
             "type": "u32",
             "count": 3,
             "unit": "byte",
-            "meaning": "寻找帧头或重同步时丢弃的字节数"
+            "meaning": "寻找帧头或重同步时丢弃的字节数；空闲无流式命令时全部计入"
+          },
+          {
+            "id": "hw-sensors-state-active_command",
+            "name": "active_command",
+            "type": "i8",
+            "count": 3,
+            "unit": "",
+            "meaning": "各通道在途命令下标；-1 空闲，空闲时按主动上传主数据命令流式解析"
+          },
+          {
+            "id": "hw-sensors-state-last_status_us",
+            "name": "last_status_us",
+            "type": "u32",
+            "count": 3,
+            "unit": "us",
+            "meaning": "最近一次状态命令应答时刻，按执行周期轮询"
           }
         ]
       },

@@ -1,7 +1,7 @@
-import { DRIVER_FRAME_BYTES, DRIVER_TX_BYTES } from './contracts.mjs';
+import { DRIVER_FRAME_BYTES, DRIVER_TX_BYTES, DRIVER_COMMANDS_MAX } from './contracts.mjs';
+export { DRIVER_COMMANDS_MAX };
 /** 驱动命令：每个串行通道一组收发单元；主数据命令产出测量值，状态读取独立成命令。 */
 export const SERIAL_INTERFACES=['spi','uart','rs485','i2c','ssi','biss','can'];
-export const DRIVER_COMMANDS_MAX=4;
 export const COMMAND_PURPOSES=[['data','主数据'],['status','状态读取'],['other','其他指令']];
 export const DRIVER_COMMAND_KEYS=['id','name','purpose','mode','requestHex','periodUs','startupDelayUs','headerHex','footerHex','frameBytes','dataOffset','dataType','dataBits','byteOrder','valueScale','valueOffset','checksum','checksumStart','statusOffset','statusMask','statusExpected'];
 const hexByteCount=text=>String(text||'').replace(/\s/g,'').length/2;

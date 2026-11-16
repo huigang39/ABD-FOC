@@ -5,6 +5,7 @@
 #define DRIVER_CHANNELS 3u
 #define DRIVER_FRAME_BYTES 64u
 #define DRIVER_TX_BYTES 32u
+#define DRIVER_COMMANDS_MAX 4u
 #define DRIVER_ERROR_CONFIG 1u
 #define DRIVER_ERROR_FRAME 2u
 #define DRIVER_ERROR_VALUE 4u
@@ -16,8 +17,9 @@
 typedef enum { DRIVER_REQUEST_RESPONSE, DRIVER_ACTIVE_UPLOAD } DriverMode;
 typedef enum { DRIVER_VALUE_UNSIGNED, DRIVER_VALUE_SIGNED, DRIVER_VALUE_FLOAT32 } DriverValueType;
 typedef enum { DRIVER_CHECK_NONE, DRIVER_CHECK_XOR8, DRIVER_CHECK_SUM8, DRIVER_CHECK_MODBUS } DriverChecksum;
+typedef enum { DRIVER_PURPOSE_DATA, DRIVER_PURPOSE_STATUS, DRIVER_PURPOSE_OTHER } DriverCommandPurpose;
 typedef struct {
-    bool enabled;
+    DriverCommandPurpose purpose;
     DriverMode mode;
     uint8_t request[DRIVER_TX_BYTES], request_length;
     uint8_t header[DRIVER_FRAME_BYTES], header_length;
@@ -28,9 +30,15 @@ typedef struct {
     float scale, offset;
     DriverChecksum checksum;
     uint8_t checksum_start;
-    int16_t status_offset;
+    int16_t status_offset; /* -1 表示本帧不提取状态字节 */
     uint8_t status_mask, status_expected;
-    uint32_t timeout_us, startup_delay_us;
+    uint32_t period_us, startup_delay_us;
+} DriverCommand;
+typedef struct {
+    bool enabled;
+    uint8_t command_count;
+    uint32_t timeout_us;
+    DriverCommand commands[DRIVER_COMMANDS_MAX];
 } DriverConfig;
 extern const DriverConfig driver_config[DRIVER_CHANNELS];
 /* One caller owns each state. Feed ISR data through the peripheral's queue. */

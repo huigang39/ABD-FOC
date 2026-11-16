@@ -41,30 +41,31 @@
   .architecture-role-strip > div { display: grid; grid-template-columns: 36px minmax(0,1fr); gap: 10px; align-items: baseline; }
   .architecture-role-strip span { margin-top: 0; }
 }
-/* 主页全景画布：信号与功率链。画布尽量铺满视口，卡片随网格拉伸。 */
-.architecture-overview { min-height: calc(100dvh - 104px); display: flex; flex-direction: column; gap: 14px; }
+/* 主页全景画布：信号与功率链。卡片自然高度，分组内垂直居中，避免挤压叠字。 */
+.architecture-overview { min-height: calc(100dvh - 104px); display: flex; flex-direction: column; gap: 12px; }
 .lifecycle-canvas { overflow-x: auto; }
 .canvas-flow {
-  display: grid; flex: 1; width: 100%; min-width: 1080px;
-  grid-template-columns: 158px minmax(130px, 190px) minmax(480px, 1.6fr) 62px minmax(220px, 0.9fr);
-  grid-template-rows: auto minmax(150px, auto) minmax(150px, auto) auto;
+  display: grid; flex: 1; width: 100%; min-width: 960px;
+  grid-template-columns: 148px minmax(106px, 164px) minmax(420px, 1.6fr) 54px minmax(192px, 0.9fr);
+  grid-template-rows: auto 1fr 1fr auto;
   grid-template-areas:
-    ".    sims sims  .    ."
-    "host host drv   thp  act"
-    "dbg  dbg  drv   thp  act"
-    "dyn  dyn  dyn   dyn  dyn";
-  align-items: stretch; column-gap: 6px; row-gap: 12px;
+    ".    sims   sims   .    ."
+    "host host   driver gapD actuator"
+    "dbg  dbg    driver gapD actuator"
+    "dyn  dyn    dyn    dyn  dyn";
+  align-items: stretch; column-gap: 6px; row-gap: 10px;
 }
-/* 分组容器：虚线大块 + 顶部名称标签；内部为链网格（节点+连接交替）。 */
-.canvas-group { position: relative; display: flex; flex-direction: column; border: 1.5px dashed var(--line-strong); border-radius: 20px; padding: 20px 14px 12px; }
-.canvas-group-label { position: absolute; top: -10px; left: 18px; display: flex; align-items: center; gap: 10px; background: var(--page); padding: 0 10px; }
+/* 分组容器：虚线大块 + 顶部名称与快速选择；内部为链网格，节点自然高度居中。 */
+.canvas-group { position: relative; display: flex; flex-direction: column; justify-content: center; border: 1.5px dashed var(--line-strong); border-radius: 20px; padding: 22px 12px 12px; min-width: 0; }
+.canvas-group-label { position: absolute; top: -10px; left: 16px; display: flex; align-items: center; gap: 10px; background: var(--page); padding: 0 8px; }
 .canvas-group-label b { font-size: 13px; color: var(--ink); }
 .canvas-group-label a { font-size: 10.5px; color: var(--primary); text-decoration: none; }
 .canvas-group-label a:hover { text-decoration: underline; }
+.canvas-quick-select { max-width: 148px; min-height: 26px; padding: 2px 8px; font-size: 10.5px; border-radius: 999px; }
 .canvas-group-chain { flex: 1; }
-.canvas-group-chain .chain-node { height: 100%; box-sizing: border-box; }
-.canvas-group-chain-layers { display: grid; grid-template-columns: minmax(150px, 1fr) 76px minmax(150px, 1fr) 76px minmax(170px, 1.15fr); column-gap: 6px; align-items: stretch; }
-.canvas-group-chain-physical { display: grid; grid-template-columns: minmax(96px, 1fr) 46px minmax(96px, 1fr); column-gap: 4px; align-items: stretch; }
+.canvas-group-chain-layers { display: grid; grid-template-columns: minmax(146px, 1fr) 72px minmax(146px, 1fr) 72px minmax(164px, 1.15fr); column-gap: 5px; align-items: center; }
+.canvas-group-chain-physical { display: grid; grid-template-columns: minmax(92px, 1fr) 44px minmax(92px, 1fr); column-gap: 4px; align-items: center; }
+.canvas-source-unit { align-self: center; }
 .canvas-sims { display: flex; gap: 14px; justify-content: space-between; align-items: end; padding: 0 6px; }
 .canvas-sims .canvas-sim { flex: 0 1 auto; min-width: 240px; }
 /* 指令源单元：竖排两枚，各自带箭头与通信方式；点选哪个亮哪个。 */
@@ -82,7 +83,7 @@
 .canvas-source-unit:has(input:checked) .canvas-link i, .canvas-source-unit:has(input:checked) .canvas-link i::after { border-color: var(--primary); }
 .canvas-source-unit input:focus-visible + .canvas-source-card { outline: 2px solid var(--focus); outline-offset: 2px; }
 /* 链节点：三层固件 + 物理端（电机 / 减速机）。 */
-.chain-node { display: flex; flex-direction: column; gap: 8px; padding: 15px 16px 12px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); color: var(--ink); text-decoration: none; transition: border-color var(--motion), background-color var(--motion); min-width: 0; }
+.chain-node { display: flex; flex-direction: column; gap: 6px; padding: 12px 13px 10px; border: 1px solid var(--line); border-radius: 15px; background: var(--surface); color: var(--ink); text-decoration: none; transition: border-color var(--motion), background-color var(--motion); min-width: 0; }
 a.chain-node:hover { border-color: var(--primary); background: var(--surface-hover); }
 .chain-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .chain-head strong { font-size: 14.5px; }
@@ -90,7 +91,7 @@ a.chain-node:hover { border-color: var(--primary); background: var(--surface-hov
 .chain-summary { font-size: 10.5px; color: var(--muted); line-height: 1.5; }
 .chain-node .layer-capabilities { display: flex; flex-wrap: wrap; gap: 4px; }
 .chain-node .layer-capabilities span { padding: 2px 8px; border-radius: 999px; background: var(--soft); font-size: 9.5px; color: var(--muted); white-space: nowrap; }
-.chain-node .line-field { width: 100%; height: 62px; }
+.chain-node .line-field { width: 100%; height: 46px; flex: none; }
 .chain-foot { display: flex; justify-content: space-between; align-items: center; font-size: 10.5px; color: var(--subtle); }
 .chain-embedded { margin-top: 2px; padding: 8px 10px; border: 1px dashed var(--line-strong); border-radius: 10px; display: flex; flex-direction: column; gap: 2px; }
 .chain-embedded b { font-size: 11px; }
