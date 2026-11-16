@@ -1,0 +1,79 @@
+ABD-FOC 私有构建与固件交付设计
+
+当前状态
+已提供独立构建服务入口 workbench/build-server.mjs，复用同一套配置校验和生成器。客户端提交一次配置 JSON，服务器自动检查、生成、编译，再直接返回 HEX 文件；不要求先调用检查接口或查询任务状态。
+网页“检查并构建”先做本地配置检查，再调用同一实现挂载的 /api/v1/build。它接收返回的 HEX 文件，核对配置指纹、长度和 SHA-256，并提供下载；请求期间配置已改变时不会应用返回的 HEX 文件。
+完整固件的平台装配仍未完成：当前真实 NEO 后端返回 CONFIGURATION_REJECTED，不能输出可烧录镜像。模块静态库不会当作 BIN 交付。HEX 交付成功路径通过注入构建后端和人工字节文件验证，并不代表实机固件通过测试。
+签名加密服务与设备 Bootloader 尚未接入，开启加密明确返回 ENCRYPTION_NOT_IMPLEMENTED，没有明文回退。独立入口尚未部署到远端服务器。
+
+单请求接口
+POST /v1/build
+Authorization: Bearer <服务端分配的凭据>
+Content-Type: application/json
+
+请求体直接使用控制台导出的配置 JSON，不使用 { project: ... } 包装。不上传源码，不接受输出目录或可执行文件路径。上限为 2 MiB。
+同一份配置快照依次经过格式校验、权限检查、模块和参数校验、目标适配检查、生成、编译、镜像核对与 HEX 导出。客户端检查不能跳过服务端检查。
+当前是单构建实例：繁忙时返回 429 和 Retry-After，客户端不自动重试。断开请求会在阶段边界停止后续工作；已经启动的工具进程尚不支持中途终止。队列、并行隔离和跨实例调度留待部署阶段加入。
+
+成功响应
+HTTP 200，Content-Type: application/octet-stream，正文直接为 Intel HEX 文件内容，文件名为 firmware-<buildId>.hex。
+响应头包含 X-Build-Id、X-Configuration-Fingerprint、X-Firmware-SHA256、X-Firmware-Format: intel-hex 和 Content-Disposition。
+关闭加密时直接返回一个 HEX；STM32H745 的 M7 / M4 镜像合并在同一文件内，各自保留链接/烧录地址。采用 32 位扩展线性地址记录、数据记录与一个结束记录；跨 64 KiB 自动切换地址，不填充镜像间的空隙。
+HEX 中只有地址、机器码和记录校验，不包含源码、ELF、MAP、符号表、原始日志或服务器路径。三层版本、内核来源、原始镜像长度和哈希保存在服务端构建记录，配置指纹和最终 HEX 的 SHA-256 通过响应头返回。
+交付前核对完整固件标志、目标 MCU、配置指纹、内核数量、产物目录、文件长度和哈希、可执行 Flash 范围，并拒绝与校准/参数/日志扇区或另一个镜像重叠的镜像。
+HEX 自带地址，可由 J-Link Commander 的 loadfile 命令装载；仍需要选择实际芯片和调试接口。当前未连接设备验证烧录。开启加密时使用未来的 Bootloader 升级包，不把加密字节伪装成可直接烧录的 HEX。
+
+失败响应
+Content-Type: application/json；正文结构如下：
+{
+  "requestId": "请求编号",
+  "fingerprint": "配置指纹（解析完成后才有）",
+  "error": { "code": "CONFIGURATION_REJECTED", "stage": "validation", "message": "构建检查未通过" },
+  "issues": [{ "level": "error", "moduleId": "foc-current", "paramKey": "bandwidthHz", "path": "instances.foc-current.parameters.bandwidthHz", "message": "参数需要调整" }]
+}
+400 为配置格式错误，401 为未认证，403 为发布权限不满足，413 为请求过大，415 为内容类型错误，422 为配置/适配或镜像核对未通过，429 为服务繁忙，500 为内部构建失败，501 为加密流程尚未实现。
+已整理的检查问题可定位模块/字段；未知生成或编译异常只返回阶段和请求编号，详细日志留在服务端。
+
+本地启动独立服务
+npm run start:build-service
+必须通过 BUILD_SERVICE_TOKEN 提供至少 32 个字符的凭据。BUILD_SERVICE_PORT 默认 4320，BUILD_SERVICE_OUTPUT 默认 .workbench-local/private-builds。服务仅监听 127.0.0.1，正式服务器的认证、TLS 入口与隔离部署需要另行配置。
+BUILD_SERVICE_ENVIRONMENT 默认 production，BUILD_SERVICE_ROLE 默认 end-user。本人开发明文包时，服务端设置 development / developer；这两个值不能由配置 JSON 指定。
+独立服务仅暴露 POST /v1/build，不挂载工作台静态资源、本地 session/jobs、源码、通用产物下载或设备调试接口。私有执行记录写入 BUILD_SERVICE_OUTPUT/requests/。
+现有工作台端口的 /api/v1/build 受同源和会话令牌限制。旁边保留的源码预览、构建日志和 J-Link 接口只用于本机开发，不能将整个工作台服务当作公开构建服务部署。
+
+部署边界
+使用者工作台 --配置 JSON--> 构建入口 --> 私有生成器/编译器 --> 镜像核对/发布
+使用者工作台 <--HEX（开发）/加密包（生产）或结构化诊断-------------------------------+
+生产发布包经本地传输桥交给设备 Bootloader，设备完成验签、解密与安装。电脑不持有设备解密密钥。
+
+权限与开关
+开发者可关闭加密并使用明文 BIN、J-Link 和完整调试资料。
+面向使用者的生产交付强制加密；服务器从已认证身份判定权限，不相信网页传来的角色或加密开关。
+明文调试输出与生产发布包使用不同存储和下载路径。现有直接 J-Link 烧录只接收明文镜像，加密包必须经过新的 Bootloader 升级通道。
+加密开关不控制优化等级；关闭加密也不意味着生产升级可以跳过签名验证。
+
+公开与私有数据
+公开接口只交付 HEX 或加密包、必要元数据或已整理的诊断。
+源码、生成器、私有参数映射、ELF/MAP、符号表、原始日志、服务器路径和签名/加密密钥留在服务器。
+当前 source 预览、通用 artifact 下载、完整 manifest、session/status 路径等仅属于本机开发接口，生产服务必须使用独立白名单输出，不能靠网页隐藏按钮实现隔离。
+网页现有 NEO 预置文件还含内部来源参数，正式公开部署前需将公开型号配置与私有实现映射继续拆分。
+
+发布包约束
+签名清单绑定硬件型号、发布序号、三层版本组合、两核镜像身份、长度、哈希和安装区域。
+M7、M4 必须作为一个可验证的发布组合提交，不允许掉电后启动未配套的双核镜像。
+Bootloader 在可信初始化环节写入验证公钥和解密所需密钥材料；工作台与本地传输桥不获得设备解密密钥。
+具体密钥层级、加密算法、设备身份、回滚策略、暂存空间、断电恢复及制造写入流程需与 Bootloader 一起确定，不能用占位密钥或自定义异或替代。
+
+STM32H745 边界
+H745 为 Cortex-M7/M4，不能按带 TrustZone 的 Cortex-M33 平台套用安全升级。
+常规内部 Flash 执行方案会在设备内安装可执行镜像；下载包加密不等于运行 Flash 始终为密文。
+正式交付的代码保密还涉及芯片访问保护；保持任意 SWD 内存读取与保密交付有冲突。研发调试和使用者遥测应采用不同权限。
+现有三层扇区布局没有预留完整 Bootloader/升级暂存与提交机制，接入前须重新验证 Flash 分配。工作台不会自动修改保护选项字节。
+
+官方依据
+Intel HEX 格式：https://www.keil.com/support/docs/1584/default.htm
+J-Link LoadFile：https://kb.segger.com/J-Link_Commander#LoadFile
+STM32H745II 器件规格：https://www.st.com/en/microcontrollers-microprocessors/stm32h745ii.html
+AN5056 双核安全启动集成：https://www.st.com/resource/en/application_note/an5056-integration-guide-for-the-xcubesbsfu-stm32cube-expansion-package-stmicroelectronics.pdf
+ST Secure Boot / Secure Firmware Update：https://wiki.st.com/stm32mcu/wiki/Security:Introduction_to_Secure_boot_and_Secure_firmware_update
+RM0399：https://www.st.com/resource/en/reference_manual/rm0399-stm32h745755-and-stm32h747757-advanced-armbased-32bit-mcus-stmicroelectronics.pdf

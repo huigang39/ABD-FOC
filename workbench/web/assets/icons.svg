@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <symbol id="overview" viewBox="0 0 24 24"><path d="m12 3 9 4.5-9 4.5-9-4.5L12 3Zm-9 9 9 4.5 9-4.5M3 16.5l9 4.5 9-4.5"/></symbol>
+  <symbol id="guide" viewBox="0 0 24 24"><circle cx="5" cy="5" r="2"/><circle cx="19" cy="19" r="2"/><path d="M7 5h9a4 4 0 0 1 0 8H8a3 3 0 0 0 0 6h9M16 2l3 3-3 3"/></symbol>
+  <symbol id="shelf" viewBox="0 0 24 24"><path d="M3 3v18M21 3v18M3 11h18M3 20h18"/><rect x="6" y="4" width="5" height="7" rx="1"/><rect x="14" y="6" width="4" height="5" rx="1"/><rect x="7" y="14" width="10" height="6" rx="1"/></symbol>
+  <symbol id="versions" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M6 7v10M18 7v3a4 4 0 0 1-4 4h-4a4 4 0 0 0-4 3"/></symbol>
+  <symbol id="link" viewBox="0 0 24 24"><path d="M3 8h18m-4-4 4 4-4 4M21 16H3m4-4-4 4 4 4"/></symbol>
+  <symbol id="check" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="m8 8 1.5 1.5L12 7m-4 9 1.5 1.5L12 15m3-6h2m-2 8h2"/></symbol>
+  <symbol id="build" viewBox="0 0 24 24"><path d="m14 4 3-2 5 5-2 3-3-1-8 8-2 4-4-4 4-2 8-8-1-3Z"/></symbol>
+  <symbol id="wave" viewBox="0 0 24 24"><path d="M3 3v18h18M5 12h3l2-6 4 12 2-6h5"/></symbol>
+  <symbol id="play" viewBox="0 0 24 24"><path d="m8 4 12 8-12 8V4Z"/></symbol>
+  <symbol id="pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol>
+  <symbol id="settings" viewBox="0 0 24 24"><path d="M3 6h4m6 0h8M3 12h10m6 0h2M3 18h2m6 0h10"/><circle cx="10" cy="6" r="3"/><circle cx="16" cy="12" r="3"/><circle cx="8" cy="18" r="3"/></symbol>
+  <symbol id="folder" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h4l3 3h7a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Zm0 2h18"/></symbol>
+  <symbol id="import" viewBox="0 0 24 24"><path d="M12 3v12m-4-4 4 4 4-4M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></symbol>
+  <symbol id="export" viewBox="0 0 24 24"><path d="M12 15V3m-4 4 4-4 4 4M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></symbol>
+  <symbol id="save" viewBox="0 0 24 24"><path d="M5 3h12l4 4v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2ZM7 3v6h9V3M7 21v-8h10v8"/></symbol>
+  <symbol id="chip" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9" y="9" width="6" height="6" rx="1"/><path d="M9 3v3m6-3v3M9 18v3m6-3v3M3 9h3m-3 6h3m12-6h3m-3 6h3"/></symbol>
+  <!-- Equal-amplitude phases: y = 12 - 6 sin(2π(x - 2)/20 + phase), phase = 0°, 120°, 240°. -->
+  <symbol id="algorithm" viewBox="0 0 24 24" fill="none" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 12C3.111 9.906 4.222 7.851 5.333 6.804C6.444 5.757 7.556 5.757 8.667 6.804C9.778 7.851 10.889 9.906 12 12C13.111 14.094 14.222 16.149 15.333 17.196C16.444 18.243 17.556 18.243 18.667 17.196C19.778 16.149 20.889 14.094 22 12"/>
+    <path d="M2 6.804C3.111 7.851 4.222 9.906 5.333 12C6.444 14.094 7.556 16.149 8.667 17.196C9.778 18.243 10.889 18.243 12 17.196C13.111 16.149 14.222 14.094 15.333 12C16.444 9.906 17.556 7.851 18.667 6.804C19.778 5.757 20.889 5.757 22 6.804" opacity=".85"/>
+    <path d="M2 17.196C3.111 18.243 4.222 18.243 5.333 17.196C6.444 16.149 7.556 14.094 8.667 12C9.778 9.906 10.889 7.851 12 6.804C13.111 5.757 14.222 5.757 15.333 6.804C16.444 7.851 17.556 9.906 18.667 12C19.778 14.094 20.889 16.149 22 17.196" opacity=".7"/>
+  </symbol>
+  <symbol id="application" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 17.5h7M17.5 14v7"/></symbol>
+  <symbol id="clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></symbol>
+  <symbol id="target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></symbol>
+  <symbol id="shield" viewBox="0 0 24 24"><path d="m12 3 8 3v6c0 4-3.5 7.5-8 9-4.5-1.5-8-5-8-9V6l8-3Zm-4 9 3 3 5-6"/></symbol>
+  <symbol id="cycle" viewBox="0 0 24 24"><path d="M20 9a8 8 0 0 0-14-3L3 9m0-6v6h6M4 15a8 8 0 0 0 14 3l3-3m0 6v-6h-6"/></symbol>
+  <symbol id="rotor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/><path d="M12 3v4m9 5h-4m-5 9v-4m-9-5h4m6.5-1.5L17 7"/></symbol>
+  <symbol id="eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="current" viewBox="0 0 24 24"><path d="M2 12h3c2-9 5-9 7 0s5 9 7 0h3M12 3v2m0 14v2"/></symbol>
+  <symbol id="axes" viewBox="0 0 24 24"><path d="M5 3v16h16M2 6l3-3 3 3m10 10 3 3-3 3M5 19 18 6m-5 0h5v5"/></symbol>
+  <symbol id="board" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="6" height="6" rx="1"/><path d="M13 10h4V3M10 13v4H3m10 0h4v4M7 7V3m-4 7h4"/></symbol>
+  <symbol id="pulse" viewBox="0 0 24 24"><path d="M2 17h4V7h6v10h6V7h4M2 21h20"/></symbol>
+  <symbol id="services" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="6" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/><path d="M7 7h.01M7 17h.01M12 7h5m-5 10h5M12 10v4"/></symbol>
+  <symbol id="grip" viewBox="0 0 24 24"><path d="M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01" stroke-width="3"/></symbol>
+  <symbol id="plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></symbol>
+  <symbol id="arrow-right" viewBox="0 0 24 24"><path d="M4 12h16m-6-6 6 6-6 6"/></symbol>
+  <symbol id="close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+  <symbol id="box" viewBox="0 0 24 24"><path d="m12 3 9 5v8l-9 5-9-5V8l9-5ZM3 8l9 5 9-5M12 13v8M7.5 5.5l9 5V15"/></symbol>
+  <symbol id="edit" viewBox="0 0 24 24"><path d="m15 4 5 5M4 20l5-1L21 7a2 2 0 0 0 0-3l-1-1a2 2 0 0 0-3 0L5 15l-1 5Z"/></symbol>
+  <symbol id="copy" viewBox="0 0 24 24"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></symbol>
+  <symbol id="trash" viewBox="0 0 24 24"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/></symbol>
+  <symbol id="motor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><path d="M12 2v6m0 8v6M2 12h6m8 0h6M5 5l4 4m6 6 4 4M5 19l4-4m6-6 4-4"/></symbol>
+  <symbol id="notebook" viewBox="0 0 24 24"><rect x="5" y="3" width="15" height="18" rx="2"/><path d="M9 3v18M3 7h4M3 12h4M3 17h4M12 8h5M12 12h5M12 16h3"/></symbol>
+</svg>

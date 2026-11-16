@@ -1,0 +1,42 @@
+/** Module boundary. Each chain owns the estimator/extractor state described in view.mjs. */
+const field=(role,name,type,unit,meaning,count=1)=>({id:`foc-observer-${role}-${name}`,name,type,unit,meaning,count});
+const schema=(role,name,items)=>({name,rate:'fast',fields:items.map(args=>field(role,...args))});
+export const CONTRACTS = {
+ input:schema('input','ObserverInput',[
+  ['encoder_motor_angle','f32','rad','电机侧编码器机械角度'],
+  ['encoder_output_angle','f32','rad','出轴侧编码器机械角度'],
+  ['measured_angle','f32','rad','已通过校准与极对数换算的电角度'],
+  ['encoder_motor_time_us','u32','μs','电机侧编码器测量时间戳'],
+  ['encoder_output_time_us','u32','μs','出轴侧编码器测量时间戳'],
+  ['encoder_motor_valid','bool','','电机侧机械角度有效'],
+  ['encoder_output_valid','bool','','出轴侧机械角度有效'],
+  ['valid','bool','','已换算电角度有效，不代表其他输入有效'],
+  ['current_alpha_beta','f32','A','本周期静止坐标电流',2],
+  ['applied_voltage_alpha_beta','f32','V','对应采样区间的已生效电压',2],
+  ['electrical_input_valid','bool','','电流与已生效电压数据均有效且时间对齐'],
+  ['voltage_interval_us','u32','μs','已生效电压对应区间的起止时间戳',2],
+  ['motor_velocity','f32','rad/s','电机侧机械速度，供机械状态观测'],
+  ['electromagnetic_torque','f32','N·m','实际电流对应的电磁转矩，不是转矩给定'],
+  ['mechanical_input_valid','bool','','机械速度及转矩估计有效'],
+  ['sample_time_us','u32','μs','采样时间戳'],['dt','f32','s','电流环控制周期'],['enable','bool','','观测模块运行开关'],
+ ]),
+ output:schema('output','ObserverOutput',[
+  ['angle','f32','rad','选定链路的转子电角度，不是机械绝对位置'],
+  ['motor_velocity','f32','rad/s','独立选择的电机侧机械速度'],
+  ['motor_angle','f32','rad','跟踪后的电机侧机械角度，与输入保持同一参考'],
+  ['output_angle','f32','rad','跟踪后的出轴侧机械角度，与输入保持同一参考'],
+  ['output_velocity','f32','rad/s','跟踪后的出轴侧机械速度'],
+  ['motor_angle_valid','bool','','电机侧机械角度结果有效'],
+  ['output_angle_valid','bool','','出轴侧机械角度结果有效'],
+  ['output_speed_valid','bool','','出轴侧机械速度结果有效'],
+  ['disturbance_torque','f32','N·m','包含负载、摩擦及模型误差的电机侧扰动估计'],
+  ['angle_valid','bool','','电角度结果有效'],['speed_valid','bool','','机械速度结果有效'],['torque_valid','bool','','扰动转矩结果有效'],
+  ['sample_time_us','u32','μs','电角度、电机侧速度、电机侧角度、出轴侧角度、出轴侧速度、扰动转矩各自的测量时间戳',6],
+  ['source_id','u8','','六类发布结果各自的来源，与时间戳顺序一致',6],
+ ]),
+ state:schema('state','ObserverState',[
+  ['chain_initialized','bool','','各链路初始化状态；内部估算状态由各自子模块持有',6],
+  ['valid_since_us','u32','μs','各链路连续有效的起始时间',6],
+  ['published_source','u8','','六类发布结果的来源与切换状态',6],
+ ]),
+};

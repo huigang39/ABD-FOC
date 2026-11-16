@@ -1,0 +1,3919 @@
+{
+  "schemaVersion": 2,
+  "id": "2cd30546-0c7a-41d6-867b-20f52eef5c6c",
+  "name": "NEO_75_H_GW_KW",
+  "revision": 1,
+  "updatedAt": "2026-11-15T05:29:30.140Z",
+  "target": {
+    "vendor": "st",
+    "mcu": "STM32H745IIK6",
+    "board": "NEO"
+  },
+  "instances": {
+    "app-runtime": {
+      "enabled": true,
+      "runtimeEnabled": true,
+      "parameters": {
+        "scheduler": "cooperative",
+        "hardwareProfile": "NEO_75_H_GW_KW",
+        "stateMachine": "cia402",
+        "cia402Modes": [
+          "pp",
+          "pv",
+          "pt",
+          "hm",
+          "csp",
+          "csv",
+          "cst",
+          "ppc",
+          "pvc",
+          "cspc",
+          "csvc",
+          "csc",
+          "pd",
+          "if",
+          "vf",
+          "asc"
+        ],
+        "cia402DefaultMode": "none"
+      }
+    },
+    "app-params": {
+      "enabled": true,
+      "runtimeEnabled": true,
+      "parameters": {
+        "motionCalibrationKiB": 128,
+        "parametersKiB": 128,
+        "runtimeRecordsKiB": 128,
+        "commitStrategy": "journal"
+      }
+    },
+    "app-comms": {
+      "enabled": true,
+      "runtimeEnabled": true,
+      "parameters": {
+        "bus": "ethercat",
+        "timeoutMs": null
+      }
+    },
+    "app-motion": {
+      "enabled": true,
+      "runtimeEnabled": true,
+      "parameters": {
+        "positionFeedback": "motor_reduction",
+        "supportedModes": [
+          "current",
+          "speed",
+          "position",
+          "impedance",
+          "torque_feedback",
+          "calibration"
+        ],
+        "activeMode": "unselected",
+        "commandSource": "communication",
+        "outerHz": 5000,
+        "currentLimitA": 33.234,
+        "profileVelocityRadS": 10000,
+        "profileAccelerationRadS2": 1,
+        "profileDecelerationRadS2": 1,
+        "profileTorqueSlopeNmS": 1,
+        "profilePositionWindowRad": 0.001,
+        "profileVelocityWindowRadS": 0.01,
+        "profileTorqueWindowNm": 0.01,
+        "profileTargetTimeMs": 20
+      }
+    },
+    "app-calibration": {
+      "enabled": true,
+      "runtimeEnabled": true,
+      "parameters": {
+        "procedures": [
+          "motor_encoder_nonlinear",
+          "output_encoder_nonlinear",
+          "electrical_zero"
+        ],
+        "enabledProcedures": [
+          "motor_encoder_nonlinear",
+          "output_encoder_nonlinear",
+          "electrical_zero"
+        ],
+        "maxCurrentA": 5,
+        "zeroSamples": 128
+      }
+    },
+    "app-safety": {
+      "enabled": true,
+      "runtimeEnabled": true,
+      "parameters": {
+        "faultAction": "disable"
+      }
+    },
+    "foc-lifecycle": {
+      "enabled": true,
+      "runtimeEnabled": true,
+      "parameters": {}
+    },
+    "foc-feedback": {
+      "enabled": true,
+      "runtimeEnabled": true,
+      "parameters": {
+        "angleSource": "encoder"
+      }
+    },
+    "foc-observer": {
+      "enabled": true,
+      "runtimeEnabled": true,
+      "parameters": {
+        "kind": "source_profile",
+        "startupStrategy": "unselected",
+        "pllBandwidthHz": null
+      }
+    },
+    "foc-current": {
+      "enabled": true,
+      "runtimeEnabled": true,
+      "parameters": {
+        "bandwidthHz": 1000.0000306883219,
+        "referenceTimeoutMs": null,
+        "maxCurrentA": 33.234,
+        "decoupling": false,
+        "kpD": null,
+        "kiD": null,
+        "kpQ": null,
+        "kiQ": null
+      }
+    },
+    "foc-modulation": {
+      "enabled": true,
+      "runtimeEnabled": true,
+      "parameters": {
+        "method": "svpwm",
+        "dutyMin": 0,
+        "dutyMax": 0.99
+      }
+    },
+    "foc-compensation": {
+      "enabled": true,
+      "runtimeEnabled": false,
+      "parameters": {
+        "frictionModel": "unselected",
+        "frictionSource": "unselected",
+        "viscousNmPerRadS": null,
+        "coulombNm": null,
+        "transitionRadS": null,
+        "maxCompensationNm": null
+      }
+    },
+    "hw-platform": {
+      "enabled": true,
+      "runtimeEnabled": true,
+      "parameters": {
+        "architecture": "arm",
+        "clockSource": "external",
+        "oscillatorHz": 25000000,
+        "busClockHz": 200000000,
+        "timerClockHz": 200000000,
+        "coreConfigs": {
+          "cm7": {
+            "clockHz": 400000000,
+            "systemTickHz": 1000,
+            "irqPriorityBits": 4,
+            "controlIrqPriority": 2,
+            "communicationIrqPriority": null,
+            "floatAbi": "hard",
+            "instructionCache": "enabled",
+            "dataCache": "enabled"
+          },
+          "cm4": {
+            "clockHz": 200000000,
+            "systemTickHz": 1000,
+            "irqPriorityBits": 4,
+            "controlIrqPriority": null,
+            "communicationIrqPriority": null,
+            "floatAbi": "hard",
+            "instructionCache": "disabled",
+            "dataCache": "disabled"
+          }
+        },
+        "flashKiB": 2048,
+        "eraseKiB": 128,
+        "firmwareReserveKiB": 896
+      }
+    },
+    "hw-board": {
+      "enabled": true,
+      "runtimeEnabled": true,
+      "parameters": {
+        "resources": [
+          {
+            "id": "HRTIM1",
+            "name": "三相功率输出",
+            "kind": "pwm",
+            "instance": "HRTIM1",
+            "pins": {
+              "A1": "PC6",
+              "A2": "PC7",
+              "B1": "PC8",
+              "B2": "PA8",
+              "C1": "PA9",
+              "C2": "PA10"
+            },
+            "settings": {
+              "alignment": "center",
+              "polarity": "high"
+            }
+          },
+          {
+            "id": "ADC1",
+            "name": "U 相电流 / W 相电压",
+            "kind": "adc",
+            "instance": "ADC1",
+            "pins": {
+              "INP0": "PA0_C",
+              "INP9": "PB0"
+            },
+            "settings": {
+              "sampleCycles": 1.5,
+              "trigger": "HRTIM1"
+            }
+          },
+          {
+            "id": "ADC2",
+            "name": "V 相电流 / V 相电压",
+            "kind": "adc",
+            "instance": "ADC2",
+            "pins": {
+              "INP1": "PA1_C",
+              "INP10": "PC0"
+            },
+            "settings": {
+              "sampleCycles": 1.5,
+              "trigger": "HRTIM1"
+            }
+          },
+          {
+            "id": "ADC3",
+            "name": "W 相电流 / U 相及母线电压",
+            "kind": "adc",
+            "instance": "ADC3",
+            "pins": {
+              "INP1": "PC3_C",
+              "INP8": "PF6",
+              "INP9": "PF4"
+            },
+            "settings": {
+              "sampleCycles": 1.5,
+              "trigger": "HRTIM1"
+            }
+          },
+          {
+            "id": "USART2",
+            "name": "双编码器接口",
+            "kind": "uart",
+            "instance": "USART2",
+            "pins": {
+              "TX": "PD5",
+              "RX": "PD6",
+              "DE": "PD4"
+            },
+            "settings": {
+              "bitrate": 6250000,
+              "physical": "rs485",
+              "parity": "none",
+              "stopBits": "1"
+            }
+          },
+          {
+            "id": "USART3",
+            "name": "力矩传感器接口",
+            "kind": "uart",
+            "instance": "USART3",
+            "pins": {
+              "TX": "PD8",
+              "RX": "PD9",
+              "DE": "PD12"
+            },
+            "settings": {
+              "bitrate": 256000,
+              "physical": "rs485",
+              "parity": "none",
+              "stopBits": "1"
+            }
+          },
+          {
+            "id": "DRV8353_NFAULT",
+            "name": "DRV8353 nFAULT",
+            "kind": "gpio",
+            "instance": "GPIO",
+            "pins": {
+              "IO": "PD1"
+            },
+            "settings": {
+              "direction": "input",
+              "pull": "up",
+              "initialLevel": "low"
+            }
+          }
+        ],
+        "currentTopology": "three_shunt",
+        "busVoltageV": null,
+        "currentGain": 0.025,
+        "pwmHz": 20000,
+        "currentLoopDivider": 1,
+        "adcBits": 14,
+        "adcClockHz": null,
+        "deadtimeNs": 500
+      }
+    },
+    "hw-sensors": {
+      "enabled": true,
+      "runtimeEnabled": true,
+      "parameters": {
+        "encoderCapability": "present",
+        "motorEncoderType": "absolute",
+        "motorEncoderVendor": "gongwang",
+        "motorEncoderHallMode": "unselected",
+        "motorEncoderModel": "GW 外圈",
+        "motorEncoderInterface": "uart",
+        "motorEncoderResource": "USART2",
+        "motorEncoderTransferMode": "request_response",
+        "motorEncoderRequestHex": "3B",
+        "motorEncoderStartHex": "",
+        "motorEncoderStartupDelayUs": 200000,
+        "motorEncoderHeaderHex": "3B",
+        "motorEncoderFooterHex": "",
+        "motorEncoderFrameBytes": 9,
+        "motorEncoderDataOffset": 1,
+        "motorEncoderDataType": "unsigned",
+        "motorEncoderDataBits": 24,
+        "motorEncoderByteOrder": "little",
+        "motorEncoderValueScale": 4.7936899621426287e-05,
+        "motorEncoderValueOffset": 0,
+        "motorEncoderChecksum": "xor8",
+        "motorEncoderChecksumStart": 0,
+        "motorEncoderStatusOffset": 7,
+        "motorEncoderStatusMask": 0,
+        "motorEncoderStatusExpected": 0,
+        "motorEncoderAngleDomain": "mechanical",
+        "encoderBits": 17,
+        "motorEncoderCountsPerRev": null,
+        "motorEncoderDirection": "calibration",
+        "motorEncoderTiming": "fast",
+        "motorEncoderRateHz": null,
+        "motorEncoderTimeoutUs": null,
+        "motorEncoderBitrate": 6250000,
+        "motorEncoderSinResource": "",
+        "motorEncoderCosResource": "",
+        "motorEncoderAmplitudeMin": null,
+        "motorEncoderAmplitudeMax": null,
+        "outputEncoderCapability": "present",
+        "outputEncoderType": "absolute",
+        "outputEncoderVendor": "gongwang",
+        "outputEncoderHallMode": "unselected",
+        "outputEncoderModel": "GW 内圈",
+        "outputEncoderInterface": "uart",
+        "outputEncoderResource": "USART2",
+        "outputEncoderTransferMode": "request_response",
+        "outputEncoderRequestHex": "3B",
+        "outputEncoderStartHex": "",
+        "outputEncoderStartupDelayUs": 200000,
+        "outputEncoderHeaderHex": "3B",
+        "outputEncoderFooterHex": "",
+        "outputEncoderFrameBytes": 9,
+        "outputEncoderDataOffset": 4,
+        "outputEncoderDataType": "unsigned",
+        "outputEncoderDataBits": 24,
+        "outputEncoderByteOrder": "little",
+        "outputEncoderValueScale": 1.1984224905356572e-05,
+        "outputEncoderValueOffset": 0,
+        "outputEncoderChecksum": "xor8",
+        "outputEncoderChecksumStart": 0,
+        "outputEncoderStatusOffset": 7,
+        "outputEncoderStatusMask": 0,
+        "outputEncoderStatusExpected": 0,
+        "outputEncoderAngleDomain": "mechanical",
+        "outputEncoderBits": 19,
+        "outputEncoderCountsPerRev": null,
+        "outputEncoderDirection": "calibration",
+        "outputEncoderTiming": "fast",
+        "outputEncoderRateHz": null,
+        "outputEncoderTimeoutUs": null,
+        "outputEncoderBitrate": 6250000,
+        "outputEncoderSinResource": "",
+        "outputEncoderCosResource": "",
+        "outputEncoderAmplitudeMin": null,
+        "outputEncoderAmplitudeMax": null,
+        "torqueCapability": "present",
+        "torqueSensorModel": "KW",
+        "torqueSensorInterface": "uart",
+        "torqueSensorResource": "USART3",
+        "torqueSensorTransferMode": "active_upload",
+        "torqueSensorRequestHex": "",
+        "torqueSensorStartHex": "48 AA 85 7F 14 D4",
+        "torqueSensorStartupDelayUs": 200000,
+        "torqueSensorHeaderHex": "48 AA",
+        "torqueSensorFooterHex": "",
+        "torqueSensorFrameBytes": 8,
+        "torqueSensorDataOffset": 2,
+        "torqueSensorDataType": "float32",
+        "torqueSensorDataBits": 32,
+        "torqueSensorByteOrder": "little",
+        "torqueSensorValueScale": 1,
+        "torqueSensorValueOffset": 0,
+        "torqueSensorChecksum": "crc16_modbus",
+        "torqueSensorChecksumStart": 0,
+        "torqueSensorStatusOffset": null,
+        "torqueSensorStatusMask": 0,
+        "torqueSensorStatusExpected": 0,
+        "torqueSensorUnit": "nm",
+        "torqueSensorRangeNm": null,
+        "torqueSensorScale": null,
+        "torqueSensorDirection": "calibration",
+        "torqueSensorTiming": "periodic",
+        "torqueSensorRateHz": 1000,
+        "torqueSensorTimeoutUs": null,
+        "torqueSensorBitrate": 256000,
+        "hallCapability": "unconfirmed"
+      }
+    },
+    "hw-safety": {
+      "enabled": true,
+      "runtimeEnabled": true,
+      "parameters": {
+        "hardwareTripCapability": "unconfirmed",
+        "tripPaths": [],
+        "resetOutputDisabled": true
+      }
+    }
+  },
+  "provenance": {
+    "app-runtime.scheduler": "example",
+    "app-runtime.hardwareProfile": "example",
+    "app-runtime.stateMachine": "example",
+    "app-runtime.cia402Modes": "example",
+    "app-runtime.cia402DefaultMode": "example",
+    "app-comms.bus": "example",
+    "app-motion.positionFeedback": "example",
+    "app-motion.supportedModes": "example",
+    "app-motion.commandSource": "example",
+    "app-motion.outerHz": "example",
+    "app-motion.currentLimitA": "example",
+    "app-params.motionCalibrationKiB": "example",
+    "app-params.parametersKiB": "example",
+    "app-params.runtimeRecordsKiB": "example",
+    "app-params.commitStrategy": "example",
+    "app-calibration.procedures": "example",
+    "app-calibration.enabledProcedures": "example",
+    "app-calibration.maxCurrentA": "example",
+    "foc-feedback.angleSource": "example",
+    "foc-observer.kind": "example",
+    "foc-current.bandwidthHz": "example",
+    "foc-current.maxCurrentA": "example",
+    "foc-modulation.method": "example",
+    "foc-modulation.dutyMin": "example",
+    "foc-modulation.dutyMax": "example",
+    "app-motion.profileVelocityRadS": "example",
+    "app-motion.profileAccelerationRadS2": "example",
+    "app-motion.profileDecelerationRadS2": "example",
+    "app-motion.profileTorqueSlopeNmS": "example",
+    "app-motion.profilePositionWindowRad": "example",
+    "app-motion.profileVelocityWindowRadS": "example",
+    "app-motion.profileTorqueWindowNm": "example",
+    "app-motion.profileTargetTimeMs": "example",
+    "hw-sensors.torqueSensorBitrate": "example",
+    "hw-platform.architecture": "example",
+    "hw-platform.clockSource": "example",
+    "hw-platform.oscillatorHz": "example",
+    "hw-platform.busClockHz": "example",
+    "hw-platform.timerClockHz": "example",
+    "hw-board.currentTopology": "example",
+    "hw-board.currentGain": "example",
+    "hw-sensors.encoderCapability": "example",
+    "hw-sensors.motorEncoderType": "example",
+    "hw-sensors.motorEncoderVendor": "example",
+    "hw-sensors.motorEncoderModel": "example",
+    "hw-sensors.motorEncoderInterface": "example",
+    "hw-sensors.motorEncoderResource": "example",
+    "hw-sensors.motorEncoderAngleDomain": "example",
+    "hw-sensors.motorEncoderBitrate": "example",
+    "hw-sensors.motorEncoderTiming": "example",
+    "hw-sensors.outputEncoderCapability": "example",
+    "hw-sensors.outputEncoderType": "example",
+    "hw-sensors.outputEncoderVendor": "example",
+    "hw-sensors.outputEncoderModel": "example",
+    "hw-sensors.outputEncoderInterface": "example",
+    "hw-sensors.outputEncoderResource": "example",
+    "hw-sensors.outputEncoderAngleDomain": "example",
+    "hw-sensors.outputEncoderBitrate": "example",
+    "hw-sensors.outputEncoderTiming": "example",
+    "hw-sensors.torqueCapability": "example",
+    "hw-sensors.torqueSensorModel": "example",
+    "hw-sensors.torqueSensorInterface": "example",
+    "hw-sensors.torqueSensorResource": "example",
+    "hw-sensors.torqueSensorUnit": "example",
+    "hw-sensors.torqueSensorTiming": "example",
+    "hw-sensors.torqueSensorRateHz": "example",
+    "hw-board.resources": "example",
+    "hw-board.busVoltageV": "user",
+    "hw-sensors.motorEncoderHallMode": "user",
+    "hw-sensors.encoderBits": "user",
+    "hw-sensors.motorEncoderCountsPerRev": "user",
+    "hw-sensors.motorEncoderDirection": "user",
+    "hw-sensors.motorEncoderRateHz": "user",
+    "hw-sensors.motorEncoderTimeoutUs": "user",
+    "hw-sensors.motorEncoderSinResource": "user",
+    "hw-sensors.motorEncoderCosResource": "user",
+    "hw-sensors.motorEncoderAmplitudeMin": "user",
+    "hw-sensors.motorEncoderAmplitudeMax": "user",
+    "hw-sensors.outputEncoderHallMode": "user",
+    "hw-sensors.outputEncoderBits": "user",
+    "hw-sensors.outputEncoderCountsPerRev": "user",
+    "hw-sensors.outputEncoderDirection": "user",
+    "hw-sensors.outputEncoderRateHz": "user",
+    "hw-sensors.outputEncoderTimeoutUs": "user",
+    "hw-sensors.outputEncoderSinResource": "user",
+    "hw-sensors.outputEncoderCosResource": "user",
+    "hw-sensors.outputEncoderAmplitudeMin": "user",
+    "hw-sensors.outputEncoderAmplitudeMax": "user",
+    "hw-sensors.torqueSensorRangeNm": "user",
+    "hw-sensors.torqueSensorScale": "user",
+    "hw-sensors.torqueSensorDirection": "user",
+    "hw-sensors.torqueSensorTimeoutUs": "user",
+    "hw-sensors.hallCapability": "user",
+    "hw-safety.hardwareTripCapability": "user",
+    "hw-safety.tripPaths": "user",
+    "hw-safety.resetOutputDisabled": "user",
+    "hw-board.pwmHz": "example",
+    "hw-board.deadtimeNs": "example",
+    "hw-board.currentLoopDivider": "example",
+    "hw-board.adcBits": "example",
+    "hw-platform.flashKiB": "example",
+    "hw-platform.eraseKiB": "example",
+    "hw-platform.firmwareReserveKiB": "example",
+    "hw-board.adcClockHz": "user"
+  },
+  "performance": {
+    "records": []
+  },
+  "build": {
+    "compiler": "gcc",
+    "version": "",
+    "optimization": "Os",
+    "lto": false,
+    "encryptFirmware": false,
+    "moduleOptimizations": {}
+  },
+  "design": {
+    "structures": [
+      {
+        "id": "sample-frame",
+        "name": "SampleFrame",
+        "owner": "hw-board",
+        "consumers": [
+          "foc-feedback",
+          "foc-current"
+        ],
+        "rate": "fast",
+        "description": "统一时序域交付的采样快照提案；有效通道与布局需按采样拓扑调整。电机侧角度与输出轴角度分别表达。",
+        "fields": [
+          {
+            "id": "sample-frame-sequence",
+            "name": "sequence",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "采样序号，检测重复或丢失"
+          },
+          {
+            "id": "sample-frame-sample_time_us",
+            "name": "sample_time_us",
+            "type": "u32",
+            "count": 1,
+            "unit": "us",
+            "meaning": "采样时刻；时基、回绕处理待实现"
+          },
+          {
+            "id": "sample-frame-phase_current",
+            "name": "phase_current",
+            "type": "f32",
+            "count": 3,
+            "unit": "A",
+            "meaning": "相电流提案；拓扑可能需要先重构"
+          },
+          {
+            "id": "sample-frame-bus_voltage",
+            "name": "bus_voltage",
+            "type": "f32",
+            "count": 1,
+            "unit": "V",
+            "meaning": "对应采样的母线电压"
+          },
+          {
+            "id": "sample-frame-motor_angle",
+            "name": "motor_angle",
+            "type": "f32",
+            "count": 1,
+            "unit": "rad",
+            "meaning": "电机侧机械角；无传感器时通过有效标志声明缺失"
+          },
+          {
+            "id": "sample-frame-output_angle",
+            "name": "output_angle",
+            "type": "f32",
+            "count": 1,
+            "unit": "rad",
+            "meaning": "输出侧角度；不能替代电机侧电角度"
+          },
+          {
+            "id": "sample-frame-valid_flags",
+            "name": "valid_flags",
+            "type": "u16",
+            "count": 1,
+            "unit": "",
+            "meaning": "通道有效性；位定义待设计"
+          }
+        ]
+      },
+      {
+        "id": "drive-feedback",
+        "name": "DriveFeedback",
+        "owner": "hw-board",
+        "consumers": [
+          "foc-feedback",
+          "foc-observer",
+          "foc-current"
+        ],
+        "rate": "fast",
+        "description": "记录实际已生效的 PWM 与门极状态。记录来自定时器生效结果，不能回传尚未锁存的下一周期给定，也不等于实测端电压。",
+        "fields": [
+          {
+            "id": "drive-feedback-applied_sequence",
+            "name": "applied_sequence",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "已生效更新的序号"
+          },
+          {
+            "id": "drive-feedback-applied_time_us",
+            "name": "applied_time_us",
+            "type": "u32",
+            "count": 1,
+            "unit": "us",
+            "meaning": "本组输出生效时刻"
+          },
+          {
+            "id": "drive-feedback-duty",
+            "name": "duty",
+            "type": "f32",
+            "count": 3,
+            "unit": "",
+            "meaning": "实际锁存的三相占空比"
+          },
+          {
+            "id": "drive-feedback-gate_enabled",
+            "name": "gate_enabled",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "实际门极许可状态"
+          },
+          {
+            "id": "drive-feedback-bus_voltage",
+            "name": "bus_voltage",
+            "type": "f32",
+            "count": 1,
+            "unit": "V",
+            "meaning": "输出期间对应母线电压"
+          },
+          {
+            "id": "drive-feedback-valid",
+            "name": "valid",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "输出历史是否可信"
+          }
+        ]
+      },
+      {
+        "id": "observer-input",
+        "name": "ObserverSamples",
+        "owner": "foc-feedback",
+        "consumers": [
+          "foc-observer"
+        ],
+        "rate": "fast",
+        "description": "电压/电流模型观测器的输入提案，按所选算法裁剪，并非所有观测器的必需字段。电压必须对应实际已生效输出与采样时间；可由有效 PWM、母线和门极状态估算，不能使用待发送的电压指令。",
+        "fields": [
+          {
+            "id": "observer-input-sample_sequence",
+            "name": "sample_sequence",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "对应电流样本序号"
+          },
+          {
+            "id": "observer-input-sample_time_us",
+            "name": "sample_time_us",
+            "type": "u32",
+            "count": 1,
+            "unit": "us",
+            "meaning": "对应电流采样时刻"
+          },
+          {
+            "id": "observer-input-current_ab",
+            "name": "current_ab",
+            "type": "f32",
+            "count": 2,
+            "unit": "A",
+            "meaning": "静止坐标系电流"
+          },
+          {
+            "id": "observer-input-applied_voltage_ab",
+            "name": "applied_voltage_ab",
+            "type": "f32",
+            "count": 2,
+            "unit": "V",
+            "meaning": "与样本时间对齐的已生效电压估计；非未来指令"
+          },
+          {
+            "id": "observer-input-applied_sequence",
+            "name": "applied_sequence",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "关联输出历史记录"
+          },
+          {
+            "id": "observer-input-voltage_time_us",
+            "name": "voltage_time_us",
+            "type": "u32",
+            "count": 1,
+            "unit": "us",
+            "meaning": "电压估计对应输出时间，明确采样/计算延迟"
+          },
+          {
+            "id": "observer-input-dt",
+            "name": "dt",
+            "type": "f32",
+            "count": 1,
+            "unit": "s",
+            "meaning": "真实更新间隔"
+          },
+          {
+            "id": "observer-input-valid",
+            "name": "valid",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "输入时间与通道有效性"
+          }
+        ]
+      },
+      {
+        "id": "observer-state",
+        "name": "ObserverEstimate",
+        "owner": "foc-observer",
+        "consumers": [
+          "foc-feedback",
+          "app-motion"
+        ],
+        "rate": "fast",
+        "description": "统一估算状态提案；置信度与锁定判据按算法定义，失效时不能静默继续使用旧角度。",
+        "fields": [
+          {
+            "id": "observer-state-sequence",
+            "name": "sequence",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "估算对应的样本序号"
+          },
+          {
+            "id": "observer-state-electrical_angle",
+            "name": "electrical_angle",
+            "type": "f32",
+            "count": 1,
+            "unit": "rad",
+            "meaning": "估算电角度，定义旋转正方向"
+          },
+          {
+            "id": "observer-state-electrical_speed",
+            "name": "electrical_speed",
+            "type": "f32",
+            "count": 1,
+            "unit": "rad/s",
+            "meaning": "估算电角速度"
+          },
+          {
+            "id": "observer-state-confidence",
+            "name": "confidence",
+            "type": "f32",
+            "count": 1,
+            "unit": "",
+            "meaning": "算法定义的质量指标"
+          },
+          {
+            "id": "observer-state-valid",
+            "name": "valid",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "是否满足当前运行模式使用条件"
+          }
+        ]
+      },
+      {
+        "id": "control-ref",
+        "name": "ControlRef",
+        "owner": "app-motion",
+        "consumers": [
+          "foc-lifecycle",
+          "foc-current"
+        ],
+        "rate": "control",
+        "description": "应用命令仲裁后的统一给定提案；正常控制与校准互斥，所有来源共用限值与有效期。",
+        "fields": [
+          {
+            "id": "control-ref-sequence",
+            "name": "sequence",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "给定序号"
+          },
+          {
+            "id": "control-ref-valid_until_us",
+            "name": "valid_until_us",
+            "type": "u32",
+            "count": 1,
+            "unit": "us",
+            "meaning": "有效截止时刻，需约定时基与回绕"
+          },
+          {
+            "id": "control-ref-id_ref",
+            "name": "id_ref",
+            "type": "f32",
+            "count": 1,
+            "unit": "A",
+            "meaning": "d 轴电流给定"
+          },
+          {
+            "id": "control-ref-iq_ref",
+            "name": "iq_ref",
+            "type": "f32",
+            "count": 1,
+            "unit": "A",
+            "meaning": "q 轴电流给定"
+          },
+          {
+            "id": "control-ref-current_limit",
+            "name": "current_limit",
+            "type": "f32",
+            "count": 1,
+            "unit": "A",
+            "meaning": "应用动态限值，不覆盖电流环独立保护"
+          },
+          {
+            "id": "control-ref-mode",
+            "name": "mode",
+            "type": "u8",
+            "count": 1,
+            "unit": "",
+            "meaning": "运行/受限校准等模式枚举待定义"
+          }
+        ]
+      },
+      {
+        "id": "control-status",
+        "name": "ControlStatus",
+        "owner": "foc-lifecycle",
+        "consumers": [
+          "app-motion",
+          "app-safety",
+          "app-comms"
+        ],
+        "rate": "control",
+        "description": "算法层向应用发布的一致性快照；不要求算法读取应用内部状态。",
+        "fields": [
+          {
+            "id": "control-status-sequence",
+            "name": "sequence",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "快照序号"
+          },
+          {
+            "id": "control-status-state",
+            "name": "state",
+            "type": "u8",
+            "count": 1,
+            "unit": "",
+            "meaning": "生命周期状态枚举待定义"
+          },
+          {
+            "id": "control-status-id_measured",
+            "name": "id_measured",
+            "type": "f32",
+            "count": 1,
+            "unit": "A",
+            "meaning": "d 轴反馈"
+          },
+          {
+            "id": "control-status-iq_measured",
+            "name": "iq_measured",
+            "type": "f32",
+            "count": 1,
+            "unit": "A",
+            "meaning": "q 轴反馈"
+          },
+          {
+            "id": "control-status-motor_speed",
+            "name": "motor_speed",
+            "type": "f32",
+            "count": 1,
+            "unit": "rad/s",
+            "meaning": "电机侧机械角速度"
+          },
+          {
+            "id": "control-status-fault_flags",
+            "name": "fault_flags",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "当前故障摘要，详细记录独立上报"
+          }
+        ]
+      },
+      {
+        "id": "fault-event",
+        "name": "FaultEvent",
+        "owner": "app-safety",
+        "consumers": [
+          "app-params",
+          "app-comms"
+        ],
+        "rate": "event",
+        "description": "聚合故障记录提案；硬件关断先执行，日志和上报异步完成，不能让 Flash 写入阻塞电流环。",
+        "fields": [
+          {
+            "id": "fault-event-code",
+            "name": "code",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "对应错误码表"
+          },
+          {
+            "id": "fault-event-time_us",
+            "name": "time_us",
+            "type": "u32",
+            "count": 1,
+            "unit": "us",
+            "meaning": "故障时刻，时基待约定"
+          },
+          {
+            "id": "fault-event-severity",
+            "name": "severity",
+            "type": "u8",
+            "count": 1,
+            "unit": "",
+            "meaning": "等级编码待定义"
+          },
+          {
+            "id": "fault-event-latched",
+            "name": "latched",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "是否保持故障锁存"
+          }
+        ]
+      },
+      {
+        "id": "app-runtime-input",
+        "name": "SchedulerInput",
+        "owner": "app-runtime",
+        "consumers": [],
+        "description": "调度与状态的输入结构。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "app-runtime-input-now_us",
+            "name": "now_us",
+            "type": "u32",
+            "count": 1,
+            "unit": "us",
+            "meaning": "任务调度时间"
+          },
+          {
+            "id": "app-runtime-input-enable_request",
+            "name": "enable_request",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "运行请求"
+          },
+          {
+            "id": "app-runtime-input-ready",
+            "name": "ready",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "配置、校准和平台都已就绪"
+          },
+          {
+            "id": "app-runtime-input-fault",
+            "name": "fault",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "任意活动故障"
+          },
+          {
+            "id": "app-runtime-input-reset_request",
+            "name": "reset_request",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "显式故障复位"
+          }
+        ]
+      },
+      {
+        "id": "app-runtime-output",
+        "name": "SchedulerOutput",
+        "owner": "app-runtime",
+        "consumers": [],
+        "description": "调度与状态的输出结构。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "app-runtime-output-release_mask",
+            "name": "release_mask",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "本次释放的任务位图，按优先级依次处理"
+          },
+          {
+            "id": "app-runtime-output-run_permitted",
+            "name": "run_permitted",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "应用运行许可"
+          },
+          {
+            "id": "app-runtime-output-fault_latched",
+            "name": "fault_latched",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "应用故障锁存"
+          }
+        ]
+      },
+      {
+        "id": "app-runtime-state",
+        "name": "SchedulerState",
+        "owner": "app-runtime",
+        "consumers": [],
+        "description": "调度与状态的状态结构，仅供本模块内部使用。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "app-runtime-state-next_release_us",
+            "name": "next_release_us",
+            "type": "u32",
+            "count": 16,
+            "unit": "us",
+            "meaning": "各任务下一次释放时间"
+          },
+          {
+            "id": "app-runtime-state-missed_deadlines",
+            "name": "missed_deadlines",
+            "type": "u32",
+            "count": 16,
+            "unit": "",
+            "meaning": "各任务错过周期的累计次数"
+          },
+          {
+            "id": "app-runtime-state-initialized",
+            "name": "initialized",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "任务时间表已经初始化"
+          },
+          {
+            "id": "app-runtime-state-fault_latched",
+            "name": "fault_latched",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "应用锁存故障"
+          }
+        ]
+      },
+      {
+        "id": "app-params-input",
+        "name": "RecordsInput",
+        "owner": "app-params",
+        "consumers": [],
+        "description": "参数管理的输入结构。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "app-params-input-sequence",
+            "name": "sequence",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "候选记录序号"
+          },
+          {
+            "id": "app-params-input-payload",
+            "name": "payload",
+            "type": "u8",
+            "count": 256,
+            "unit": "byte",
+            "meaning": "候选记录负载"
+          },
+          {
+            "id": "app-params-input-length",
+            "name": "length",
+            "type": "u16",
+            "count": 1,
+            "unit": "byte",
+            "meaning": "有效负载长度"
+          },
+          {
+            "id": "app-params-input-commit",
+            "name": "commit",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "请求提交候选记录"
+          },
+          {
+            "id": "app-params-input-storage_done",
+            "name": "storage_done",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "存储适配器返回写入完成"
+          },
+          {
+            "id": "app-params-input-storage_ok",
+            "name": "storage_ok",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "写入后校验成功"
+          }
+        ]
+      },
+      {
+        "id": "app-params-output",
+        "name": "RecordsOutput",
+        "owner": "app-params",
+        "consumers": [],
+        "description": "参数管理的输出结构。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "app-params-output-payload",
+            "name": "payload",
+            "type": "u8",
+            "count": 256,
+            "unit": "byte",
+            "meaning": "提交给存储适配器的稳定负载"
+          },
+          {
+            "id": "app-params-output-length",
+            "name": "length",
+            "type": "u16",
+            "count": 1,
+            "unit": "byte",
+            "meaning": "记录长度"
+          },
+          {
+            "id": "app-params-output-sequence",
+            "name": "sequence",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "记录序号"
+          },
+          {
+            "id": "app-params-output-crc32",
+            "name": "crc32",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "负载完整性校验"
+          },
+          {
+            "id": "app-params-output-write_request",
+            "name": "write_request",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "请求后台存储事务"
+          },
+          {
+            "id": "app-params-output-committed",
+            "name": "committed",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "存储确认已持久化"
+          },
+          {
+            "id": "app-params-output-error",
+            "name": "error",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "1 非法长度，2 存储失败"
+          }
+        ]
+      },
+      {
+        "id": "app-params-state",
+        "name": "RecordsState",
+        "owner": "app-params",
+        "consumers": [],
+        "description": "参数管理的状态结构，仅供本模块内部使用。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "app-params-state-busy",
+            "name": "busy",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "存在未完成存储事务"
+          },
+          {
+            "id": "app-params-state-committed_sequence",
+            "name": "committed_sequence",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "最近一次完成提交的序号"
+          }
+        ]
+      },
+      {
+        "id": "app-comms-input",
+        "name": "CommandsInput",
+        "owner": "app-comms",
+        "consumers": [],
+        "description": "通信协议的输入结构。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "app-comms-input-sequence",
+            "name": "sequence",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "总线适配器解码后的命令序号"
+          },
+          {
+            "id": "app-comms-input-receive_time_us",
+            "name": "receive_time_us",
+            "type": "u32",
+            "count": 1,
+            "unit": "us",
+            "meaning": "命令接收时刻"
+          },
+          {
+            "id": "app-comms-input-now_us",
+            "name": "now_us",
+            "type": "u32",
+            "count": 1,
+            "unit": "us",
+            "meaning": "当前时刻"
+          },
+          {
+            "id": "app-comms-input-iq",
+            "name": "iq",
+            "type": "f32",
+            "count": 1,
+            "unit": "A",
+            "meaning": "总线适配器解码的电流给定"
+          },
+          {
+            "id": "app-comms-input-received",
+            "name": "received",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "本次有新命令"
+          },
+          {
+            "id": "app-comms-input-frame_valid",
+            "name": "frame_valid",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "总线完整性和长度校验通过"
+          }
+        ]
+      },
+      {
+        "id": "app-comms-output",
+        "name": "CommandsOutput",
+        "owner": "app-comms",
+        "consumers": [],
+        "description": "通信协议的输出结构。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "app-comms-output-iq",
+            "name": "iq",
+            "type": "f32",
+            "count": 1,
+            "unit": "A",
+            "meaning": "最近有效命令"
+          },
+          {
+            "id": "app-comms-output-valid",
+            "name": "valid",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "命令通过检查且未超时"
+          },
+          {
+            "id": "app-comms-output-sequence",
+            "name": "sequence",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "最近接受的命令序号"
+          }
+        ]
+      },
+      {
+        "id": "app-comms-state",
+        "name": "CommandsState",
+        "owner": "app-comms",
+        "consumers": [],
+        "description": "通信协议的状态结构，仅供本模块内部使用。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "app-comms-state-last_sequence",
+            "name": "last_sequence",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "用于丢弃重复和乱序命令"
+          },
+          {
+            "id": "app-comms-state-last_receive_us",
+            "name": "last_receive_us",
+            "type": "u32",
+            "count": 1,
+            "unit": "us",
+            "meaning": "最近一次接受命令的时间"
+          },
+          {
+            "id": "app-comms-state-received",
+            "name": "received",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "至少接受过一次命令"
+          },
+          {
+            "id": "app-comms-state-rejected_count",
+            "name": "rejected_count",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "拒绝的命令计数"
+          }
+        ]
+      },
+      {
+        "id": "app-motion-input",
+        "name": "MotionInput",
+        "owner": "app-motion",
+        "consumers": [],
+        "description": "运动控制的输入结构。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "app-motion-input-requested_iq",
+            "name": "requested_iq",
+            "type": "f32",
+            "count": 1,
+            "unit": "A",
+            "meaning": "通过应用命令仲裁后的 q 轴给定"
+          },
+          {
+            "id": "app-motion-input-dynamic_limit",
+            "name": "dynamic_limit",
+            "type": "f32",
+            "count": 1,
+            "unit": "A",
+            "meaning": "上层动态电流边界"
+          },
+          {
+            "id": "app-motion-input-enabled",
+            "name": "enabled",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "应用与生命周期允许运行"
+          },
+          {
+            "id": "app-motion-input-command_valid",
+            "name": "command_valid",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "命令序号与有效期均通过检查"
+          }
+        ]
+      },
+      {
+        "id": "app-motion-output",
+        "name": "MotionOutput",
+        "owner": "app-motion",
+        "consumers": [],
+        "description": "运动控制的输出结构。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "app-motion-output-reference_dq",
+            "name": "reference_dq",
+            "type": "f32",
+            "count": 2,
+            "unit": "A",
+            "meaning": "受限的 d/q 轴给定"
+          },
+          {
+            "id": "app-motion-output-valid",
+            "name": "valid",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "本次给定有效"
+          }
+        ]
+      },
+      {
+        "id": "app-motion-state",
+        "name": "MotionState",
+        "owner": "app-motion",
+        "consumers": [],
+        "description": "运动控制的状态结构，仅供本模块内部使用。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "app-motion-state-last_iq",
+            "name": "last_iq",
+            "type": "f32",
+            "count": 1,
+            "unit": "A",
+            "meaning": "上次有效 q 轴给定"
+          }
+        ]
+      },
+      {
+        "id": "app-calibration-input",
+        "name": "ZeroingInput",
+        "owner": "app-calibration",
+        "consumers": [],
+        "description": "校准管理的输入结构。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "app-calibration-input-sample",
+            "name": "sample",
+            "type": "f32",
+            "count": 1,
+            "unit": "",
+            "meaning": "标零测量值"
+          },
+          {
+            "id": "app-calibration-input-sample_valid",
+            "name": "sample_valid",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "本次采样有效"
+          },
+          {
+            "id": "app-calibration-input-start",
+            "name": "start",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "启动标零请求"
+          },
+          {
+            "id": "app-calibration-input-cancel",
+            "name": "cancel",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "取消当前标零"
+          },
+          {
+            "id": "app-calibration-input-stationary",
+            "name": "stationary",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "上层已确认静止"
+          }
+        ]
+      },
+      {
+        "id": "app-calibration-output",
+        "name": "ZeroingOutput",
+        "owner": "app-calibration",
+        "consumers": [],
+        "description": "校准管理的输出结构。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "app-calibration-output-offset",
+            "name": "offset",
+            "type": "f32",
+            "count": 1,
+            "unit": "",
+            "meaning": "有效候选标零值；写入参数区"
+          },
+          {
+            "id": "app-calibration-output-complete",
+            "name": "complete",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "本次得到候选结果"
+          },
+          {
+            "id": "app-calibration-output-busy",
+            "name": "busy",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "正在采集"
+          },
+          {
+            "id": "app-calibration-output-error",
+            "name": "error",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "1 标零时发生运动，2 测量非法"
+          }
+        ]
+      },
+      {
+        "id": "app-calibration-state",
+        "name": "ZeroingState",
+        "owner": "app-calibration",
+        "consumers": [],
+        "description": "校准管理的状态结构，仅供本模块内部使用。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "app-calibration-state-sum",
+            "name": "sum",
+            "type": "f32",
+            "count": 1,
+            "unit": "",
+            "meaning": "有效样本累计"
+          },
+          {
+            "id": "app-calibration-state-count",
+            "name": "count",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "有效样本数量"
+          },
+          {
+            "id": "app-calibration-state-active",
+            "name": "active",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "正在采集"
+          },
+          {
+            "id": "app-calibration-state-start_previous",
+            "name": "start_previous",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "启动请求边沿检测"
+          }
+        ]
+      },
+      {
+        "id": "app-safety-input",
+        "name": "DiagnosticsInput",
+        "owner": "app-safety",
+        "consumers": [],
+        "description": "保护与诊断的输入结构。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "app-safety-input-hardware_faults",
+            "name": "hardware_faults",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "硬件快速故障"
+          },
+          {
+            "id": "app-safety-input-algorithm_faults",
+            "name": "algorithm_faults",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "算法保护故障"
+          },
+          {
+            "id": "app-safety-input-command_valid",
+            "name": "command_valid",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "通信命令有效"
+          },
+          {
+            "id": "app-safety-input-enabled",
+            "name": "enabled",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "当前运行状态"
+          },
+          {
+            "id": "app-safety-input-output_disabled",
+            "name": "output_disabled",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "功率输出已确认关闭"
+          },
+          {
+            "id": "app-safety-input-reset_request",
+            "name": "reset_request",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "显式请求恢复"
+          }
+        ]
+      },
+      {
+        "id": "app-safety-output",
+        "name": "DiagnosticsOutput",
+        "owner": "app-safety",
+        "consumers": [],
+        "description": "保护与诊断的输出结构。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "app-safety-output-stop_request",
+            "name": "stop_request",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "请求停止输出"
+          },
+          {
+            "id": "app-safety-output-fault_flags",
+            "name": "fault_flags",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "聚合并锁存的故障"
+          },
+          {
+            "id": "app-safety-output-new_event",
+            "name": "new_event",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "本次出现新的故障位"
+          }
+        ]
+      },
+      {
+        "id": "app-safety-state",
+        "name": "DiagnosticsState",
+        "owner": "app-safety",
+        "consumers": [],
+        "description": "保护与诊断的状态结构，仅供本模块内部使用。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "app-safety-state-latched_faults",
+            "name": "latched_faults",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "累计锁存故障"
+          }
+        ]
+      },
+      {
+        "id": "foc-lifecycle-input",
+        "name": "ControlInput",
+        "owner": "foc-lifecycle",
+        "consumers": [],
+        "description": "算法管理的输入结构。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "foc-lifecycle-input-enable_request",
+            "name": "enable_request",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "应用请求使能"
+          },
+          {
+            "id": "foc-lifecycle-input-reset_request",
+            "name": "reset_request",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "显式清除故障请求"
+          },
+          {
+            "id": "foc-lifecycle-input-hardware_ready",
+            "name": "hardware_ready",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "平台和外设已就绪"
+          },
+          {
+            "id": "foc-lifecycle-input-calibration_valid",
+            "name": "calibration_valid",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "所需校准记录完整"
+          },
+          {
+            "id": "foc-lifecycle-input-feedback_valid",
+            "name": "feedback_valid",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "本周期反馈有效"
+          },
+          {
+            "id": "foc-lifecycle-input-fault_flags",
+            "name": "fault_flags",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "下层和电流环故障"
+          }
+        ]
+      },
+      {
+        "id": "foc-lifecycle-output",
+        "name": "ControlOutput",
+        "owner": "foc-lifecycle",
+        "consumers": [],
+        "description": "算法管理的输出结构。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "foc-lifecycle-output-enabled",
+            "name": "enabled",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "本周期允许控制输出"
+          },
+          {
+            "id": "foc-lifecycle-output-state",
+            "name": "state",
+            "type": "u8",
+            "count": 1,
+            "unit": "",
+            "meaning": "0 待机，1 运行，2 故障"
+          },
+          {
+            "id": "foc-lifecycle-output-fault_flags",
+            "name": "fault_flags",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "锁存故障"
+          }
+        ]
+      },
+      {
+        "id": "foc-lifecycle-state",
+        "name": "ControlState",
+        "owner": "foc-lifecycle",
+        "consumers": [],
+        "description": "算法管理的状态结构，仅供本模块内部使用。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "foc-lifecycle-state-latched_faults",
+            "name": "latched_faults",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "停机前故障记录"
+          },
+          {
+            "id": "foc-lifecycle-state-previous_enable",
+            "name": "previous_enable",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "上周期输出许可"
+          }
+        ]
+      },
+      {
+        "id": "foc-feedback-input",
+        "name": "FeedbackInput",
+        "owner": "foc-feedback",
+        "consumers": [],
+        "description": "反馈解算的输入结构。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "foc-feedback-input-motor_angle",
+            "name": "motor_angle",
+            "type": "f32",
+            "count": 1,
+            "unit": "rad",
+            "meaning": "电机侧单圈机械角"
+          },
+          {
+            "id": "foc-feedback-input-output_angle",
+            "name": "output_angle",
+            "type": "f32",
+            "count": 1,
+            "unit": "rad",
+            "meaning": "输出轴侧机械角"
+          },
+          {
+            "id": "foc-feedback-input-sample_time_us",
+            "name": "sample_time_us",
+            "type": "u32",
+            "count": 1,
+            "unit": "us",
+            "meaning": "角度采样时刻"
+          },
+          {
+            "id": "foc-feedback-input-motor_valid",
+            "name": "motor_valid",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "电机侧角度有效"
+          },
+          {
+            "id": "foc-feedback-input-output_valid",
+            "name": "output_valid",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "输出轴角度有效"
+          },
+          {
+            "id": "foc-feedback-input-electrical_offset",
+            "name": "electrical_offset",
+            "type": "f32",
+            "count": 1,
+            "unit": "rad",
+            "meaning": "编码器校准记录中的电角度零位"
+          }
+        ]
+      },
+      {
+        "id": "foc-feedback-output",
+        "name": "FeedbackOutput",
+        "owner": "foc-feedback",
+        "consumers": [],
+        "description": "反馈解算的输出结构。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "foc-feedback-output-electrical_angle",
+            "name": "electrical_angle",
+            "type": "f32",
+            "count": 1,
+            "unit": "rad",
+            "meaning": "归一化电角度"
+          },
+          {
+            "id": "foc-feedback-output-motor_velocity",
+            "name": "motor_velocity",
+            "type": "f32",
+            "count": 1,
+            "unit": "rad/s",
+            "meaning": "电机机械角速度"
+          },
+          {
+            "id": "foc-feedback-output-joint_position",
+            "name": "joint_position",
+            "type": "f32",
+            "count": 1,
+            "unit": "rad",
+            "meaning": "连续输出位置"
+          },
+          {
+            "id": "foc-feedback-output-valid",
+            "name": "valid",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "反馈可用"
+          }
+        ]
+      },
+      {
+        "id": "foc-feedback-state",
+        "name": "FeedbackState",
+        "owner": "foc-feedback",
+        "consumers": [],
+        "description": "反馈解算的状态结构，仅供本模块内部使用。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "foc-feedback-state-last_angle",
+            "name": "last_angle",
+            "type": "f32",
+            "count": 1,
+            "unit": "rad",
+            "meaning": "上一次电机机械角"
+          },
+          {
+            "id": "foc-feedback-state-unwrapped_angle",
+            "name": "unwrapped_angle",
+            "type": "f32",
+            "count": 1,
+            "unit": "rad",
+            "meaning": "电机展开角"
+          },
+          {
+            "id": "foc-feedback-state-last_time_us",
+            "name": "last_time_us",
+            "type": "u32",
+            "count": 1,
+            "unit": "us",
+            "meaning": "上次有效采样时刻"
+          },
+          {
+            "id": "foc-feedback-state-initialized",
+            "name": "initialized",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "是否取得初始角度"
+          }
+        ]
+      },
+      {
+        "id": "foc-current-input",
+        "name": "CurrentInput",
+        "owner": "foc-current",
+        "consumers": [],
+        "description": "电流环的输入结构。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "foc-current-input-current_dq",
+            "name": "current_dq",
+            "type": "f32",
+            "count": 2,
+            "unit": "A",
+            "meaning": "同步坐标系反馈电流"
+          },
+          {
+            "id": "foc-current-input-reference_dq",
+            "name": "reference_dq",
+            "type": "f32",
+            "count": 2,
+            "unit": "A",
+            "meaning": "d/q 轴电流给定"
+          },
+          {
+            "id": "foc-current-input-voltage_limit",
+            "name": "voltage_limit",
+            "type": "f32",
+            "count": 1,
+            "unit": "V",
+            "meaning": "调制允许的电压矢量幅值"
+          },
+          {
+            "id": "foc-current-input-dt",
+            "name": "dt",
+            "type": "f32",
+            "count": 1,
+            "unit": "s",
+            "meaning": "电流环实际控制间隔"
+          },
+          {
+            "id": "foc-current-input-now_us",
+            "name": "now_us",
+            "type": "u32",
+            "count": 1,
+            "unit": "us",
+            "meaning": "当前时刻"
+          },
+          {
+            "id": "foc-current-input-reference_time_us",
+            "name": "reference_time_us",
+            "type": "u32",
+            "count": 1,
+            "unit": "us",
+            "meaning": "给定生成时刻"
+          },
+          {
+            "id": "foc-current-input-feedback_valid",
+            "name": "feedback_valid",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "当前电流反馈有效"
+          },
+          {
+            "id": "foc-current-input-enable",
+            "name": "enable",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "算法生命周期允许输出"
+          }
+        ]
+      },
+      {
+        "id": "foc-current-output",
+        "name": "CurrentOutput",
+        "owner": "foc-current",
+        "consumers": [],
+        "description": "电流环的输出结构。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "foc-current-output-voltage_dq",
+            "name": "voltage_dq",
+            "type": "f32",
+            "count": 2,
+            "unit": "V",
+            "meaning": "限幅后的 d/q 轴电压指令"
+          },
+          {
+            "id": "foc-current-output-fault_flags",
+            "name": "fault_flags",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "1 非法输入，2 过流，4 给定超时"
+          },
+          {
+            "id": "foc-current-output-saturated",
+            "name": "saturated",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "电压指令发生限幅"
+          }
+        ]
+      },
+      {
+        "id": "foc-current-state",
+        "name": "CurrentState",
+        "owner": "foc-current",
+        "consumers": [],
+        "description": "电流环的状态结构，仅供本模块内部使用。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "foc-current-state-integral_dq",
+            "name": "integral_dq",
+            "type": "f32",
+            "count": 2,
+            "unit": "V",
+            "meaning": "电流 PI 的两轴积分状态"
+          },
+          {
+            "id": "foc-current-state-latched_faults",
+            "name": "latched_faults",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "电流环故障锁存；禁止输出后清除"
+          }
+        ]
+      },
+      {
+        "id": "foc-modulation-input",
+        "name": "ModulationInput",
+        "owner": "foc-modulation",
+        "consumers": [],
+        "description": "变换与调制的输入结构。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "foc-modulation-input-phase_current",
+            "name": "phase_current",
+            "type": "f32",
+            "count": 3,
+            "unit": "A",
+            "meaning": "三相电流快照"
+          },
+          {
+            "id": "foc-modulation-input-electrical_angle",
+            "name": "electrical_angle",
+            "type": "f32",
+            "count": 1,
+            "unit": "rad",
+            "meaning": "同步坐标变换使用的电角度"
+          },
+          {
+            "id": "foc-modulation-input-voltage_dq",
+            "name": "voltage_dq",
+            "type": "f32",
+            "count": 2,
+            "unit": "V",
+            "meaning": "电流环电压指令"
+          },
+          {
+            "id": "foc-modulation-input-bus_voltage",
+            "name": "bus_voltage",
+            "type": "f32",
+            "count": 1,
+            "unit": "V",
+            "meaning": "采样对应的母线电压"
+          },
+          {
+            "id": "foc-modulation-input-enable",
+            "name": "enable",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "输出许可"
+          }
+        ]
+      },
+      {
+        "id": "foc-modulation-output",
+        "name": "ModulationOutput",
+        "owner": "foc-modulation",
+        "consumers": [],
+        "description": "变换与调制的输出结构。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "foc-modulation-output-current_dq",
+            "name": "current_dq",
+            "type": "f32",
+            "count": 2,
+            "unit": "A",
+            "meaning": "Clarke/Park 变换的电流反馈"
+          },
+          {
+            "id": "foc-modulation-output-duty",
+            "name": "duty",
+            "type": "f32",
+            "count": 3,
+            "unit": "",
+            "meaning": "三相占空比"
+          },
+          {
+            "id": "foc-modulation-output-valid",
+            "name": "valid",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "计算与母线输入有效"
+          }
+        ]
+      },
+      {
+        "id": "foc-modulation-state",
+        "name": "ModulationState",
+        "owner": "foc-modulation",
+        "consumers": [],
+        "description": "变换与调制的状态结构，仅供本模块内部使用。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "foc-modulation-state-saturation_count",
+            "name": "saturation_count",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "调制约束触发次数"
+          }
+        ]
+      },
+      {
+        "id": "foc-observer-input",
+        "name": "ObserverInput",
+        "owner": "foc-observer",
+        "consumers": [],
+        "description": "状态观测的输入结构。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "foc-observer-input-measured_angle",
+            "name": "measured_angle",
+            "type": "f32",
+            "count": 1,
+            "unit": "rad",
+            "meaning": "PLL 跟踪的有效电角度"
+          },
+          {
+            "id": "foc-observer-input-dt",
+            "name": "dt",
+            "type": "f32",
+            "count": 1,
+            "unit": "s",
+            "meaning": "与电流环一致的更新间隔"
+          },
+          {
+            "id": "foc-observer-input-valid",
+            "name": "valid",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "输入角度有效"
+          },
+          {
+            "id": "foc-observer-input-enable",
+            "name": "enable",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "运行期开关"
+          }
+        ]
+      },
+      {
+        "id": "foc-observer-output",
+        "name": "ObserverOutput",
+        "owner": "foc-observer",
+        "consumers": [],
+        "description": "状态观测的输出结构。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "foc-observer-output-angle",
+            "name": "angle",
+            "type": "f32",
+            "count": 1,
+            "unit": "rad",
+            "meaning": "PLL 估算电角度"
+          },
+          {
+            "id": "foc-observer-output-velocity",
+            "name": "velocity",
+            "type": "f32",
+            "count": 1,
+            "unit": "rad/s",
+            "meaning": "PLL 估算电角速度"
+          },
+          {
+            "id": "foc-observer-output-valid",
+            "name": "valid",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "PLL 状态有效"
+          }
+        ]
+      },
+      {
+        "id": "foc-observer-state",
+        "name": "ObserverState",
+        "owner": "foc-observer",
+        "consumers": [],
+        "description": "状态观测的状态结构，仅供本模块内部使用。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "foc-observer-state-angle",
+            "name": "angle",
+            "type": "f32",
+            "count": 1,
+            "unit": "rad",
+            "meaning": "PLL 积分角度"
+          },
+          {
+            "id": "foc-observer-state-velocity",
+            "name": "velocity",
+            "type": "f32",
+            "count": 1,
+            "unit": "rad/s",
+            "meaning": "PLL 积分速度"
+          },
+          {
+            "id": "foc-observer-state-initialized",
+            "name": "initialized",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "PLL 初始化状态"
+          }
+        ]
+      },
+      {
+        "id": "foc-compensation-input",
+        "name": "FrictionInput",
+        "owner": "foc-compensation",
+        "consumers": [],
+        "description": "摩擦补偿的输入结构。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "foc-compensation-input-joint_velocity",
+            "name": "joint_velocity",
+            "type": "f32",
+            "count": 1,
+            "unit": "rad/s",
+            "meaning": "输出轴机械角速度"
+          },
+          {
+            "id": "foc-compensation-input-valid",
+            "name": "valid",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "速度反馈有效"
+          },
+          {
+            "id": "foc-compensation-input-enable",
+            "name": "enable",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "运行期开关"
+          }
+        ]
+      },
+      {
+        "id": "foc-compensation-output",
+        "name": "FrictionOutput",
+        "owner": "foc-compensation",
+        "consumers": [],
+        "description": "摩擦补偿的输出结构。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "foc-compensation-output-torque",
+            "name": "torque",
+            "type": "f32",
+            "count": 1,
+            "unit": "N.m",
+            "meaning": "限幅后的摩擦补偿力矩"
+          },
+          {
+            "id": "foc-compensation-output-valid",
+            "name": "valid",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "补偿输出有效"
+          }
+        ]
+      },
+      {
+        "id": "foc-compensation-state",
+        "name": "FrictionState",
+        "owner": "foc-compensation",
+        "consumers": [],
+        "description": "摩擦补偿的状态结构，仅供本模块内部使用。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "foc-compensation-state-last_torque",
+            "name": "last_torque",
+            "type": "f32",
+            "count": 1,
+            "unit": "N.m",
+            "meaning": "最近一次补偿力矩"
+          }
+        ]
+      },
+      {
+        "id": "hw-platform-input",
+        "name": "CoreInput",
+        "owner": "hw-platform",
+        "consumers": [],
+        "description": "内核的输入结构。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "hw-platform-input-now_us",
+            "name": "now_us",
+            "type": "u32",
+            "count": 1,
+            "unit": "us",
+            "meaning": "平台单调时钟，按无符号差处理回绕"
+          },
+          {
+            "id": "hw-platform-input-boot_ready",
+            "name": "boot_ready",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "平台初始化结果"
+          },
+          {
+            "id": "hw-platform-input-reset_reason",
+            "name": "reset_reason",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "硬件复位原因位"
+          },
+          {
+            "id": "hw-platform-input-clock_fault",
+            "name": "clock_fault",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "时钟监控故障"
+          }
+        ]
+      },
+      {
+        "id": "hw-platform-output",
+        "name": "CoreOutput",
+        "owner": "hw-platform",
+        "consumers": [],
+        "description": "内核的输出结构。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "hw-platform-output-ready",
+            "name": "ready",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "平台是否可用于控制"
+          },
+          {
+            "id": "hw-platform-output-elapsed_us",
+            "name": "elapsed_us",
+            "type": "u32",
+            "count": 1,
+            "unit": "us",
+            "meaning": "本次与上次调用的间隔"
+          },
+          {
+            "id": "hw-platform-output-reset_reason",
+            "name": "reset_reason",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "启动复位原因"
+          },
+          {
+            "id": "hw-platform-output-fault",
+            "name": "fault",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "平台故障标志"
+          }
+        ]
+      },
+      {
+        "id": "hw-platform-state",
+        "name": "CoreState",
+        "owner": "hw-platform",
+        "consumers": [],
+        "description": "内核的状态结构，仅供本模块内部使用。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "hw-platform-state-last_us",
+            "name": "last_us",
+            "type": "u32",
+            "count": 1,
+            "unit": "us",
+            "meaning": "上次调用时刻"
+          },
+          {
+            "id": "hw-platform-state-initialized",
+            "name": "initialized",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "时基是否已初始化"
+          }
+        ]
+      },
+      {
+        "id": "hw-board-input",
+        "name": "PeripheralsInput",
+        "owner": "hw-board",
+        "consumers": [],
+        "description": "外设的输入结构。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "hw-board-input-phase_current",
+            "name": "phase_current",
+            "type": "f32",
+            "count": 3,
+            "unit": "A",
+            "meaning": "ADC 外设适配完成零偏和增益换算的三相电流"
+          },
+          {
+            "id": "hw-board-input-bus_voltage",
+            "name": "bus_voltage",
+            "type": "f32",
+            "count": 1,
+            "unit": "V",
+            "meaning": "ADC 外设适配后的母线电压"
+          },
+          {
+            "id": "hw-board-input-sample_time_us",
+            "name": "sample_time_us",
+            "type": "u32",
+            "count": 1,
+            "unit": "us",
+            "meaning": "硬件触发采样时间"
+          },
+          {
+            "id": "hw-board-input-sample_valid",
+            "name": "sample_valid",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "ADC/DMA 已提交完整采样"
+          },
+          {
+            "id": "hw-board-input-duty_request",
+            "name": "duty_request",
+            "type": "f32",
+            "count": 3,
+            "unit": "",
+            "meaning": "本周期请求的三相占空比"
+          },
+          {
+            "id": "hw-board-input-gate_request",
+            "name": "gate_request",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "上层允许输出"
+          },
+          {
+            "id": "hw-board-input-trip",
+            "name": "trip",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "硬件快速保护输入"
+          }
+        ]
+      },
+      {
+        "id": "hw-board-output",
+        "name": "PeripheralsOutput",
+        "owner": "hw-board",
+        "consumers": [],
+        "description": "外设的输出结构。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "hw-board-output-phase_current",
+            "name": "phase_current",
+            "type": "f32",
+            "count": 3,
+            "unit": "A",
+            "meaning": "有效采样快照"
+          },
+          {
+            "id": "hw-board-output-bus_voltage",
+            "name": "bus_voltage",
+            "type": "f32",
+            "count": 1,
+            "unit": "V",
+            "meaning": "采样快照的母线电压"
+          },
+          {
+            "id": "hw-board-output-sample_time_us",
+            "name": "sample_time_us",
+            "type": "u32",
+            "count": 1,
+            "unit": "us",
+            "meaning": "采样时刻"
+          },
+          {
+            "id": "hw-board-output-sequence",
+            "name": "sequence",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "有效采样序号"
+          },
+          {
+            "id": "hw-board-output-valid",
+            "name": "valid",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "快照有效"
+          },
+          {
+            "id": "hw-board-output-duty",
+            "name": "duty",
+            "type": "f32",
+            "count": 3,
+            "unit": "",
+            "meaning": "经边界检查后交给定时器的占空比"
+          },
+          {
+            "id": "hw-board-output-gate_enable",
+            "name": "gate_enable",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "门极输出许可；实际生效由外设适配反馈"
+          }
+        ]
+      },
+      {
+        "id": "hw-board-state",
+        "name": "PeripheralsState",
+        "owner": "hw-board",
+        "consumers": [],
+        "description": "外设的状态结构，仅供本模块内部使用。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "hw-board-state-sample_sequence",
+            "name": "sample_sequence",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "采样发布计数"
+          },
+          {
+            "id": "hw-board-state-rejected_samples",
+            "name": "rejected_samples",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "不完整或非法采样计数"
+          }
+        ]
+      },
+      {
+        "id": "hw-sensors-input",
+        "name": "DriversInput",
+        "owner": "hw-sensors",
+        "consumers": [],
+        "description": "驱动的输入结构。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "hw-sensors-input-channel",
+            "name": "channel",
+            "type": "u8",
+            "count": 1,
+            "unit": "",
+            "meaning": "通道编号：0 电机侧编码器，1 出轴侧编码器，2 力矩传感器"
+          },
+          {
+            "id": "hw-sensors-input-now_us",
+            "name": "now_us",
+            "type": "u32",
+            "count": 1,
+            "unit": "us",
+            "meaning": "单调时钟，按无符号差值处理回绕"
+          },
+          {
+            "id": "hw-sensors-input-rx_data",
+            "name": "rx_data",
+            "type": "u8",
+            "count": 64,
+            "unit": "byte",
+            "meaning": "本次交付的接收字节；支持分段和连续多帧"
+          },
+          {
+            "id": "hw-sensors-input-rx_length",
+            "name": "rx_length",
+            "type": "u16",
+            "count": 1,
+            "unit": "byte",
+            "meaning": "本次有效接收字节数，最大 64"
+          },
+          {
+            "id": "hw-sensors-input-request",
+            "name": "request",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "调度器请求一次采样或启动上传"
+          },
+          {
+            "id": "hw-sensors-input-tx_complete",
+            "name": "tx_complete",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "本次携带发送提交结果"
+          },
+          {
+            "id": "hw-sensors-input-transport_status",
+            "name": "transport_status",
+            "type": "i32",
+            "count": 1,
+            "unit": "",
+            "meaning": "发送提交结果，0 成功，非 0 失败；失败后可重试"
+          },
+          {
+            "id": "hw-sensors-input-reset",
+            "name": "reset",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "复位当前通道的接收、发送和有效性状态"
+          }
+        ]
+      },
+      {
+        "id": "hw-sensors-output",
+        "name": "DriversOutput",
+        "owner": "hw-sensors",
+        "consumers": [],
+        "description": "驱动的输出结构。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "hw-sensors-output-value",
+            "name": "value",
+            "type": "f32",
+            "count": 3,
+            "unit": "",
+            "meaning": "通道换算值；0/1 为 rad，2 为所配置的力矩接口单位"
+          },
+          {
+            "id": "hw-sensors-output-raw",
+            "name": "raw",
+            "type": "u32",
+            "count": 3,
+            "unit": "",
+            "meaning": "本次有效数值的原始位模式"
+          },
+          {
+            "id": "hw-sensors-output-sample_time_us",
+            "name": "sample_time_us",
+            "type": "u32",
+            "count": 3,
+            "unit": "us",
+            "meaning": "最近一次通过校验的数据接收时刻"
+          },
+          {
+            "id": "hw-sensors-output-sequence",
+            "name": "sequence",
+            "type": "u32",
+            "count": 3,
+            "unit": "",
+            "meaning": "每收到一帧有效数值递增"
+          },
+          {
+            "id": "hw-sensors-output-valid",
+            "name": "valid",
+            "type": "bool",
+            "count": 3,
+            "unit": "",
+            "meaning": "已收到有效帧且未超时；失效后不得继续用于闭环"
+          },
+          {
+            "id": "hw-sensors-output-error",
+            "name": "error",
+            "type": "u32",
+            "count": 3,
+            "unit": "",
+            "meaning": "位标志：1 配置，2 帧校验，4 数值，8 超时，16 传输，32 器件状态"
+          },
+          {
+            "id": "hw-sensors-output-device_status",
+            "name": "device_status",
+            "type": "u32",
+            "count": 3,
+            "unit": "",
+            "meaning": "按帧格式提取的器件状态字节，不按厂商解释"
+          },
+          {
+            "id": "hw-sensors-output-tx_data",
+            "name": "tx_data",
+            "type": "u8",
+            "count": 32,
+            "unit": "byte",
+            "meaning": "通用引擎生成的待发送字节，提交给所绑定的外设"
+          },
+          {
+            "id": "hw-sensors-output-tx_length",
+            "name": "tx_length",
+            "type": "u16",
+            "count": 1,
+            "unit": "byte",
+            "meaning": "待发送字节数"
+          },
+          {
+            "id": "hw-sensors-output-tx_channel",
+            "name": "tx_channel",
+            "type": "u8",
+            "count": 1,
+            "unit": "",
+            "meaning": "发送所属通道"
+          },
+          {
+            "id": "hw-sensors-output-tx_request",
+            "name": "tx_request",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "本次产生发送请求；外设提交后反馈 tx_complete"
+          }
+        ]
+      },
+      {
+        "id": "hw-sensors-state",
+        "name": "DriversState",
+        "owner": "hw-sensors",
+        "consumers": [],
+        "description": "驱动的状态结构，仅供本模块内部使用。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "hw-sensors-state-rx_buffer",
+            "name": "rx_buffer",
+            "type": "u8",
+            "count": 192,
+            "unit": "byte",
+            "meaning": "三个通道各 64 字节的拼帧缓冲"
+          },
+          {
+            "id": "hw-sensors-state-rx_size",
+            "name": "rx_size",
+            "type": "u16",
+            "count": 3,
+            "unit": "byte",
+            "meaning": "各通道已缓存字节数"
+          },
+          {
+            "id": "hw-sensors-state-last_tx_us",
+            "name": "last_tx_us",
+            "type": "u32",
+            "count": 3,
+            "unit": "us",
+            "meaning": "最近一次成功提交发送的时刻"
+          },
+          {
+            "id": "hw-sensors-state-start_us",
+            "name": "start_us",
+            "type": "u32",
+            "count": 3,
+            "unit": "us",
+            "meaning": "通道复位时刻，用于启动等待"
+          },
+          {
+            "id": "hw-sensors-state-tx_pending",
+            "name": "tx_pending",
+            "type": "bool",
+            "count": 3,
+            "unit": "",
+            "meaning": "等待外设反馈发送提交结果"
+          },
+          {
+            "id": "hw-sensors-state-waiting_response",
+            "name": "waiting_response",
+            "type": "bool",
+            "count": 3,
+            "unit": "",
+            "meaning": "请求已发送，等待应答或超时"
+          },
+          {
+            "id": "hw-sensors-state-started",
+            "name": "started",
+            "type": "bool",
+            "count": 3,
+            "unit": "",
+            "meaning": "启动上传或查询命令已成功提交"
+          },
+          {
+            "id": "hw-sensors-state-received",
+            "name": "received",
+            "type": "bool",
+            "count": 3,
+            "unit": "",
+            "meaning": "至少收到一帧有效数据"
+          },
+          {
+            "id": "hw-sensors-state-rejected_frames",
+            "name": "rejected_frames",
+            "type": "u32",
+            "count": 3,
+            "unit": "",
+            "meaning": "校验、数值或器件状态不合格的帧数"
+          },
+          {
+            "id": "hw-sensors-state-dropped_bytes",
+            "name": "dropped_bytes",
+            "type": "u32",
+            "count": 3,
+            "unit": "byte",
+            "meaning": "寻找帧头或重同步时丢弃的字节数"
+          }
+        ]
+      },
+      {
+        "id": "hw-safety-input",
+        "name": "ProtectionInput",
+        "owner": "hw-safety",
+        "consumers": [],
+        "description": "保护的输入结构。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "hw-safety-input-trip_flags",
+            "name": "trip_flags",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "比较器、制动输入或 nFAULT 触发位"
+          },
+          {
+            "id": "hw-safety-input-reset_request",
+            "name": "reset_request",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "显式请求解除锁存"
+          },
+          {
+            "id": "hw-safety-input-output_disabled",
+            "name": "output_disabled",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "输出已经关断"
+          }
+        ]
+      },
+      {
+        "id": "hw-safety-output",
+        "name": "ProtectionOutput",
+        "owner": "hw-safety",
+        "consumers": [],
+        "description": "保护的输出结构。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "hw-safety-output-trip_latched",
+            "name": "trip_latched",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "快速故障锁存"
+          },
+          {
+            "id": "hw-safety-output-gate_permitted",
+            "name": "gate_permitted",
+            "type": "bool",
+            "count": 1,
+            "unit": "",
+            "meaning": "快速保护允许输出"
+          },
+          {
+            "id": "hw-safety-output-fault_flags",
+            "name": "fault_flags",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "锁存的硬件故障位"
+          }
+        ]
+      },
+      {
+        "id": "hw-safety-state",
+        "name": "ProtectionState",
+        "owner": "hw-safety",
+        "consumers": [],
+        "description": "保护的状态结构，仅供本模块内部使用。",
+        "rate": "event",
+        "fields": [
+          {
+            "id": "hw-safety-state-latched_flags",
+            "name": "latched_flags",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "累计锁存位"
+          },
+          {
+            "id": "hw-safety-state-trip_count",
+            "name": "trip_count",
+            "type": "u32",
+            "count": 1,
+            "unit": "",
+            "meaning": "新故障事件计数"
+          }
+        ]
+      }
+    ],
+    "faults": [
+      {
+        "id": "hardware-overcurrent",
+        "code": 4097,
+        "name": "HARDWARE_OVERCURRENT",
+        "source": "hw-safety",
+        "severity": "critical",
+        "action": "trip",
+        "latched": true,
+        "recovery": "power_cycle",
+        "description": "独立硬件过流关断；复位条件需结合功率级评审。"
+      },
+      {
+        "id": "feedback-invalid",
+        "code": 8193,
+        "name": "FEEDBACK_INVALID",
+        "source": "foc-current",
+        "severity": "error",
+        "action": "stop",
+        "latched": true,
+        "recovery": "command",
+        "description": "反馈失效后停止输出，恢复条件由算法管理模块检查。"
+      },
+      {
+        "id": "command-timeout",
+        "code": 12289,
+        "name": "COMMAND_TIMEOUT",
+        "source": "app-safety",
+        "severity": "error",
+        "action": "stop",
+        "latched": true,
+        "recovery": "command",
+        "description": "命令超时触发停机；不能因迟到旧帧自动重新运行。"
+      }
+    ],
+    "protocol": {
+      "transport": "ethercat",
+      "version": 1,
+      "byteOrder": "little",
+      "nodeId": null,
+      "bitrate": null,
+      "timeoutMs": null,
+      "integrity": "unselected",
+      "messages": []
+    },
+    "moduleContracts": {
+      "app-runtime": {
+        "input": "app-runtime-input",
+        "output": "app-runtime-output",
+        "state": "app-runtime-state"
+      },
+      "app-params": {
+        "input": "app-params-input",
+        "output": "app-params-output",
+        "state": "app-params-state"
+      },
+      "app-comms": {
+        "input": "app-comms-input",
+        "output": "app-comms-output",
+        "state": "app-comms-state"
+      },
+      "app-motion": {
+        "input": "app-motion-input",
+        "output": "app-motion-output",
+        "state": "app-motion-state"
+      },
+      "app-calibration": {
+        "input": "app-calibration-input",
+        "output": "app-calibration-output",
+        "state": "app-calibration-state"
+      },
+      "app-safety": {
+        "input": "app-safety-input",
+        "output": "app-safety-output",
+        "state": "app-safety-state"
+      },
+      "foc-lifecycle": {
+        "input": "foc-lifecycle-input",
+        "output": "foc-lifecycle-output",
+        "state": "foc-lifecycle-state"
+      },
+      "foc-feedback": {
+        "input": "foc-feedback-input",
+        "output": "foc-feedback-output",
+        "state": "foc-feedback-state"
+      },
+      "foc-current": {
+        "input": "foc-current-input",
+        "output": "foc-current-output",
+        "state": "foc-current-state"
+      },
+      "foc-modulation": {
+        "input": "foc-modulation-input",
+        "output": "foc-modulation-output",
+        "state": "foc-modulation-state"
+      },
+      "foc-observer": {
+        "input": "foc-observer-input",
+        "output": "foc-observer-output",
+        "state": "foc-observer-state"
+      },
+      "foc-compensation": {
+        "input": "foc-compensation-input",
+        "output": "foc-compensation-output",
+        "state": "foc-compensation-state"
+      },
+      "hw-platform": {
+        "input": "hw-platform-input",
+        "output": "hw-platform-output",
+        "state": "hw-platform-state"
+      },
+      "hw-board": {
+        "input": "hw-board-input",
+        "output": "hw-board-output",
+        "state": "hw-board-state"
+      },
+      "hw-sensors": {
+        "input": "hw-sensors-input",
+        "output": "hw-sensors-output",
+        "state": "hw-sensors-state"
+      },
+      "hw-safety": {
+        "input": "hw-safety-input",
+        "output": "hw-safety-output",
+        "state": "hw-safety-state"
+      }
+    },
+    "layerInterfaces": [],
+    "privateStructures": []
+  },
+  "commissioning": {
+    "checks": {}
+  },
+  "catalog": {
+    "actuators": [
+      {
+        "id": "actuator-ec79eb2a-79ca-47a0-9fa9-6cf4bea7c2f6",
+        "name": "NEO_75_H_GW_KW",
+        "motor": {
+          "polePairs": 10,
+          "resistanceOhm": 0.15,
+          "inductanceDH": 0.0001755,
+          "inductanceQH": 0.000189,
+          "fluxWb": 0.007977,
+          "torqueConstantNmA": null,
+          "ratedCurrentA": 10.889,
+          "maxCurrentA": 33.234,
+          "maxSpeedRpm": 9549.29658551372
+        },
+        "reducer": {
+          "ratio": 51,
+          "efficiency": null,
+          "backlashArcmin": null,
+          "maxOutputTorqueNm": 50
+        }
+      }
+    ],
+    "drivers": [
+      {
+        "id": "driver-0230b7f9-839e-423b-8184-6cf3f974f9ce",
+        "name": "NEO · KW 力矩传感器",
+        "vendor": "st",
+        "mcu": "STM32H745IIK6",
+        "board": "NEO",
+        "busVoltageV": null,
+        "maxCurrentA": null,
+        "pwmHz": 20000,
+        "adcBits": 14,
+        "adcClockHz": null,
+        "deadtimeNs": 500,
+        "flashKiB": 2048,
+        "eraseKiB": 128,
+        "firmwareReserveKiB": 896,
+        "bindings": [
+          {
+            "id": "binding-48e34fa0-a20a-4c91-91c5-17e32c8c8983",
+            "signal": "编码器 DE",
+            "peripheral": "USART2",
+            "pin": "PD4",
+            "mode": "alternate",
+            "notes": "源工程 neo_v25 启动 / NEO 外设配置，复用 AF7"
+          },
+          {
+            "id": "binding-fc68e7a8-4332-4966-a6f4-8338e1175c4b",
+            "signal": "编码器 TX",
+            "peripheral": "USART2",
+            "pin": "PD5",
+            "mode": "alternate",
+            "notes": "源工程 neo_v25 启动 / NEO 外设配置，复用 AF7"
+          },
+          {
+            "id": "binding-75cbeb6c-fa7c-4373-8291-5ed39ccf1653",
+            "signal": "编码器 RX",
+            "peripheral": "USART2",
+            "pin": "PD6",
+            "mode": "alternate",
+            "notes": "源工程 neo_v25 启动 / NEO 外设配置，复用 AF7"
+          },
+          {
+            "id": "binding-e73cec44-8e52-4689-9030-88a9f63218bc",
+            "signal": "力矩 TX",
+            "peripheral": "USART3",
+            "pin": "PD8",
+            "mode": "alternate",
+            "notes": "源工程 neo_v25 启动 / NEO 外设配置，复用 AF7"
+          },
+          {
+            "id": "binding-42989973-6f3f-42fa-b203-4af087868166",
+            "signal": "力矩 RX",
+            "peripheral": "USART3",
+            "pin": "PD9",
+            "mode": "alternate",
+            "notes": "源工程 neo_v25 启动 / NEO 外设配置，复用 AF7"
+          },
+          {
+            "id": "binding-6d5fd19a-8675-4693-9023-06714f39d35b",
+            "signal": "力矩 DE",
+            "peripheral": "USART3",
+            "pin": "PD12",
+            "mode": "alternate",
+            "notes": "源工程 neo_v25 启动 / NEO 外设配置，复用 AF7"
+          }
+        ],
+        "hardware": {
+          "hw-platform": {
+            "architecture": "arm",
+            "clockSource": "external",
+            "oscillatorHz": 25000000,
+            "busClockHz": 200000000,
+            "timerClockHz": 200000000,
+            "coreConfigs": {
+              "cm7": {
+                "clockHz": 400000000,
+                "systemTickHz": 1000,
+                "irqPriorityBits": 4,
+                "controlIrqPriority": 2,
+                "communicationIrqPriority": null,
+                "floatAbi": "hard",
+                "instructionCache": "enabled",
+                "dataCache": "enabled"
+              },
+              "cm4": {
+                "clockHz": 200000000,
+                "systemTickHz": 1000,
+                "irqPriorityBits": 4,
+                "controlIrqPriority": null,
+                "communicationIrqPriority": null,
+                "floatAbi": "hard",
+                "instructionCache": "disabled",
+                "dataCache": "disabled"
+              }
+            },
+            "flashKiB": 2048,
+            "eraseKiB": 128,
+            "firmwareReserveKiB": 896
+          },
+          "hw-board": {
+            "resources": [
+              {
+                "id": "HRTIM1",
+                "name": "三相功率输出",
+                "kind": "pwm",
+                "instance": "HRTIM1",
+                "pins": {
+                  "A1": "PC6",
+                  "A2": "PC7",
+                  "B1": "PC8",
+                  "B2": "PA8",
+                  "C1": "PA9",
+                  "C2": "PA10"
+                },
+                "settings": {
+                  "alignment": "center",
+                  "polarity": "high"
+                }
+              },
+              {
+                "id": "ADC1",
+                "name": "U 相电流 / W 相电压",
+                "kind": "adc",
+                "instance": "ADC1",
+                "pins": {
+                  "INP0": "PA0_C",
+                  "INP9": "PB0"
+                },
+                "settings": {
+                  "sampleCycles": 1.5,
+                  "trigger": "HRTIM1"
+                }
+              },
+              {
+                "id": "ADC2",
+                "name": "V 相电流 / V 相电压",
+                "kind": "adc",
+                "instance": "ADC2",
+                "pins": {
+                  "INP1": "PA1_C",
+                  "INP10": "PC0"
+                },
+                "settings": {
+                  "sampleCycles": 1.5,
+                  "trigger": "HRTIM1"
+                }
+              },
+              {
+                "id": "ADC3",
+                "name": "W 相电流 / U 相及母线电压",
+                "kind": "adc",
+                "instance": "ADC3",
+                "pins": {
+                  "INP1": "PC3_C",
+                  "INP8": "PF6",
+                  "INP9": "PF4"
+                },
+                "settings": {
+                  "sampleCycles": 1.5,
+                  "trigger": "HRTIM1"
+                }
+              },
+              {
+                "id": "USART2",
+                "name": "双编码器接口",
+                "kind": "uart",
+                "instance": "USART2",
+                "pins": {
+                  "TX": "PD5",
+                  "RX": "PD6",
+                  "DE": "PD4"
+                },
+                "settings": {
+                  "bitrate": 6250000,
+                  "physical": "rs485",
+                  "parity": "none",
+                  "stopBits": "1"
+                }
+              },
+              {
+                "id": "USART3",
+                "name": "力矩传感器接口",
+                "kind": "uart",
+                "instance": "USART3",
+                "pins": {
+                  "TX": "PD8",
+                  "RX": "PD9",
+                  "DE": "PD12"
+                },
+                "settings": {
+                  "bitrate": 256000,
+                  "physical": "rs485",
+                  "parity": "none",
+                  "stopBits": "1"
+                }
+              },
+              {
+                "id": "DRV8353_NFAULT",
+                "name": "DRV8353 nFAULT",
+                "kind": "gpio",
+                "instance": "GPIO",
+                "pins": {
+                  "IO": "PD1"
+                },
+                "settings": {
+                  "direction": "input",
+                  "pull": "up",
+                  "initialLevel": "low"
+                }
+              }
+            ],
+            "currentTopology": "three_shunt",
+            "busVoltageV": null,
+            "currentGain": 0.025,
+            "pwmHz": 20000,
+            "currentLoopDivider": 1,
+            "adcBits": 14,
+            "adcClockHz": null,
+            "deadtimeNs": 500
+          },
+          "hw-sensors": {
+            "encoderCapability": "present",
+            "motorEncoderType": "absolute",
+            "motorEncoderVendor": "gongwang",
+            "motorEncoderHallMode": "unselected",
+            "motorEncoderModel": "GW 外圈",
+            "motorEncoderInterface": "uart",
+            "motorEncoderResource": "USART2",
+            "motorEncoderTransferMode": "request_response",
+            "motorEncoderRequestHex": "3B",
+            "motorEncoderStartHex": "",
+            "motorEncoderStartupDelayUs": 200000,
+            "motorEncoderHeaderHex": "3B",
+            "motorEncoderFooterHex": "",
+            "motorEncoderFrameBytes": 9,
+            "motorEncoderDataOffset": 1,
+            "motorEncoderDataType": "unsigned",
+            "motorEncoderDataBits": 24,
+            "motorEncoderByteOrder": "little",
+            "motorEncoderValueScale": 4.7936899621426287e-05,
+            "motorEncoderValueOffset": 0,
+            "motorEncoderChecksum": "xor8",
+            "motorEncoderChecksumStart": 0,
+            "motorEncoderStatusOffset": 7,
+            "motorEncoderStatusMask": 0,
+            "motorEncoderStatusExpected": 0,
+            "motorEncoderAngleDomain": "mechanical",
+            "encoderBits": 17,
+            "motorEncoderCountsPerRev": null,
+            "motorEncoderDirection": "calibration",
+            "motorEncoderTiming": "fast",
+            "motorEncoderRateHz": null,
+            "motorEncoderTimeoutUs": null,
+            "motorEncoderBitrate": 6250000,
+            "motorEncoderSinResource": "",
+            "motorEncoderCosResource": "",
+            "motorEncoderAmplitudeMin": null,
+            "motorEncoderAmplitudeMax": null,
+            "outputEncoderCapability": "present",
+            "outputEncoderType": "absolute",
+            "outputEncoderVendor": "gongwang",
+            "outputEncoderHallMode": "unselected",
+            "outputEncoderModel": "GW 内圈",
+            "outputEncoderInterface": "uart",
+            "outputEncoderResource": "USART2",
+            "outputEncoderTransferMode": "request_response",
+            "outputEncoderRequestHex": "3B",
+            "outputEncoderStartHex": "",
+            "outputEncoderStartupDelayUs": 200000,
+            "outputEncoderHeaderHex": "3B",
+            "outputEncoderFooterHex": "",
+            "outputEncoderFrameBytes": 9,
+            "outputEncoderDataOffset": 4,
+            "outputEncoderDataType": "unsigned",
+            "outputEncoderDataBits": 24,
+            "outputEncoderByteOrder": "little",
+            "outputEncoderValueScale": 1.1984224905356572e-05,
+            "outputEncoderValueOffset": 0,
+            "outputEncoderChecksum": "xor8",
+            "outputEncoderChecksumStart": 0,
+            "outputEncoderStatusOffset": 7,
+            "outputEncoderStatusMask": 0,
+            "outputEncoderStatusExpected": 0,
+            "outputEncoderAngleDomain": "mechanical",
+            "outputEncoderBits": 19,
+            "outputEncoderCountsPerRev": null,
+            "outputEncoderDirection": "calibration",
+            "outputEncoderTiming": "fast",
+            "outputEncoderRateHz": null,
+            "outputEncoderTimeoutUs": null,
+            "outputEncoderBitrate": 6250000,
+            "outputEncoderSinResource": "",
+            "outputEncoderCosResource": "",
+            "outputEncoderAmplitudeMin": null,
+            "outputEncoderAmplitudeMax": null,
+            "torqueCapability": "present",
+            "torqueSensorModel": "KW",
+            "torqueSensorInterface": "uart",
+            "torqueSensorResource": "USART3",
+            "torqueSensorTransferMode": "active_upload",
+            "torqueSensorRequestHex": "",
+            "torqueSensorStartHex": "48 AA 85 7F 14 D4",
+            "torqueSensorStartupDelayUs": 200000,
+            "torqueSensorHeaderHex": "48 AA",
+            "torqueSensorFooterHex": "",
+            "torqueSensorFrameBytes": 8,
+            "torqueSensorDataOffset": 2,
+            "torqueSensorDataType": "float32",
+            "torqueSensorDataBits": 32,
+            "torqueSensorByteOrder": "little",
+            "torqueSensorValueScale": 1,
+            "torqueSensorValueOffset": 0,
+            "torqueSensorChecksum": "crc16_modbus",
+            "torqueSensorChecksumStart": 0,
+            "torqueSensorStatusOffset": null,
+            "torqueSensorStatusMask": 0,
+            "torqueSensorStatusExpected": 0,
+            "torqueSensorUnit": "nm",
+            "torqueSensorRangeNm": null,
+            "torqueSensorScale": null,
+            "torqueSensorDirection": "calibration",
+            "torqueSensorTiming": "periodic",
+            "torqueSensorRateHz": 1000,
+            "torqueSensorTimeoutUs": null,
+            "torqueSensorBitrate": 256000,
+            "hallCapability": "unconfirmed"
+          },
+          "hw-safety": {
+            "hardwareTripCapability": "unconfirmed",
+            "tripPaths": [],
+            "resetOutputDisabled": true
+          }
+        },
+        "memoryLayout": {
+          "mcu": "STM32H745IIK6",
+          "board": "NEO",
+          "banks": [
+            {
+              "id": "neo-bank-1",
+              "name": "Bank 1",
+              "baseAddress": 134217728,
+              "sizeKiB": 1024,
+              "executable": "yes",
+              "sectors": [
+                {
+                  "id": "neo-bank-1-sector-0",
+                  "offsetKiB": 0,
+                  "sizeKiB": 128,
+                  "name": "Sector 0 · 硬件层",
+                  "reserved": false
+                },
+                {
+                  "id": "neo-bank-1-sector-1",
+                  "offsetKiB": 128,
+                  "sizeKiB": 128,
+                  "name": "Sector 1 · 算法层",
+                  "reserved": false
+                },
+                {
+                  "id": "neo-bank-1-sector-2",
+                  "offsetKiB": 256,
+                  "sizeKiB": 128,
+                  "name": "Sector 2 · 应用层",
+                  "reserved": false
+                },
+                {
+                  "id": "neo-bank-1-sector-3",
+                  "offsetKiB": 384,
+                  "sizeKiB": 128,
+                  "name": "Sector 3",
+                  "reserved": false
+                },
+                {
+                  "id": "neo-bank-1-sector-4",
+                  "offsetKiB": 512,
+                  "sizeKiB": 128,
+                  "name": "Sector 4",
+                  "reserved": false
+                },
+                {
+                  "id": "neo-bank-1-sector-5",
+                  "offsetKiB": 640,
+                  "sizeKiB": 128,
+                  "name": "Sector 5",
+                  "reserved": false
+                },
+                {
+                  "id": "neo-bank-1-sector-6",
+                  "offsetKiB": 768,
+                  "sizeKiB": 128,
+                  "name": "Sector 6",
+                  "reserved": false
+                },
+                {
+                  "id": "neo-bank-1-sector-7",
+                  "offsetKiB": 896,
+                  "sizeKiB": 128,
+                  "name": "Sector 7",
+                  "reserved": false
+                }
+              ]
+            },
+            {
+              "id": "neo-bank-2",
+              "name": "Bank 2",
+              "baseAddress": 135266304,
+              "sizeKiB": 1024,
+              "executable": "yes",
+              "sectors": [
+                {
+                  "id": "neo-bank-2-sector-0",
+                  "offsetKiB": 0,
+                  "sizeKiB": 128,
+                  "name": "Sector 0 · M4 通信",
+                  "reserved": true
+                },
+                {
+                  "id": "neo-bank-2-sector-1",
+                  "offsetKiB": 128,
+                  "sizeKiB": 128,
+                  "name": "Sector 1 · M4 通信",
+                  "reserved": true
+                },
+                {
+                  "id": "neo-bank-2-sector-2",
+                  "offsetKiB": 256,
+                  "sizeKiB": 128,
+                  "name": "Sector 2 · M4 通信",
+                  "reserved": true
+                },
+                {
+                  "id": "neo-bank-2-sector-3",
+                  "offsetKiB": 384,
+                  "sizeKiB": 128,
+                  "name": "Sector 3 · M4 通信",
+                  "reserved": true
+                },
+                {
+                  "id": "neo-bank-2-sector-4",
+                  "offsetKiB": 512,
+                  "sizeKiB": 128,
+                  "name": "Sector 4",
+                  "reserved": false
+                },
+                {
+                  "id": "neo-bank-2-sector-5",
+                  "offsetKiB": 640,
+                  "sizeKiB": 128,
+                  "name": "Sector 5 · 校准",
+                  "reserved": false
+                },
+                {
+                  "id": "neo-bank-2-sector-6",
+                  "offsetKiB": 768,
+                  "sizeKiB": 128,
+                  "name": "Sector 6 · 参数",
+                  "reserved": false
+                },
+                {
+                  "id": "neo-bank-2-sector-7",
+                  "offsetKiB": 896,
+                  "sizeKiB": 128,
+                  "name": "Sector 7 · 日志",
+                  "reserved": false
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "assemblies": [
+      {
+        "id": "assembly-474367dc-79f3-4a3c-823a-a6f02a38a5ae",
+        "name": "NEO_75_H_GW_KW",
+        "actuatorId": "actuator-ec79eb2a-79ca-47a0-9fa9-6cf4bea7c2f6",
+        "driverId": "driver-0230b7f9-839e-423b-8184-6cf3f974f9ce"
+      }
+    ],
+    "activeAssemblyId": "assembly-474367dc-79f3-4a3c-823a-a6f02a38a5ae",
+    "activeActuatorId": "actuator-ec79eb2a-79ca-47a0-9fa9-6cf4bea7c2f6",
+    "activeDriverId": "driver-0230b7f9-839e-423b-8184-6cf3f974f9ce",
+    "appliedFingerprint": "assembly-v1:{\"actuator\":{\"id\":\"actuator-ec79eb2a-79ca-47a0-9fa9-6cf4bea7c2f6\",\"motor\":{\"fluxWb\":0.007977,\"inductanceDH\":0.0001755,\"inductanceQH\":0.000189,\"maxCurrentA\":33.234,\"maxSpeedRpm\":9549.29658551372,\"polePairs\":10,\"ratedCurrentA\":10.889,\"resistanceOhm\":0.15,\"torqueConstantNmA\":null},\"name\":\"NEO_75_H_GW_KW\",\"reducer\":{\"backlashArcmin\":null,\"efficiency\":null,\"maxOutputTorqueNm\":50,\"ratio\":51}},\"assembly\":{\"actuatorId\":\"actuator-ec79eb2a-79ca-47a0-9fa9-6cf4bea7c2f6\",\"driverId\":\"driver-0230b7f9-839e-423b-8184-6cf3f974f9ce\",\"id\":\"assembly-474367dc-79f3-4a3c-823a-a6f02a38a5ae\",\"name\":\"NEO_75_H_GW_KW\"},\"driver\":{\"adcBits\":14,\"adcClockHz\":null,\"bindings\":[{\"id\":\"binding-48e34fa0-a20a-4c91-91c5-17e32c8c8983\",\"mode\":\"alternate\",\"notes\":\"源工程 neo_v25 启动 / NEO 外设配置，复用 AF7\",\"peripheral\":\"USART2\",\"pin\":\"PD4\",\"signal\":\"编码器 DE\"},{\"id\":\"binding-fc68e7a8-4332-4966-a6f4-8338e1175c4b\",\"mode\":\"alternate\",\"notes\":\"源工程 neo_v25 启动 / NEO 外设配置，复用 AF7\",\"peripheral\":\"USART2\",\"pin\":\"PD5\",\"signal\":\"编码器 TX\"},{\"id\":\"binding-75cbeb6c-fa7c-4373-8291-5ed39ccf1653\",\"mode\":\"alternate\",\"notes\":\"源工程 neo_v25 启动 / NEO 外设配置，复用 AF7\",\"peripheral\":\"USART2\",\"pin\":\"PD6\",\"signal\":\"编码器 RX\"},{\"id\":\"binding-e73cec44-8e52-4689-9030-88a9f63218bc\",\"mode\":\"alternate\",\"notes\":\"源工程 neo_v25 启动 / NEO 外设配置，复用 AF7\",\"peripheral\":\"USART3\",\"pin\":\"PD8\",\"signal\":\"力矩 TX\"},{\"id\":\"binding-42989973-6f3f-42fa-b203-4af087868166\",\"mode\":\"alternate\",\"notes\":\"源工程 neo_v25 启动 / NEO 外设配置，复用 AF7\",\"peripheral\":\"USART3\",\"pin\":\"PD9\",\"signal\":\"力矩 RX\"},{\"id\":\"binding-6d5fd19a-8675-4693-9023-06714f39d35b\",\"mode\":\"alternate\",\"notes\":\"源工程 neo_v25 启动 / NEO 外设配置，复用 AF7\",\"peripheral\":\"USART3\",\"pin\":\"PD12\",\"signal\":\"力矩 DE\"}],\"board\":\"NEO\",\"busVoltageV\":null,\"deadtimeNs\":500,\"eraseKiB\":128,\"firmwareReserveKiB\":896,\"flashKiB\":2048,\"hardware\":{\"hw-board\":{\"adcBits\":14,\"adcClockHz\":null,\"busVoltageV\":null,\"currentGain\":0.025,\"currentLoopDivider\":1,\"currentTopology\":\"three_shunt\",\"deadtimeNs\":500,\"pwmHz\":20000,\"resources\":[{\"id\":\"HRTIM1\",\"instance\":\"HRTIM1\",\"kind\":\"pwm\",\"name\":\"三相功率输出\",\"pins\":{\"A1\":\"PC6\",\"A2\":\"PC7\",\"B1\":\"PC8\",\"B2\":\"PA8\",\"C1\":\"PA9\",\"C2\":\"PA10\"},\"settings\":{\"alignment\":\"center\",\"polarity\":\"high\"}},{\"id\":\"ADC1\",\"instance\":\"ADC1\",\"kind\":\"adc\",\"name\":\"U 相电流 / W 相电压\",\"pins\":{\"INP0\":\"PA0_C\",\"INP9\":\"PB0\"},\"settings\":{\"sampleCycles\":1.5,\"trigger\":\"HRTIM1\"}},{\"id\":\"ADC2\",\"instance\":\"ADC2\",\"kind\":\"adc\",\"name\":\"V 相电流 / V 相电压\",\"pins\":{\"INP1\":\"PA1_C\",\"INP10\":\"PC0\"},\"settings\":{\"sampleCycles\":1.5,\"trigger\":\"HRTIM1\"}},{\"id\":\"ADC3\",\"instance\":\"ADC3\",\"kind\":\"adc\",\"name\":\"W 相电流 / U 相及母线电压\",\"pins\":{\"INP1\":\"PC3_C\",\"INP8\":\"PF6\",\"INP9\":\"PF4\"},\"settings\":{\"sampleCycles\":1.5,\"trigger\":\"HRTIM1\"}},{\"id\":\"USART2\",\"instance\":\"USART2\",\"kind\":\"uart\",\"name\":\"双编码器接口\",\"pins\":{\"DE\":\"PD4\",\"RX\":\"PD6\",\"TX\":\"PD5\"},\"settings\":{\"bitrate\":6250000,\"parity\":\"none\",\"physical\":\"rs485\",\"stopBits\":\"1\"}},{\"id\":\"USART3\",\"instance\":\"USART3\",\"kind\":\"uart\",\"name\":\"力矩传感器接口\",\"pins\":{\"DE\":\"PD12\",\"RX\":\"PD9\",\"TX\":\"PD8\"},\"settings\":{\"bitrate\":256000,\"parity\":\"none\",\"physical\":\"rs485\",\"stopBits\":\"1\"}},{\"id\":\"DRV8353_NFAULT\",\"instance\":\"GPIO\",\"kind\":\"gpio\",\"name\":\"DRV8353 nFAULT\",\"pins\":{\"IO\":\"PD1\"},\"settings\":{\"direction\":\"input\",\"initialLevel\":\"low\",\"pull\":\"up\"}}]},\"hw-platform\":{\"architecture\":\"arm\",\"busClockHz\":200000000,\"clockSource\":\"external\",\"coreConfigs\":{\"cm4\":{\"clockHz\":200000000,\"communicationIrqPriority\":null,\"controlIrqPriority\":null,\"dataCache\":\"disabled\",\"floatAbi\":\"hard\",\"instructionCache\":\"disabled\",\"irqPriorityBits\":4,\"systemTickHz\":1000},\"cm7\":{\"clockHz\":400000000,\"communicationIrqPriority\":null,\"controlIrqPriority\":2,\"dataCache\":\"enabled\",\"floatAbi\":\"hard\",\"instructionCache\":\"enabled\",\"irqPriorityBits\":4,\"systemTickHz\":1000}},\"eraseKiB\":128,\"firmwareReserveKiB\":896,\"flashKiB\":2048,\"oscillatorHz\":25000000,\"timerClockHz\":200000000},\"hw-safety\":{\"hardwareTripCapability\":\"unconfirmed\",\"resetOutputDisabled\":true,\"tripPaths\":[]},\"hw-sensors\":{\"encoderBits\":17,\"encoderCapability\":\"present\",\"hallCapability\":\"unconfirmed\",\"motorEncoderAmplitudeMax\":null,\"motorEncoderAmplitudeMin\":null,\"motorEncoderAngleDomain\":\"mechanical\",\"motorEncoderBitrate\":6250000,\"motorEncoderByteOrder\":\"little\",\"motorEncoderChecksum\":\"xor8\",\"motorEncoderChecksumStart\":0,\"motorEncoderCosResource\":\"\",\"motorEncoderCountsPerRev\":null,\"motorEncoderDataBits\":24,\"motorEncoderDataOffset\":1,\"motorEncoderDataType\":\"unsigned\",\"motorEncoderDirection\":\"calibration\",\"motorEncoderFooterHex\":\"\",\"motorEncoderFrameBytes\":9,\"motorEncoderHallMode\":\"unselected\",\"motorEncoderHeaderHex\":\"3B\",\"motorEncoderInterface\":\"uart\",\"motorEncoderModel\":\"GW 外圈\",\"motorEncoderRateHz\":null,\"motorEncoderRequestHex\":\"3B\",\"motorEncoderResource\":\"USART2\",\"motorEncoderSinResource\":\"\",\"motorEncoderStartHex\":\"\",\"motorEncoderStartupDelayUs\":200000,\"motorEncoderStatusExpected\":0,\"motorEncoderStatusMask\":0,\"motorEncoderStatusOffset\":7,\"motorEncoderTimeoutUs\":null,\"motorEncoderTiming\":\"fast\",\"motorEncoderTransferMode\":\"request_response\",\"motorEncoderType\":\"absolute\",\"motorEncoderValueOffset\":0,\"motorEncoderValueScale\":0.000047936899621426287,\"motorEncoderVendor\":\"gongwang\",\"outputEncoderAmplitudeMax\":null,\"outputEncoderAmplitudeMin\":null,\"outputEncoderAngleDomain\":\"mechanical\",\"outputEncoderBitrate\":6250000,\"outputEncoderBits\":19,\"outputEncoderByteOrder\":\"little\",\"outputEncoderCapability\":\"present\",\"outputEncoderChecksum\":\"xor8\",\"outputEncoderChecksumStart\":0,\"outputEncoderCosResource\":\"\",\"outputEncoderCountsPerRev\":null,\"outputEncoderDataBits\":24,\"outputEncoderDataOffset\":4,\"outputEncoderDataType\":\"unsigned\",\"outputEncoderDirection\":\"calibration\",\"outputEncoderFooterHex\":\"\",\"outputEncoderFrameBytes\":9,\"outputEncoderHallMode\":\"unselected\",\"outputEncoderHeaderHex\":\"3B\",\"outputEncoderInterface\":\"uart\",\"outputEncoderModel\":\"GW 内圈\",\"outputEncoderRateHz\":null,\"outputEncoderRequestHex\":\"3B\",\"outputEncoderResource\":\"USART2\",\"outputEncoderSinResource\":\"\",\"outputEncoderStartHex\":\"\",\"outputEncoderStartupDelayUs\":200000,\"outputEncoderStatusExpected\":0,\"outputEncoderStatusMask\":0,\"outputEncoderStatusOffset\":7,\"outputEncoderTimeoutUs\":null,\"outputEncoderTiming\":\"fast\",\"outputEncoderTransferMode\":\"request_response\",\"outputEncoderType\":\"absolute\",\"outputEncoderValueOffset\":0,\"outputEncoderValueScale\":0.000011984224905356572,\"outputEncoderVendor\":\"gongwang\",\"torqueCapability\":\"present\",\"torqueSensorBitrate\":256000,\"torqueSensorByteOrder\":\"little\",\"torqueSensorChecksum\":\"crc16_modbus\",\"torqueSensorChecksumStart\":0,\"torqueSensorDataBits\":32,\"torqueSensorDataOffset\":2,\"torqueSensorDataType\":\"float32\",\"torqueSensorDirection\":\"calibration\",\"torqueSensorFooterHex\":\"\",\"torqueSensorFrameBytes\":8,\"torqueSensorHeaderHex\":\"48 AA\",\"torqueSensorInterface\":\"uart\",\"torqueSensorModel\":\"KW\",\"torqueSensorRangeNm\":null,\"torqueSensorRateHz\":1000,\"torqueSensorRequestHex\":\"\",\"torqueSensorResource\":\"USART3\",\"torqueSensorScale\":null,\"torqueSensorStartHex\":\"48 AA 85 7F 14 D4\",\"torqueSensorStartupDelayUs\":200000,\"torqueSensorStatusExpected\":0,\"torqueSensorStatusMask\":0,\"torqueSensorStatusOffset\":null,\"torqueSensorTimeoutUs\":null,\"torqueSensorTiming\":\"periodic\",\"torqueSensorTransferMode\":\"active_upload\",\"torqueSensorUnit\":\"nm\",\"torqueSensorValueOffset\":0,\"torqueSensorValueScale\":1}},\"id\":\"driver-0230b7f9-839e-423b-8184-6cf3f974f9ce\",\"maxCurrentA\":null,\"mcu\":\"STM32H745IIK6\",\"memoryLayout\":{\"banks\":[{\"baseAddress\":134217728,\"executable\":\"yes\",\"id\":\"neo-bank-1\",\"name\":\"Bank 1\",\"sectors\":[{\"id\":\"neo-bank-1-sector-0\",\"name\":\"Sector 0 · 硬件层\",\"offsetKiB\":0,\"reserved\":false,\"sizeKiB\":128},{\"id\":\"neo-bank-1-sector-1\",\"name\":\"Sector 1 · 算法层\",\"offsetKiB\":128,\"reserved\":false,\"sizeKiB\":128},{\"id\":\"neo-bank-1-sector-2\",\"name\":\"Sector 2 · 应用层\",\"offsetKiB\":256,\"reserved\":false,\"sizeKiB\":128},{\"id\":\"neo-bank-1-sector-3\",\"name\":\"Sector 3\",\"offsetKiB\":384,\"reserved\":false,\"sizeKiB\":128},{\"id\":\"neo-bank-1-sector-4\",\"name\":\"Sector 4\",\"offsetKiB\":512,\"reserved\":false,\"sizeKiB\":128},{\"id\":\"neo-bank-1-sector-5\",\"name\":\"Sector 5\",\"offsetKiB\":640,\"reserved\":false,\"sizeKiB\":128},{\"id\":\"neo-bank-1-sector-6\",\"name\":\"Sector 6\",\"offsetKiB\":768,\"reserved\":false,\"sizeKiB\":128},{\"id\":\"neo-bank-1-sector-7\",\"name\":\"Sector 7\",\"offsetKiB\":896,\"reserved\":false,\"sizeKiB\":128}],\"sizeKiB\":1024},{\"baseAddress\":135266304,\"executable\":\"yes\",\"id\":\"neo-bank-2\",\"name\":\"Bank 2\",\"sectors\":[{\"id\":\"neo-bank-2-sector-0\",\"name\":\"Sector 0 · M4 通信\",\"offsetKiB\":0,\"reserved\":true,\"sizeKiB\":128},{\"id\":\"neo-bank-2-sector-1\",\"name\":\"Sector 1 · M4 通信\",\"offsetKiB\":128,\"reserved\":true,\"sizeKiB\":128},{\"id\":\"neo-bank-2-sector-2\",\"name\":\"Sector 2 · M4 通信\",\"offsetKiB\":256,\"reserved\":true,\"sizeKiB\":128},{\"id\":\"neo-bank-2-sector-3\",\"name\":\"Sector 3 · M4 通信\",\"offsetKiB\":384,\"reserved\":true,\"sizeKiB\":128},{\"id\":\"neo-bank-2-sector-4\",\"name\":\"Sector 4\",\"offsetKiB\":512,\"reserved\":false,\"sizeKiB\":128},{\"id\":\"neo-bank-2-sector-5\",\"name\":\"Sector 5 · 校准\",\"offsetKiB\":640,\"reserved\":false,\"sizeKiB\":128},{\"id\":\"neo-bank-2-sector-6\",\"name\":\"Sector 6 · 参数\",\"offsetKiB\":768,\"reserved\":false,\"sizeKiB\":128},{\"id\":\"neo-bank-2-sector-7\",\"name\":\"Sector 7 · 日志\",\"offsetKiB\":896,\"reserved\":false,\"sizeKiB\":128}],\"sizeKiB\":1024}],\"board\":\"NEO\",\"mcu\":\"STM32H745IIK6\"},\"name\":\"NEO · KW 力矩传感器\",\"pwmHz\":20000,\"vendor\":\"st\"}}"
+  },
+  "layerVersions": {
+    "selected": {
+      "hardware": "",
+      "foc": "",
+      "app": ""
+    },
+    "releases": []
+  },
+  "operation": {
+    "transport": "ethercat",
+    "adapter": "",
+    "address": "",
+    "nodeId": null,
+    "periodMs": null,
+    "mode": "disabled",
+    "positionRad": null,
+    "speedRadS": null,
+    "torqueNm": null,
+    "kp": null,
+    "kd": null
+  },
+  "memory": {
+    "layout": {
+      "mcu": "STM32H745IIK6",
+      "board": "NEO",
+      "banks": [
+        {
+          "id": "neo-bank-1",
+          "name": "Bank 1",
+          "baseAddress": 134217728,
+          "sizeKiB": 1024,
+          "executable": "yes",
+          "sectors": [
+            {
+              "id": "neo-bank-1-sector-0",
+              "offsetKiB": 0,
+              "sizeKiB": 128,
+              "name": "Sector 0 · 硬件层",
+              "reserved": false
+            },
+            {
+              "id": "neo-bank-1-sector-1",
+              "offsetKiB": 128,
+              "sizeKiB": 128,
+              "name": "Sector 1 · 算法层",
+              "reserved": false
+            },
+            {
+              "id": "neo-bank-1-sector-2",
+              "offsetKiB": 256,
+              "sizeKiB": 128,
+              "name": "Sector 2 · 应用层",
+              "reserved": false
+            },
+            {
+              "id": "neo-bank-1-sector-3",
+              "offsetKiB": 384,
+              "sizeKiB": 128,
+              "name": "Sector 3",
+              "reserved": false
+            },
+            {
+              "id": "neo-bank-1-sector-4",
+              "offsetKiB": 512,
+              "sizeKiB": 128,
+              "name": "Sector 4",
+              "reserved": false
+            },
+            {
+              "id": "neo-bank-1-sector-5",
+              "offsetKiB": 640,
+              "sizeKiB": 128,
+              "name": "Sector 5",
+              "reserved": false
+            },
+            {
+              "id": "neo-bank-1-sector-6",
+              "offsetKiB": 768,
+              "sizeKiB": 128,
+              "name": "Sector 6",
+              "reserved": false
+            },
+            {
+              "id": "neo-bank-1-sector-7",
+              "offsetKiB": 896,
+              "sizeKiB": 128,
+              "name": "Sector 7",
+              "reserved": false
+            }
+          ]
+        },
+        {
+          "id": "neo-bank-2",
+          "name": "Bank 2",
+          "baseAddress": 135266304,
+          "sizeKiB": 1024,
+          "executable": "yes",
+          "sectors": [
+            {
+              "id": "neo-bank-2-sector-0",
+              "offsetKiB": 0,
+              "sizeKiB": 128,
+              "name": "Sector 0 · M4 通信",
+              "reserved": true
+            },
+            {
+              "id": "neo-bank-2-sector-1",
+              "offsetKiB": 128,
+              "sizeKiB": 128,
+              "name": "Sector 1 · M4 通信",
+              "reserved": true
+            },
+            {
+              "id": "neo-bank-2-sector-2",
+              "offsetKiB": 256,
+              "sizeKiB": 128,
+              "name": "Sector 2 · M4 通信",
+              "reserved": true
+            },
+            {
+              "id": "neo-bank-2-sector-3",
+              "offsetKiB": 384,
+              "sizeKiB": 128,
+              "name": "Sector 3 · M4 通信",
+              "reserved": true
+            },
+            {
+              "id": "neo-bank-2-sector-4",
+              "offsetKiB": 512,
+              "sizeKiB": 128,
+              "name": "Sector 4",
+              "reserved": false
+            },
+            {
+              "id": "neo-bank-2-sector-5",
+              "offsetKiB": 640,
+              "sizeKiB": 128,
+              "name": "Sector 5 · 校准",
+              "reserved": false
+            },
+            {
+              "id": "neo-bank-2-sector-6",
+              "offsetKiB": 768,
+              "sizeKiB": 128,
+              "name": "Sector 6 · 参数",
+              "reserved": false
+            },
+            {
+              "id": "neo-bank-2-sector-7",
+              "offsetKiB": 896,
+              "sizeKiB": 128,
+              "name": "Sector 7 · 日志",
+              "reserved": false
+            }
+          ]
+        }
+      ]
+    },
+    "placements": {
+      "hardware": {
+        "bankId": "neo-bank-1",
+        "sectorIds": [
+          "neo-bank-1-sector-0"
+        ],
+        "budgetKiB": 128
+      },
+      "foc": {
+        "bankId": "neo-bank-1",
+        "sectorIds": [
+          "neo-bank-1-sector-1"
+        ],
+        "budgetKiB": 128
+      },
+      "app": {
+        "bankId": "neo-bank-1",
+        "sectorIds": [
+          "neo-bank-1-sector-2"
+        ],
+        "budgetKiB": 128
+      },
+      "motion-calibration": {
+        "bankId": "neo-bank-2",
+        "sectorIds": [
+          "neo-bank-2-sector-5"
+        ],
+        "budgetKiB": 128
+      },
+      "parameters": {
+        "bankId": "neo-bank-2",
+        "sectorIds": [
+          "neo-bank-2-sector-6"
+        ],
+        "budgetKiB": 128
+      },
+      "fault-records": {
+        "bankId": "neo-bank-2",
+        "sectorIds": [
+          "neo-bank-2-sector-7"
+        ],
+        "budgetKiB": 128
+      }
+    }
+  },
+  "execution": {
+    "mcu": "STM32H745IIK6",
+    "bootCore": "cm7",
+    "assignments": {
+      "app-runtime": "cm7",
+      "app-params": "cm7",
+      "app-comms": "cm4",
+      "app-motion": "cm7",
+      "app-calibration": "cm7",
+      "app-safety": "cm7",
+      "foc-lifecycle": "cm7",
+      "foc-feedback": "cm7",
+      "foc-observer": "cm7",
+      "foc-current": "cm7",
+      "foc-modulation": "cm7",
+      "foc-compensation": "cm7",
+      "hw-platform": "cm7",
+      "hw-board": "cm7",
+      "hw-sensors": "cm7",
+      "hw-safety": "cm7"
+    },
+    "ipc": {
+      "transport": "shared_memory",
+      "notification": "polling",
+      "cachePolicy": "noncacheable",
+      "sharedAddress": 939524096,
+      "sharedSizeKiB": 64
+    }
+  },
+  "compatibility": {}
+}

@@ -1,0 +1,1127 @@
+/* Load after the feature styles. Light retains the existing paper palette. */
+.appearance-settings { position: relative; }
+.appearance-settings > summary { list-style: none; user-select: none; }
+.appearance-settings > summary::-webkit-details-marker { display: none; }
+.appearance-settings-toggle { min-width: 38px; }
+.appearance-settings[open] > summary { background: var(--soft); border-color: var(--line-strong); }
+.appearance-settings-panel { position: absolute; z-index: 65; top: calc(100% + 9px); right: 0; width: 292px; max-width: calc(100vw - 28px); padding: 20px; border: 1px solid var(--line-strong); border-radius: 13px; background: var(--surface); color: var(--ink); box-shadow: 0 12px 36px rgb(20 30 24 / 14%); }
+.appearance-settings-panel h2 { margin-bottom: 18px; font-size: 14px; }
+.appearance-settings-panel > .form-field { margin: 0; }
+.appearance-settings-panel .field-label { font-size: 12px; }
+.appearance-motion-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 20px; padding-top: 17px; border-top: 1px solid var(--line); }
+.appearance-motion-row > div { min-width: 0; }
+.appearance-motion-row strong { display: block; font-size: 12px; font-weight: 500; }
+.appearance-motion-row > div > span { display: block; margin-top: 4px; color: var(--muted); font-size: 10px; }
+.appearance-motion-row .motion-toggle { flex: none; min-width: 86px; font-size: 11px; }
+:root[data-theme="light"] { color-scheme: light; }
+
+@media screen {
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page: #141a18;
+    --surface: #1b2420;
+    --surface-hover: #25312b;
+    --surface-nested: #18211d;
+    --ink: #e7ede7;
+    --muted: #b3beb5;
+    --subtle: #97a79b;
+    --line: #34443a;
+    --line-strong: #526759;
+    --soft: #27372e;
+    --primary: #b2d8bd;
+    --primary-hover: #c7e5cf;
+    --focus: #9bd3ad;
+    --focus-ring: rgb(155 211 173 / 19%);
+    --control-border: #526459;
+    --control-fill: #19221d;
+    --app: #a8c4e5;
+    --app-tint: #23303e;
+    --foc: #9ac9b4;
+    --foc-tint: #20342b;
+    --hardware: #d5c29a;
+    --hardware-tint: #332f24;
+    --actuator: #8bd1b2;
+    --actuator-tint: #1c352a;
+    --actuator-border: #426953;
+    --driver: #9bc2ee;
+    --driver-tint: #203246;
+    --driver-border: #496785;
+    --danger: #f0a69c;
+    --danger-tint: #3a2524;
+    --warning: #e4c985;
+    --warning-tint: #352f20;
+  }
+  :root[data-theme="dark"] ::selection { background: #3b5b46; color: var(--ink); }
+  :root[data-theme="dark"] #main-nav > a.active,
+  :root[data-theme="dark"] #main-nav > a[aria-current="page"] { background: var(--soft); }
+  :root[data-theme="dark"] .button:active:not(:disabled) { background: var(--surface-hover); }
+  :root[data-theme="dark"] .button.primary:active:not(:disabled) { background: var(--primary-hover); }
+  :root[data-theme="dark"] .button:disabled,
+  :root[data-theme="dark"] .button.primary:disabled { color: var(--subtle); background: var(--surface-nested); }
+  :root[data-theme="dark"] .button.quiet:disabled { background: transparent; }
+  :root[data-theme="dark"] .app-banner { border-color: var(--danger); }
+  :root[data-theme="dark"] .status-pill.success { color: var(--actuator); background: var(--actuator-tint); }
+  :root[data-theme="dark"] .choice:has(input:checked) { background: var(--foc-tint); border-color: var(--actuator-border); }
+  :root[data-theme="dark"] input[type="checkbox"],
+  :root[data-theme="dark"] input[type="radio"] { accent-color: var(--primary); }
+  :root[data-theme="dark"] .field-input:focus,
+  :root[data-theme="dark"] .field-select:focus,
+  :root[data-theme="dark"] .compact-input:focus,
+  :root[data-theme="dark"] .form-field input:not([type="checkbox"]):not([type="radio"]):focus,
+  :root[data-theme="dark"] .form-field select:focus,
+  :root[data-theme="dark"] .form-field textarea:focus { outline-color: var(--focus); }
+  :root[data-theme="dark"] select.field-select:not([multiple]),
+  :root[data-theme="dark"] .form-field select:not([multiple]) { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='m4 6 4 4 4-4' fill='none' stroke='%23b3beb5' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+
+  /* Architecture cards use solid backing plates and cached Canvas colors. */
+  :root[data-theme="dark"] .layer-entry { --card-front: #222d27; }
+  :root[data-theme="dark"] .module-card.selected,
+  :root[data-theme="dark"] .module-card.disabled.selected { --card-front: #2b3c30; --card-outline: #668771; }
+  :root[data-theme="dark"] .layer-entry::before,
+  :root[data-theme="dark"] .module-card::before,
+  :root[data-theme="dark"] .part-card::before { background: #0e1511; border-color: var(--line); }
+  :root[data-theme="dark"] .line-field { --line-field-ink: #b4cdbb; }
+  :root[data-theme="dark"] dialog::backdrop { background: rgb(3 8 5 / 60%); }
+  :root[data-theme="dark"] .appearance-settings-panel,
+  :root[data-theme="dark"] .configuration-more-body,
+  :root[data-theme="dark"] .native-menu-items,
+  :root[data-theme="dark"] .select-menu-pop,
+  :root[data-theme="dark"] .notification-history,
+  :root[data-theme="dark"] .notification-dialog { box-shadow: 0 16px 42px rgb(0 0 0 / 35%); }
+
+  :root[data-theme="dark"] .notification-toast { --notification-accent: var(--driver); --notification-tint: var(--driver-tint); box-shadow: 0 4px 18px rgb(0 0 0 / 25%); }
+  :root[data-theme="dark"] .notification-toast[data-level="success"] { --notification-accent: var(--actuator); --notification-tint: var(--actuator-tint); }
+  :root[data-theme="dark"] .notification-toast[data-level="info"] { --notification-accent: var(--driver); --notification-tint: var(--driver-tint); }
+  :root[data-theme="dark"] .notification-toast[data-level="warning"],
+  :root[data-theme="dark"] .notification-toast[data-level="pending"] { --notification-accent: var(--warning); --notification-tint: var(--warning-tint); }
+  :root[data-theme="dark"] .notification-toast[data-level="error"] { --notification-accent: var(--danger); --notification-tint: var(--danger-tint); }
+  :root[data-theme="dark"] .notification-history-item { --notification-history-accent: var(--driver); }
+  :root[data-theme="dark"] .notification-history-item[data-level="success"] { --notification-history-accent: var(--actuator); }
+  :root[data-theme="dark"] .notification-history-item[data-level="info"] { --notification-history-accent: var(--driver); }
+  :root[data-theme="dark"] .notification-history-item[data-level="warning"],
+  :root[data-theme="dark"] .notification-history-item[data-level="pending"] { --notification-history-accent: var(--warning); }
+  :root[data-theme="dark"] .notification-history-item[data-level="error"] { --notification-history-accent: var(--danger); }
+  :root[data-theme="dark"] .notification-unread-count { color: var(--surface); }
+
+  :root[data-theme="dark"] .memory-tone-hardware { --memory-fill: #3b3425; --memory-ink: #d5c29a; }
+  :root[data-theme="dark"] .memory-tone-foc { --memory-fill: #254334; --memory-ink: #9ac9b4; }
+  :root[data-theme="dark"] .memory-tone-app { --memory-fill: #293c50; --memory-ink: #a8c4e5; }
+  :root[data-theme="dark"] .memory-tone-motion-calibration { --memory-fill: #383048; --memory-ink: #cab4e4; }
+  :root[data-theme="dark"] .memory-tone-parameters { --memory-fill: #3c3827; --memory-ink: #d8cb92; }
+  :root[data-theme="dark"] .memory-tone-fault-records { --memory-fill: #432f28; --memory-ink: #e1b19a; }
+  :root[data-theme="dark"] .memory-tone-reserved { --memory-fill: #303a33; --memory-ink: #b0beb4; }
+  :root[data-theme="dark"] .memory-tone-conflict { --memory-fill: var(--danger-tint); --memory-ink: var(--danger); }
+  :root[data-theme="dark"] .memory-map-sector.memory-tone-reserved { background-image: repeating-linear-gradient(135deg,transparent,transparent 4px,rgb(190 210 196 / 9%) 4px,rgb(190 210 196 / 9%) 5px); }
+  :root[data-theme="dark"] .memory-target.mismatch { border-color: var(--danger); }
+  :root[data-theme="dark"] .performance-chart svg > g:nth-of-type(5n + 1) { fill: #8bd1b2; stroke: #8bd1b2; }
+  :root[data-theme="dark"] .performance-chart svg > g:nth-of-type(5n + 2) { fill: #9bc2ee; stroke: #9bc2ee; }
+  :root[data-theme="dark"] .performance-chart svg > g:nth-of-type(5n + 3) { fill: #d5c29a; stroke: #d5c29a; }
+  :root[data-theme="dark"] .performance-chart svg > g:nth-of-type(5n + 4) { fill: #d0aee0; stroke: #d0aee0; }
+  :root[data-theme="dark"] .performance-chart svg > g:nth-of-type(5n + 5) { fill: #e4c985; stroke: #e4c985; }
+  :root[data-theme="dark"] .performance-legend span:nth-child(5n + 1) i { background: #8bd1b2 !important; }
+  :root[data-theme="dark"] .performance-legend span:nth-child(5n + 2) i { background: #9bc2ee !important; }
+  :root[data-theme="dark"] .performance-legend span:nth-child(5n + 3) i { background: #d5c29a !important; }
+  :root[data-theme="dark"] .performance-legend span:nth-child(5n + 4) i { background: #d0aee0 !important; }
+  :root[data-theme="dark"] .performance-legend span:nth-child(5n + 5) i { background: #e4c985 !important; }
+}
+@media screen {
+  /* 新拟物：所有表面与基底同色，层次只由左上高光/右下暗影的成对阴影承担。
+     偏移比 StyleKit 参考小一档，工作台栅格间距下阴影不会互相叠加。 */
+  :root[data-theme="neumorphism"] {
+    color-scheme: light;
+    --page: #e0e5ec;
+    --surface: #e0e5ec;
+    --surface-hover: #dce1e8;
+    --surface-nested: #e0e5ec;
+    --ink: #3d4451;
+    --muted: #535c68;
+    --subtle: #5d6572;
+    --line: rgb(61 68 81 / 10%);
+    --line-strong: rgb(61 68 81 / 20%);
+    --soft: #e0e5ec;
+    --primary: #5a49e8;
+    --primary-hover: #4b3dd4;
+    --focus: #6d5dfc;
+    --focus-ring: rgb(109 93 252 / 16%);
+    --control-border: transparent;
+    --control-fill: #e0e5ec;
+    --radius: 24px;
+    --app: #476289;
+    --app-tint: #dde3ee;
+    --foc: #2b6857;
+    --foc-tint: #dbe8e4;
+    --hardware: #6f5c3e;
+    --hardware-tint: #e8e2d4;
+    --actuator: #1f6553;
+    --actuator-tint: #d9e7e1;
+    --actuator-border: rgb(31 101 83 / 35%);
+    --driver: #35619a;
+    --driver-tint: #dae2ef;
+    --driver-border: rgb(53 97 154 / 35%);
+    --danger: #b03030;
+    --danger-tint: #f3dfdd;
+    --warning: #755c24;
+    --warning-tint: #edeadb;
+    --font: "Maple Mono CN", "Maple Mono", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+    --neu-shadow-dark: #b8bcc2;
+    --neu-shadow-light: #ffffff;
+    --neu-raised: 6px 6px 12px var(--neu-shadow-dark), -6px -6px 12px var(--neu-shadow-light);
+    --neu-raised-sm: 4px 4px 8px var(--neu-shadow-dark), -4px -4px 8px var(--neu-shadow-light);
+    --neu-raised-hover: 3px 3px 6px var(--neu-shadow-dark), -3px -3px 6px var(--neu-shadow-light);
+    --neu-raised-lg: 10px 10px 22px var(--neu-shadow-dark), -10px -10px 22px var(--neu-shadow-light);
+    --neu-sunken: inset 4px 4px 8px var(--neu-shadow-dark), inset -4px -4px 8px var(--neu-shadow-light);
+    --neu-sunken-sm: inset 2px 2px 4px var(--neu-shadow-dark), inset -2px -2px 4px var(--neu-shadow-light);
+    --neu-focus-sunken: inset 4px 4px 8px rgb(109 93 252 / 30%), inset -4px -4px 8px var(--neu-shadow-light);
+    --neu-ring: 0 0 0 2px rgb(109 93 252 / 55%);
+  }
+  /* 深色拟物：整套组件规则都引用 --neu-* 变量，这里只换底色与阴影对。
+     文本与强调色沿用默认深色主题的对比度校准值（同一底色系）。 */
+  :root[data-theme="neumorphism"][data-mode="dark"] {
+    color-scheme: dark;
+    --page: #262b33;
+    --surface: #262b33;
+    --surface-hover: #2d333d;
+    --surface-nested: #262b33;
+    --ink: #e7ede7;
+    --muted: #b3beb5;
+    --subtle: #a2adb4;
+    --line: rgb(231 237 231 / 10%);
+    --line-strong: rgb(231 237 231 / 20%);
+    --soft: #262b33;
+    --primary: #aca6f8;
+    --primary-hover: #beb9ff;
+    --focus: #b3a7ff;
+    --focus-ring: rgb(179 167 255 / 20%);
+    --control-border: transparent;
+    --control-fill: #262b33;
+    --app: #a8c4e5;
+    --app-tint: #23303e;
+    --foc: #9ac9b4;
+    --foc-tint: #20342b;
+    --hardware: #d5c29a;
+    --hardware-tint: #332f24;
+    --actuator: #8bd1b2;
+    --actuator-tint: #1c352a;
+    --actuator-border: #426953;
+    --driver: #9bc2ee;
+    --driver-tint: #203246;
+    --driver-border: #496785;
+    --danger: #f0a69c;
+    --danger-tint: #3a2524;
+    --warning: #e4c985;
+    --warning-tint: #352f20;
+    --neu-shadow-dark: #171a20;
+    --neu-shadow-light: #39404d;
+    --neu-raised: 6px 6px 12px var(--neu-shadow-dark), -6px -6px 12px var(--neu-shadow-light);
+    --neu-raised-sm: 4px 4px 8px var(--neu-shadow-dark), -4px -4px 8px var(--neu-shadow-light);
+    --neu-raised-hover: 3px 3px 6px var(--neu-shadow-dark), -3px -3px 6px var(--neu-shadow-light);
+    --neu-raised-lg: 10px 10px 22px var(--neu-shadow-dark), -10px -10px 22px var(--neu-shadow-light);
+    --neu-sunken: inset 4px 4px 8px var(--neu-shadow-dark), inset -4px -4px 8px var(--neu-shadow-light);
+    --neu-sunken-sm: inset 2px 2px 4px var(--neu-shadow-dark), inset -2px -2px 4px var(--neu-shadow-light);
+    --neu-focus-sunken: inset 4px 4px 8px rgb(172 166 248 / 26%), inset -4px -4px 8px var(--neu-shadow-light);
+    --neu-ring: 0 0 0 2px rgb(172 166 248 / 55%);
+  }
+  :root[data-theme="neumorphism"][data-mode="dark"] ::selection { background: rgb(172 166 248 / 30%); }
+  :root[data-theme="neumorphism"][data-mode="dark"] :is(dialog, .notification-dialog)::backdrop { background: rgb(3 6 12 / 62%); }
+  :root[data-theme="neumorphism"][data-mode="dark"] .button:disabled,
+  :root[data-theme="neumorphism"][data-mode="dark"] .button.primary:disabled { color: rgb(231 237 231 / 36%); }
+  :root[data-theme="neumorphism"][data-mode="dark"] :is(select.field-select:not([multiple]), .form-field select:not([multiple])) { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='m4 6 4 4 4-4' fill='none' stroke='%23b3beb5' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+  :root[data-theme="neumorphism"][data-mode="dark"] .line-field { --line-field-ink: #b4cdbb; }
+  :root[data-theme="neumorphism"] ::selection { background: rgb(109 93 252 / 24%); color: var(--ink); }
+  :root[data-theme="neumorphism"] h1 { font-family: inherit; letter-spacing: -.01em; }
+
+  :root[data-theme="neumorphism"] :is(.panel, .inspector, .logic-player, .guide-content, .design-editor, .assembly-builder, .performance-history, .performance-editor, .performance-record, .checks-panel, .configuration-toolbar, dialog) { border-color: transparent; box-shadow: var(--neu-raised); }
+  :root[data-theme="neumorphism"] dialog { border-radius: 24px; }
+  :root[data-theme="neumorphism"] :is(dialog, .notification-dialog)::backdrop { background: rgb(61 68 81 / 32%); }
+  :root[data-theme="neumorphism"] :is(.notification-history, .appearance-settings-panel) { border-color: transparent; border-radius: 20px; box-shadow: var(--neu-raised-lg); }
+  :root[data-theme="neumorphism"] :is(.native-menu-items, .part-drag-preview, .performance-record-menu > div) { border-color: transparent; border-radius: 14px; box-shadow: var(--neu-raised-lg); }
+  :root[data-theme="neumorphism"] .configuration-more-body { border-color: transparent; border-radius: 16px; box-shadow: var(--neu-raised-lg); }
+  :root[data-theme="neumorphism"] .field-help-tooltip { border-color: transparent; border-radius: 12px; box-shadow: var(--neu-raised-lg); }
+  :root[data-theme="neumorphism"] :is(.toast, .notification-toast) { border-color: transparent; box-shadow: var(--neu-raised); }
+
+  :root[data-theme="neumorphism"] :is(.core-card, .summary-stat, .issue-card, .template-card, .library-item, .version-card, .version-combination, .execution-lane, .overview-facts > article, .overview-facts > section, .overview-facts > div, .memory-target, .memory-region, .memory-map-bank, .memory-checks, .memory-summary, .memory-bank-editor, .ram-binding, .ram-capacity, .ram-geometry, .ram-placement, .native-settings, .native-inspection, .start-strip, .assembly-stage, .evidence-card, .layer-interface-bridge, .part-select) { border-color: transparent; border-radius: 16px; box-shadow: var(--neu-raised-sm); transition: box-shadow var(--motion), background-color var(--motion), border-color var(--motion); }
+  :root[data-theme="neumorphism"] :is(.template-card, .library-item, .summary-stat):hover { box-shadow: var(--neu-raised-hover); }
+  :root[data-theme="neumorphism"] .version-card { border-top-color: var(--layer-color, var(--neu-shadow-dark)); }
+
+  :root[data-theme="neumorphism"] :is(.computed-field, .native-log, .native-waveform, .memory-map-track, .inspector-notice, .sensor-note, .storage-item, .module-contract-card, .memory-generator, .configuration-selected-asset, .hardware-resource, .sensor-card, .check-row, .empty-state, .loading-state, .design-empty, .parts-empty, .memory-empty, .ram-empty, .hardware-empty, .performance-chart-empty, .ram-capacity-unknown, .native-source-module, .memory-map-empty) { border-color: transparent; border-radius: 12px; box-shadow: var(--neu-sunken); }
+  :root[data-theme="neumorphism"] .ram-capacity-track { box-shadow: var(--neu-sunken-sm); }
+  :root[data-theme="neumorphism"] .issue-card.error { border-left-color: var(--danger); }
+  :root[data-theme="neumorphism"] :is(.issue-card.warning, .issue-card.pending, .issue-card.info) { border-left-color: var(--line-strong); }
+  :root[data-theme="neumorphism"] :is(.configuration-selected-asset.asset-actuator) { border-left-color: var(--foc); }
+  :root[data-theme="neumorphism"] :is(.configuration-selected-asset.asset-driver) { border-left-color: var(--app); }
+
+  :root[data-theme="neumorphism"] .button { border-color: transparent; border-radius: 999px; padding-inline: 18px; background-color: var(--control-fill); box-shadow: var(--neu-raised-sm); transition: box-shadow var(--motion), background-color var(--motion), border-color var(--motion), color var(--motion); }
+  :root[data-theme="neumorphism"] .button.small { padding-inline: 12px; }
+  :root[data-theme="neumorphism"] .row-actions .button { padding-inline: 12px; }
+  :root[data-theme="neumorphism"] .button:hover:not(:disabled) { border-color: transparent; background-color: var(--control-fill); box-shadow: var(--neu-raised-hover); }
+  :root[data-theme="neumorphism"] .button:active:not(:disabled) { background-color: var(--control-fill); box-shadow: var(--neu-sunken-sm); }
+  :root[data-theme="neumorphism"] .button.primary { border-color: transparent; background-color: var(--control-fill); color: var(--primary); box-shadow: 4px 4px 10px rgb(90 73 232 / 38%), -4px -4px 10px var(--neu-shadow-light); }
+  :root[data-theme="neumorphism"] .button.primary:hover:not(:disabled) { color: var(--primary-hover); box-shadow: 3px 3px 6px rgb(90 73 232 / 30%), -3px -3px 6px var(--neu-shadow-light); }
+  :root[data-theme="neumorphism"] .button.primary:active:not(:disabled) { color: var(--primary-hover); box-shadow: var(--neu-sunken-sm); }
+  :root[data-theme="neumorphism"] .button.quiet { background-color: transparent; box-shadow: none; }
+  :root[data-theme="neumorphism"] .button.quiet:hover:not(:disabled) { background-color: var(--control-fill); box-shadow: var(--neu-raised-sm); }
+  :root[data-theme="neumorphism"] .button:disabled,
+  :root[data-theme="neumorphism"] .button.primary:disabled { color: rgb(61 68 81 / 42%); background-color: var(--control-fill); border-color: transparent; box-shadow: none; }
+  :root[data-theme="neumorphism"] .button.quiet:disabled { background-color: transparent; }
+  :root[data-theme="neumorphism"] .validation-toolbar button.active { border-color: transparent; background-color: var(--control-fill); color: var(--primary); box-shadow: var(--neu-sunken-sm); }
+  :root[data-theme="neumorphism"] .native-menu-items > .button { border-color: transparent; border-radius: 10px; background-color: transparent; box-shadow: none; }
+  :root[data-theme="neumorphism"] .native-menu-items > .button:hover:not(:disabled) { background-color: var(--control-fill); box-shadow: var(--neu-sunken-sm); }
+
+  :root[data-theme="neumorphism"] :is(.field-input, .field-select, .compact-input, .form-field input:not([type="checkbox"]):not([type="radio"]), .form-field select, .form-field textarea) { border-color: transparent; border-radius: 16px; background-color: var(--control-fill); box-shadow: var(--neu-sunken); transition: box-shadow var(--motion), border-color var(--motion), background-color var(--motion); }
+  :root[data-theme="neumorphism"] :is(.field-input, .field-select, .compact-input, .form-field input:not([type="checkbox"]):not([type="radio"]), .form-field select, .form-field textarea):hover:not(:disabled) { border-color: transparent; }
+  :root[data-theme="neumorphism"] .field-input-wrap { border-color: transparent; border-radius: 16px; background-color: var(--control-fill); box-shadow: var(--neu-sunken); }
+  :root[data-theme="neumorphism"] .field-input-wrap .field-input { border-color: transparent; border-radius: 16px; background: transparent; box-shadow: none; }
+  :root[data-theme="neumorphism"] :is(.field-input, .field-select, .compact-input, .form-field input:not([type="checkbox"]):not([type="radio"]), .form-field select, .form-field textarea):focus { border-color: transparent; outline-color: rgb(109 93 252 / 45%); box-shadow: var(--neu-focus-sunken); }
+  :root[data-theme="neumorphism"] :is(.form-field input:disabled, .form-field select:disabled, .form-field textarea:disabled, .field-input:disabled, .field-select:disabled) { border-color: transparent; }
+  :root[data-theme="neumorphism"] :is(.form-field input[readonly], .form-field textarea[readonly]) { background-color: var(--control-fill); }
+  :root[data-theme="neumorphism"] :is(.form-field:has(.field-error) .field-input, .form-field:has(.field-error) .field-select, [aria-invalid="true"]) { border-color: rgb(176 48 48 / 55%); }
+  :root[data-theme="neumorphism"] select.field-select:not([multiple]),
+  :root[data-theme="neumorphism"] .form-field select:not([multiple]) { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='m4 6 4 4 4-4' fill='none' stroke='%23535c68' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+
+  :root[data-theme="neumorphism"] #main-nav > a { border-radius: 999px; transition: box-shadow var(--motion), color var(--motion); }
+  :root[data-theme="neumorphism"] #main-nav > a:hover { background-color: var(--control-fill); box-shadow: var(--neu-raised-sm); color: var(--ink); }
+  :root[data-theme="neumorphism"] #main-nav > a:active:not(.active):not([aria-current="page"]) { box-shadow: var(--neu-sunken-sm); }
+  :root[data-theme="neumorphism"] #main-nav > a.active,
+  :root[data-theme="neumorphism"] #main-nav > a[aria-current="page"] { background-color: var(--control-fill); box-shadow: var(--neu-sunken-sm); color: var(--primary); }
+  :root[data-theme="neumorphism"] .layer-nav { margin-left: 12px; padding-left: 0; border-left: 0; }
+  :root[data-theme="neumorphism"] .layer-nav a { border-radius: 999px; padding-inline: 12px; transition: box-shadow var(--motion), color var(--motion); }
+  :root[data-theme="neumorphism"] .layer-nav a:hover { background-color: var(--control-fill); box-shadow: var(--neu-raised-sm); color: var(--ink); }
+  :root[data-theme="neumorphism"] :is(.layer-nav a.active, .layer-nav a[aria-current="page"]) { background-color: var(--control-fill); box-shadow: var(--neu-sunken-sm); color: var(--primary); }
+  :root[data-theme="neumorphism"] .configuration-tree summary { border-radius: 14px; }
+  :root[data-theme="neumorphism"] .configuration-tree .guide-step { padding-inline: 12px; }
+  :root[data-theme="neumorphism"] .configuration-tree-module { padding-inline: 10px; }
+  :root[data-theme="neumorphism"] .nav-count,
+  :root[data-theme="neumorphism"] .status-pill { border-radius: 999px; }
+  :root[data-theme="neumorphism"] .status-pill.success { color: var(--actuator); background: var(--actuator-tint); }
+  :root[data-theme="neumorphism"] .workspace-icon { box-shadow: var(--neu-sunken-sm); }
+  :root[data-theme="neumorphism"] .dialog-close { border-radius: 10px; box-shadow: var(--neu-sunken-sm); }
+
+  :root[data-theme="neumorphism"] .layer-entry { --card-front: var(--control-fill); }
+  :root[data-theme="neumorphism"] :is(.layer-entry, .module-card, .part-card) { border-radius: 20px; box-shadow: var(--neu-raised-sm); transition: box-shadow var(--motion), translate var(--motion), background-color var(--motion); }
+  :root[data-theme="neumorphism"] :is(.layer-entry, .module-card, .part-card)::before { background: transparent; border-color: transparent; }
+  :root[data-theme="neumorphism"] :is(.layer-entry, .module-card, .part-card):hover { box-shadow: var(--neu-raised-hover); translate: 0 -2px; }
+  :root[data-theme="neumorphism"] :is(.module-card.selected, .module-card.disabled.selected) { --card-front: var(--control-fill); --card-outline: transparent; box-shadow: var(--neu-raised-sm), var(--neu-ring); }
+  :root[data-theme="neumorphism"] .module-card.selected:hover { box-shadow: var(--neu-raised-hover), var(--neu-ring); }
+  :root[data-theme="neumorphism"] .part-card.selected { --card-outline: transparent; box-shadow: var(--neu-raised-sm), var(--neu-ring); }
+  :root[data-theme="neumorphism"] .part-card.selected:hover { box-shadow: var(--neu-raised-hover), var(--neu-ring); }
+  :root[data-theme="neumorphism"] .line-field { --line-field-ink: #4d5666; }
+
+  :root[data-theme="neumorphism"] .assembly-slot { border-color: var(--line); box-shadow: var(--neu-sunken-sm); }
+  :root[data-theme="neumorphism"] .choice { border-color: transparent; border-radius: 14px; box-shadow: var(--neu-sunken-sm); }
+  :root[data-theme="neumorphism"] .choice:not(:has(input:checked)):hover { box-shadow: var(--neu-raised-sm); }
+  :root[data-theme="neumorphism"] .memory-sector-choice { border-radius: 12px; }
+  :root[data-theme="neumorphism"] .select-menu-option { border-radius: 10px; }
+  :root[data-theme="neumorphism"] .choice:has(input:checked) { color: var(--primary); background: var(--control-fill); border-color: rgb(109 93 252 / 45%); box-shadow: var(--neu-sunken-sm); }
+  :root[data-theme="neumorphism"] .chip { border-color: var(--line); box-shadow: var(--neu-sunken-sm); }
+  :root[data-theme="neumorphism"] :is(.chip.active, .chip:has(input:checked)) { background: var(--control-fill); border-color: rgb(109 93 252 / 45%); color: var(--primary); box-shadow: var(--neu-sunken-sm); }
+  :root[data-theme="neumorphism"] .appearance-pill { border-color: transparent; background-color: var(--control-fill); box-shadow: var(--neu-sunken-sm); }
+  :root[data-theme="neumorphism"] .appearance-option:hover input:not(:disabled):not(:checked) + .appearance-pill { border-color: transparent; background-color: var(--control-fill); box-shadow: var(--neu-raised-sm); color: var(--ink); }
+  :root[data-theme="neumorphism"] .appearance-option input:checked + .appearance-pill { border-color: transparent; background-color: var(--control-fill); color: var(--primary); box-shadow: var(--neu-sunken-sm), var(--neu-ring); }
+  :root[data-theme="neumorphism"] .select-menu-trigger { border-color: transparent; border-radius: 16px; background-color: var(--control-fill); box-shadow: var(--neu-sunken); transition: box-shadow var(--motion); }
+  :root[data-theme="neumorphism"] .select-menu-pop { border-color: transparent; border-radius: 14px; box-shadow: var(--neu-raised-lg); }
+  :root[data-theme="neumorphism"] :is(.select-menu-option:hover:not([aria-disabled="true"]), .select-menu-option.active) { background-color: var(--control-fill); box-shadow: var(--neu-sunken-sm); }
+  :root[data-theme="neumorphism"] .mcu-vendor-chip { border-color: transparent; background-color: var(--control-fill); box-shadow: var(--neu-sunken-sm); }
+  :root[data-theme="neumorphism"] .mcu-vendor-chip:not([aria-pressed="true"]):hover { box-shadow: var(--neu-raised-sm); color: var(--ink); }
+  :root[data-theme="neumorphism"] .mcu-vendor-chip[aria-pressed="true"] { border-color: transparent; color: var(--primary); box-shadow: var(--neu-sunken-sm), var(--neu-ring); }
+  :root[data-theme="neumorphism"] .select-menu-option[aria-selected="true"] { color: var(--primary); background: rgb(109 93 252 / 10%); }
+  :root[data-theme="neumorphism"] .select-menu-option[aria-selected="true"].active { background: rgb(109 93 252 / 16%); }
+  :root[data-theme="neumorphism"] .module-toggle-pill { border-color: transparent; box-shadow: var(--neu-sunken-sm); }
+  :root[data-theme="neumorphism"] .switch-field .switch-ui { border-color: transparent; background-color: var(--control-fill); box-shadow: var(--neu-sunken-sm); }
+  :root[data-theme="neumorphism"] .switch-field .switch-ui::before { color: var(--subtle); }
+  :root[data-theme="neumorphism"] .switch-field .switch-ui::after { border-color: transparent; background-color: var(--control-fill); box-shadow: var(--neu-raised-sm); }
+  /* Global Toggle 物理：轨道永不凸起，状态只改变凹陷深度；旋钮保持凸起。 */
+  :root[data-theme="neumorphism"] .switch-field input:checked ~ .switch-ui { border-color: transparent; background-color: var(--control-fill); box-shadow: var(--neu-sunken), var(--neu-ring); }
+  :root[data-theme="neumorphism"] .switch-field input:checked ~ .switch-ui::before { color: var(--primary); }
+  :root[data-theme="neumorphism"] .switch-field input:checked ~ .switch-ui::after { background-color: var(--primary); box-shadow: var(--neu-raised-sm); }
+  :root[data-theme="neumorphism"] .module-toggle:hover input:not(:disabled):not(:checked) + .module-toggle-pill { border-color: transparent; box-shadow: var(--neu-raised-sm); color: var(--ink); }
+  :root[data-theme="neumorphism"] .module-toggle input:checked + .module-toggle-pill { background-color: var(--control-fill); color: var(--primary); box-shadow: var(--neu-sunken-sm), var(--neu-ring); }
+  :root[data-theme="neumorphism"] .segmented-choice label { border-color: transparent; box-shadow: var(--neu-sunken-sm); }
+  :root[data-theme="neumorphism"] .segmented-choice label:not(:has(input:checked)):hover { box-shadow: var(--neu-raised-sm); }
+  :root[data-theme="neumorphism"] .segmented-choice label:has(input:checked) { background: var(--control-fill); border-color: transparent; box-shadow: var(--neu-sunken-sm), var(--neu-ring); color: var(--primary); }
+
+  /* 交互模型（StyleKit 物理）：未选中项平面；悬停浮出表面（凸起）；按下或选中沉入表面。 */
+  :root[data-theme="neumorphism"] :is(.guide-step:not(.active):not([aria-current="step"]), .configuration-tree-module:not(.active), .configuration-module-pages a:not([aria-current="page"]), .scenario-button:not(.active), .design-item:not(.active):not(.selected):not([aria-selected="true"]), .equipment-tabs button:not(.active):not([aria-selected="true"]), .equipment-tabs a:not(.active):not([aria-selected="true"]), .configuration-module-tabs a:not([aria-current="page"])):hover { background-color: var(--control-fill); box-shadow: var(--neu-raised-sm); color: var(--ink); }
+  :root[data-theme="neumorphism"] :is(.guide-step, .configuration-tree-module, .configuration-module-pages a, .scenario-button, .design-item, .equipment-tabs button, .equipment-tabs a, .configuration-module-tabs a):active:not(.active):not([aria-current]) { box-shadow: var(--neu-sunken-sm); }
+  :root[data-theme="neumorphism"] :is(.guide-step.active, .guide-step[aria-current="step"], .scenario-button.active, .design-item.active, .design-item.selected, .design-item[aria-selected="true"], .performance-history-item.active, .notification-history-tools > button[aria-pressed="true"], .configuration-tree .guide-step.active) { background-color: var(--control-fill); border-color: transparent; box-shadow: var(--neu-sunken-sm); }
+  :root[data-theme="neumorphism"] .configuration-hardware-source > .button[aria-pressed="true"] { border-color: transparent; box-shadow: var(--neu-sunken-sm); }
+  :root[data-theme="neumorphism"] .notification-history-item[data-read="false"] { box-shadow: var(--neu-sunken-sm); }
+  :root[data-theme="neumorphism"] .memory-target.mismatch { border-color: rgb(176 48 48 / 40%); }
+
+  :root[data-theme="neumorphism"] :is(.status-pill, .asset-kind, .execution-tag, .module-tag, .performance-kind, .hardware-resource-kind, .prototype-label, .nav-count, .issue-notice-count, .sensor-role-index, .layer-version-label, .cia402-states span, .option-badge) { border-color: transparent; box-shadow: var(--neu-sunken-sm); }
+  :root[data-theme="neumorphism"] :is(.derived-value, .signal-box, .guide-callout) { border-color: transparent; border-left-color: var(--line-strong); border-radius: 14px; box-shadow: var(--neu-sunken); }
+  :root[data-theme="neumorphism"] :is(.contract-table-wrap, .ram-table-wrap, .memory-sector-table-wrap) { border-color: transparent; background: transparent; box-shadow: none; }
+  :root[data-theme="neumorphism"] :is(.module-tag, .cia402-states span, .performance-kind, .hardware-resource-kind, .memory-map-track) { border-radius: 8px; }
+  :root[data-theme="neumorphism"] :is(.assembly-summary > div, .assembly-summary > article, .module-feature-link, .protocol-flow, .sensor-communication) { border-color: transparent; border-radius: 16px; box-shadow: var(--neu-raised-sm); }
+  :root[data-theme="neumorphism"] .lane-nodes > a,
+  :root[data-theme="neumorphism"] .lane-nodes > span:not([aria-hidden="true"]) { border-color: transparent; box-shadow: var(--neu-sunken-sm); }
+  :root[data-theme="neumorphism"] .memory-sector-choice { border-color: var(--line); box-shadow: var(--neu-sunken-sm); }
+  :root[data-theme="neumorphism"] .memory-sector-choice.selected { border-color: var(--memory-ink); }
+  :root[data-theme="neumorphism"] .memory-sector-choice.conflict { border-color: rgb(176 48 48 / 45%); }
+  :root[data-theme="neumorphism"] :is(.inspector-tabs button:hover, .notification-history-header > button:hover, .notification-toast-close:hover) { box-shadow: var(--neu-sunken-sm); }
+  :root[data-theme="neumorphism"] .equipment-tabs :is(.active, [aria-selected="true"]) { border-color: transparent; background-color: var(--control-fill); color: var(--tab-color, var(--primary)); box-shadow: var(--neu-sunken-sm); }
+  :root[data-theme="neumorphism"] :is(.inspector-tabs button.active, .inspector-tabs button[aria-selected="true"]) { border-bottom-color: transparent; border-radius: 999px; background-color: var(--control-fill); box-shadow: var(--neu-sunken-sm); }
+  :root[data-theme="neumorphism"] .configuration-module-tabs a { padding-inline: 12px; margin-bottom: 0; border-radius: 999px; transition: box-shadow var(--motion), color var(--motion), background-color var(--motion); }
+  :root[data-theme="neumorphism"] .configuration-module-tabs a:hover:not([aria-current="page"]) { color: var(--primary); background-color: var(--control-fill); box-shadow: var(--neu-raised-sm); }
+  :root[data-theme="neumorphism"] .configuration-module-tabs a[aria-current="page"] { border-color: transparent; background-color: var(--control-fill); color: var(--primary); box-shadow: var(--neu-sunken-sm); }
+  :root[data-theme="neumorphism"] :is(.configuration-tree-module:not(.active):hover, .configuration-module-pages a:not([aria-current="page"]):hover) { background-color: var(--control-fill); box-shadow: var(--neu-raised-sm); }
+  :root[data-theme="neumorphism"] .configuration-tree-module.active { background-color: var(--control-fill); box-shadow: var(--neu-sunken-sm); }
+  :root[data-theme="neumorphism"] .configuration-module-pages a[aria-current="page"] { background-color: var(--control-fill); box-shadow: var(--neu-sunken-sm); }
+  :root[data-theme="neumorphism"] a[target="_blank"] { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border: 1px solid transparent; border-radius: 999px; background-color: var(--control-fill); box-shadow: var(--neu-raised-sm); transition: box-shadow var(--motion); }
+  :root[data-theme="neumorphism"] a[target="_blank"]:hover { box-shadow: var(--neu-raised-hover); }
+  :root[data-theme="neumorphism"] :is(.validation-toolbar, .version-actions, .configuration-file-actions) > .button { flex: 1 1 auto; }
+  :root[data-theme="neumorphism"] :is(.equipment-tabs button, .equipment-tabs a) { flex: 1 1 auto; justify-content: center; }
+  :root[data-theme="neumorphism"] :is(.computed-field, .native-log, .native-waveform, .memory-map-track, .inspector-notice, .sensor-note, .storage-item, .module-contract-card, .memory-generator, .configuration-selected-asset, .hardware-resource, .sensor-card, .check-row, .empty-state, .loading-state, .design-empty, .parts-empty, .memory-empty, .ram-empty, .hardware-empty, .performance-chart-empty, .ram-capacity-unknown) { border-radius: 14px; }
+  :root[data-theme="neumorphism"] .sensor-card { border-radius: 24px; }
+  :root[data-theme="neumorphism"] :is(.dialog-close, .part-select, .field-help, .notification-history-header > button, .notification-toast-close, .sensor-role-index, .workspace-icon, .slot-clear) { border-radius: 999px; }
+  :root[data-theme="neumorphism"] :is(.module-tag, .module-toggle-pill, .chip, .asset-kind, .execution-tag, .performance-kind, .hardware-resource-kind, .cia402-states span, .layer-version-label, .appearance-settings-toggle, .motion-toggle, .issue-notice, .configuration-more > summary) { border-radius: 999px; }
+  :root[data-theme="neumorphism"] .layer-capabilities { gap: 6px; }
+  :root[data-theme="neumorphism"] .layer-capabilities span { display: inline-flex; align-items: center; padding: 3px 10px; border: 1px solid transparent; border-radius: 999px; background-color: var(--control-fill); box-shadow: var(--neu-sunken-sm); }
+  :root[data-theme="neumorphism"] .dependency-links { gap: 6px; }
+  :root[data-theme="neumorphism"] .dependency-links :is(a, button) { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border: 1px solid transparent; border-radius: 999px; background-color: var(--control-fill); box-shadow: var(--neu-sunken-sm); transition: box-shadow var(--motion); }
+  :root[data-theme="neumorphism"] .dependency-links small { color: var(--subtle); }
+  :root[data-theme="neumorphism"] :is(.inspector-tabs button, .configuration-module-tabs a, .equipment-tabs button, .equipment-tabs a, .appearance-pill, .segmented-choice label, .native-menu-items > .button) { border-radius: 999px; }
+  :root[data-theme="neumorphism"] :is(.guide-step, .configuration-tree-module, .configuration-module-pages a, .scenario-button, .design-item) { border-radius: 999px; }
+  :root[data-theme="neumorphism"] :is(.module-data-item, .assembly-performance-item) { border-radius: 999px; padding-inline: 14px; transition: box-shadow var(--motion), background-color var(--motion); }
+  :root[data-theme="neumorphism"] :is(.module-data-item:hover, .assembly-performance-item:hover) { background-color: var(--control-fill); box-shadow: var(--neu-sunken-sm); }
+  :root[data-theme="neumorphism"] .slot-clear { border-radius: 999px; }
+  :root[data-theme="neumorphism"] .slot-clear:hover { box-shadow: var(--neu-sunken-sm); }
+  :root[data-theme="neumorphism"] :is(.step-index, .step-dot, .schedule-index, .module-number, .tree-module-number, .sensor-role-index) { border-color: transparent; background-color: var(--control-fill); box-shadow: var(--neu-sunken-sm); color: var(--muted); }
+  :root[data-theme="neumorphism"] :is(.guide-step.active .step-index, .guide-step[aria-current="step"] .step-index, .step-dot.active) { border-color: transparent; background-color: var(--control-fill); color: var(--primary); box-shadow: var(--neu-sunken-sm), var(--neu-ring); }
+  :root[data-theme="neumorphism"] :is(.guide-step.done .step-index, .guide-step.configured .step-index, .guide-step.verified .step-index) { border-color: transparent; background-color: var(--control-fill); color: var(--foc); }
+  :root[data-theme="neumorphism"] .guide-step.blocked .step-index { border-color: transparent; background-color: var(--control-fill); color: var(--danger); }
+  :root[data-theme="neumorphism"] .connection-line::before { background: var(--primary); }
+  /* 层间接口面板内的文章是无内边距裸块，不按卡片着装，避免文字顶到圆角。 */
+  :root[data-theme="neumorphism"] .overview-contracts .overview-facts > article { border-radius: 0; box-shadow: none; background: transparent; }
+}
+@media (max-width: 560px) {
+  .appearance-settings-toggle > span { display: none; }
+  .appearance-settings-toggle { padding-inline: 10px; }
+}
+@media (forced-colors: active) {
+  .appearance-settings-panel { border-color: CanvasText; }
+  :root[data-theme] select.field-select:not([multiple]),
+  :root[data-theme] .form-field select:not([multiple]) { appearance: auto; -webkit-appearance: auto; background-image: none; }
+}
+@media print { .appearance-settings { display: none !important; } }
+
+.appearance-data { border-top: 1px solid var(--line); margin-top: 18px; padding-top: 18px; font-size: 12px; }
+.appearance-data p { color: var(--muted); font-size: 11px; margin: 7px 0 12px; }
+.appearance-segment { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.appearance-segment.is-triple { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.appearance-option { position: relative; cursor: pointer; }
+.appearance-option input { position: absolute; width: 1px; height: 1px; margin: 0; padding: 0; border: 0; clip-path: inset(50%); overflow: hidden; white-space: nowrap; }
+.appearance-pill { display: flex; align-items: center; justify-content: center; min-height: 34px; padding: 5px 8px; border: 1px solid var(--line-strong); border-radius: 9px; background: var(--surface); color: var(--muted); font-size: 12px; font-weight: 500; line-height: 1.5; white-space: nowrap; transition: background-color 140ms, border-color 140ms, color 140ms; }
+.appearance-option:hover input:not(:disabled) + .appearance-pill { border-color: var(--focus); color: var(--ink); }
+.appearance-option input:checked + .appearance-pill { border-color: var(--primary); background: var(--primary); color: var(--surface); }
+.appearance-option input:focus-visible + .appearance-pill { outline: 2px solid var(--focus); outline-offset: 3px; }
+.appearance-hint { margin-top: 8px; color: var(--muted); font-size: 10px; line-height: 1.6; }
+@media (pointer: coarse) { .appearance-pill { min-height: 40px; } }
+
+/* Soft controls: one recessed track, one raised thumb, with clear travel. */
+:root[data-theme="neumorphism"] .switch-field .switch-ui {
+  width: 64px; height: 32px; border: 0; border-radius: 16px;
+  box-shadow: inset 3px 3px 6px var(--neu-shadow-dark), inset -3px -3px 6px var(--neu-shadow-light);
+}
+:root[data-theme="neumorphism"] .switch-field .switch-ui::before { right: 8px; font-size: 9px; letter-spacing: 0; }
+:root[data-theme="neumorphism"] .switch-field .switch-ui::after {
+  left: 4px; width: 24px; height: 24px; border: 0;
+  box-shadow: 2px 2px 5px var(--neu-shadow-dark), -2px -2px 5px var(--neu-shadow-light);
+  transition: left 200ms ease-out, background-color 200ms ease-out, box-shadow 200ms ease-out;
+}
+:root[data-theme="neumorphism"] .switch-field input:checked ~ .switch-ui {
+  box-shadow: inset 3px 3px 6px var(--neu-shadow-dark), inset -3px -3px 6px var(--neu-shadow-light);
+}
+:root[data-theme="neumorphism"] .switch-field input:checked ~ .switch-ui::before { left: 9px; }
+:root[data-theme="neumorphism"] .switch-field input:checked ~ .switch-ui::after { left: 36px; background: var(--primary); }
+:root[data-theme="neumorphism"] .module-toggles { gap: 16px; }
+:root[data-theme="neumorphism"] .module-toggle-pill {
+  position: relative; min-height: 36px; padding: 8px 62px 8px 12px;
+  border: 0; background: transparent; box-shadow: none; font-weight: 500;
+}
+:root[data-theme="neumorphism"] .module-toggle-pill::before {
+  content: ''; position: absolute; right: 0; top: 50%; translate: 0 -50%;
+  width: 52px; height: 28px; border-radius: 16px; background: var(--control-fill);
+  box-shadow: inset 3px 3px 6px var(--neu-shadow-dark), inset -3px -3px 6px var(--neu-shadow-light);
+}
+:root[data-theme="neumorphism"] .module-toggle-pill::after {
+  content: ''; position: absolute; right: 27px; top: 50%; translate: 0 -50%;
+  width: 22px; height: 22px; border-radius: 50%; background: var(--control-fill);
+  box-shadow: 2px 2px 4px var(--neu-shadow-dark), -2px -2px 4px var(--neu-shadow-light);
+  transition: right 200ms ease-out, background-color 200ms ease-out;
+}
+:root[data-theme="neumorphism"] .module-toggle input:checked + .module-toggle-pill,
+:root[data-theme="neumorphism"] .module-toggle:hover input:not(:disabled):not(:checked) + .module-toggle-pill { box-shadow: none; background: transparent; }
+:root[data-theme="neumorphism"] .module-toggle input:checked + .module-toggle-pill::after { right: 3px; background: var(--primary); }
+:root[data-theme="neumorphism"] .module-toggle input:disabled + .module-toggle-pill { opacity: .45; cursor: not-allowed; }
+:root[data-theme="neumorphism"] .module-toggle input:focus-visible + .module-toggle-pill { outline: 2px solid var(--primary); outline-offset: 4px; }
+:root[data-theme="neumorphism"] .button { transition: box-shadow 200ms ease-out, color 200ms ease-out; }
+:root[data-theme="neumorphism"] .button:active:not(:disabled) { transform: none; box-shadow: var(--neu-sunken-sm); }
+
+/* Icons respond to intent rather than moving continuously while reading. */
+.ui-icon { transform-origin: center; transition: transform 200ms ease-out, opacity 200ms ease-out; }
+:is(button, a, summary, label):is(:hover, :focus-visible) > .ui-icon { transform: translateY(-2px) rotate(-5deg); }
+:is(button, a, summary):active > .ui-icon { transform: translateY(1px); }
+details[open] > summary > .ui-icon { transform: rotate(8deg); }
+:is(button:disabled, [aria-disabled="true"]) > .ui-icon { transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .ui-icon, .switch-ui, .switch-ui::after, .module-toggle-pill::after { transition: none !important; animation: none !important; }
+  :is(button, a, summary, label):is(:hover, :focus-visible, :active) > .ui-icon,
+  details[open] > summary > .ui-icon { transform: none; }
+}
+@keyframes soft-switch-on { from { left: 4px; } to { left: 36px; } }
+@keyframes soft-switch-off { from { left: 36px; } to { left: 4px; } }
+@keyframes soft-tag-on { from { right: 27px; } to { right: 3px; } }
+@keyframes soft-tag-off { from { right: 3px; } to { right: 27px; } }
+:root[data-theme="neumorphism"] [data-switch-motion="on"] .switch-ui::after { animation: soft-switch-on 240ms ease-out; }
+:root[data-theme="neumorphism"] [data-switch-motion="off"] .switch-ui::after { animation: soft-switch-off 240ms ease-out; }
+:root[data-theme="neumorphism"] [data-switch-motion="on"] .module-toggle-pill::after { animation: soft-tag-on 240ms ease-out; }
+:root[data-theme="neumorphism"] [data-switch-motion="off"] .module-toggle-pill::after { animation: soft-tag-off 240ms ease-out; }
+:root[data-icon-motion="off"] :is(.nav-symbol,.ui-icon) { animation: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .ui-icon,.nav-symbol,[data-switch-motion] .switch-ui::after,[data-switch-motion] .module-toggle-pill::after { animation: none !important; }
+}
+/* Geometry moves inside the SVG; the viewport and hit target stay still. */
+svg.ui-icon[data-live-icon],
+:is(button,a,summary,label):is(:hover,:focus-visible,:active) > svg.ui-icon[data-live-icon] {
+  animation: none !important; transform: none !important;
+}
+
+/* Keep the inner soft control; the summary wrapper stays transparent. */
+:root[data-theme="neumorphism"] .configuration-tree summary,
+:root[data-theme="neumorphism"] .configuration-tree summary:hover {
+  background: transparent; box-shadow: none;
+}
+:root[data-theme="neumorphism"] .configuration-tree :is(.guide-step,.configuration-tree-module,.configuration-module-pages a):not(.active):not([aria-current]):hover {
+  background: var(--control-fill); box-shadow: var(--neu-raised-sm); color: var(--primary);
+}
+:root[data-theme="neumorphism"] .configuration-tree :is(.guide-step.active,.configuration-tree-module.active,[aria-current="page"]):hover {
+  background: var(--control-fill); box-shadow: var(--neu-sunken-sm);
+}
+
+:root[data-theme="neumorphism"] .configuration-tree :is(.guide-step,.configuration-tree-module,.configuration-module-pages a):active {
+  background: var(--control-fill); box-shadow: var(--neu-sunken-sm);
+}
+:root[data-theme="neumorphism"] .field-input-wrap .field-unit {
+  border: 0; border-radius: 999px; background: var(--control-fill);
+  box-shadow: var(--neu-sunken-sm);
+  color: var(--muted);
+}
+:root[data-theme="neumorphism"] .mcu-info .mcu-model-badge { background: var(--control-fill); box-shadow: var(--neu-sunken-sm); }
+
+/* Parameter timing labels share the compact tag treatment. */
+.phase-tag { display:inline-flex; align-items:center; justify-content:center; margin-left:auto; flex:none; padding:4px 9px; border:1px solid var(--line); border-radius:999px; background:var(--soft); color:var(--muted); font:500 10px/1.4 var(--font); cursor:help; white-space:nowrap; }
+.phase-tag:hover,.phase-tag[aria-describedby] { color:var(--primary); }
+.phase-tag:focus-visible { outline:2px solid var(--focus); outline-offset:3px; }
+:root[data-theme="neumorphism"] .phase-tag { border-color:transparent; background:var(--control-fill); box-shadow:var(--neu-sunken-sm); }
+/* Content ordinals use the same compact circles as the engineering tree. */
+.configuration-step :is(.module-sequence,.sensor-role-index,.schedule-index),
+.guide-module :is(.module-sequence,.sensor-role-index,.schedule-index) {
+  display:inline-grid; place-items:center; width:18px; height:18px; min-width:18px;
+  flex:0 0 18px; border:1px solid var(--line-strong); border-radius:50%;
+  background:var(--surface); color:var(--subtle); font:400 9px/1 var(--mono); white-space:nowrap;
+}
+:root[data-theme="neumorphism"] .guide-module :is(.module-sequence,.sensor-role-index,.schedule-index) {
+  border-color:transparent; background:var(--control-fill); box-shadow:var(--neu-sunken-sm);
+}
+:root[data-theme="neumorphism"] .architecture-layer .dependency-links a:has(.dependency-layer) { padding:5px 5px 5px 12px; gap:10px; box-shadow:var(--neu-raised-sm); }
+:root[data-theme="neumorphism"] .dependency-layer { background:var(--control-fill); box-shadow:var(--neu-sunken-sm); }
+:root[data-theme="neumorphism"] .contract-field-preview :is(.contract-data-type,.contract-data-unit) {
+  background:var(--control-fill); box-shadow:var(--neu-sunken-sm);
+}
+
+/* Shared spacing keeps hit targets and paired shadows from crowding. */
+#workspace :is(.profile-form,.design-meta,.sensor-fields) { column-gap:28px; row-gap:24px; }
+#workspace :is(.profile-form,.design-meta,.sensor-fields) > .form-field { margin-bottom:0; }
+#workspace .field-label { min-height:28px; margin-bottom:10px; align-items:center; gap:6px 10px; }
+#workspace .field-label > .phase-tag { margin-block:3px; }
+#workspace :is(.configuration-file-actions,.row-actions,.version-actions,.module-toggles) { gap:14px; }
+#workspace .design-toolbar { gap:16px; margin-bottom:24px; }
+#workspace .design-toolbar > div:last-child { gap:14px; }
+#workspace :is(.sensor-config,.platform-cores,.module-contracts) { gap:28px; }
+#workspace .sensor-card-head { gap:12px 16px; margin-bottom:24px; }
+#workspace .sensor-card-head > .sensor-enable { padding-left:8px; }
+#workspace .sensor-communication { margin-block:24px; padding:18px; }
+#workspace .sensor-communication > summary { min-height:36px; }
+#workspace .sensor-communication[open] > summary { margin-bottom:24px; }
+#workspace .dependency-links { gap:12px; }
+#workspace .schedule-entry { padding-block:16px; gap:16px; }
+#workspace .schedule-entry-controls { gap:10px; }
+#workspace .schedule-entry-controls button { min-width:36px; min-height:36px; }
+#workspace .configuration-module-tabs { gap:20px; margin-bottom:24px; }
+#workspace .configuration-module-tabs a { padding-block:12px; }
+#workspace .form-field:has(.field-error) { padding-bottom:4px; }
+#workspace .field-input-wrap .field-unit { top:8px; bottom:8px; right:8px; }
+@media(max-width:760px) {
+  #workspace :is(.profile-form,.design-meta,.sensor-fields) { grid-template-columns:minmax(0,1fr); row-gap:24px; }
+  #workspace .sensor-card-head > div:not(.sensor-enable) { flex:1 1 120px; }
+  #workspace .design-toolbar > div:last-child { flex-wrap:wrap; }
+  #workspace .configuration-file-actions { gap:12px; }
+  #workspace .sensor-communication { padding:16px; }
+}
+@media(pointer:coarse) {
+  #workspace :is(.button,.button.small,.schedule-entry-controls button) { min-height:44px; }
+  #workspace .field-help { width:32px; height:32px; }
+  #workspace .sensor-enable .checkbox-field { min-height:44px; padding-inline:4px; }
+}
+
+/* Semantic accents: hardware amber, algorithm teal, application violet. */
+:root { --accent-hardware:#997025; --accent-algorithm:#187b72; --accent-app:#7056b0; --accent-info:#326da4; --accent-danger:#b44e57; }
+:root[data-theme="dark"],:root[data-mode="dark"] { --accent-hardware:#e7bc73; --accent-algorithm:#76cbbb; --accent-app:#bba5ef; --accent-info:#8bbce9; --accent-danger:#f0969e; }
+.attribute-tag,.phase-label { display:inline-flex; align-items:center; justify-content:center; flex:none; padding:4px 10px; border-radius:999px; font:500 10px/1.4 var(--font); color:var(--accent-info); background:color-mix(in srgb,var(--accent-info) 11%,var(--control-fill)); white-space:nowrap; }
+.field-label > .attribute-tag { margin-left:auto; }
+:root .phase-tag[data-phase="compile"] { color:var(--accent-app); background:color-mix(in srgb,var(--accent-app) 9%,var(--control-fill)); }
+:root .phase-tag:is([data-phase="runtime"],[data-phase="init"]) { color:var(--accent-algorithm); background:color-mix(in srgb,var(--accent-algorithm) 9%,var(--control-fill)); }
+.layer-entry.layer-hardware { --semantic-accent:var(--accent-hardware); }
+.layer-entry.layer-foc { --semantic-accent:var(--accent-algorithm); }
+.layer-entry.layer-app { --semantic-accent:var(--accent-app); }
+:root .layer-entry .line-field { --line-field-ink:var(--semantic-accent); opacity:1; filter:drop-shadow(0 4px 9px color-mix(in srgb,var(--semantic-accent) 24%,transparent)); }
+:root .layer-entry .layer-capabilities span { color:var(--semantic-accent); background:color-mix(in srgb,var(--semantic-accent) 8%,var(--control-fill)); border-radius:999px; padding:4px 10px; }
+:root .layer-entry .layer-order-icon { color:var(--semantic-accent); }
+@media(min-width:1101px) { .layer-entry { grid-template-columns:48px minmax(0,1fr) 190px 120px 20px; min-height:180px; } .line-field { width:190px; height:142px; } }
+@media(min-width:761px) and (max-width:1100px) { .layer-entry { grid-template-columns:31px minmax(0,1fr) 132px 92px 14px; } .line-field { width:132px; height:112px; } }
+:root .button.navigation-action { text-decoration:none; border-radius:999px; color:var(--accent-info); background:color-mix(in srgb,var(--accent-info) 7%,var(--control-fill)); }
+:root .button.primary:not(:disabled) { color:var(--accent-app); background:color-mix(in srgb,var(--accent-app) 12%,var(--control-fill)); }
+:root .button:is([data-action^="remove-"],[data-action^="delete-"],[data-action="stop"]):not(:disabled) { color:var(--accent-danger); background:color-mix(in srgb,var(--accent-danger) 8%,var(--control-fill)); }
+:root .button:is([data-action*="export"],[data-action*="import"]):not(:disabled) { color:var(--accent-info); background:color-mix(in srgb,var(--accent-info) 8%,var(--control-fill)); }
+:root .button.navigation-action:hover { background:color-mix(in srgb,var(--accent-info) 13%,var(--control-fill)); }
+
+/* A recessed seam separates navigation without a hard border. */
+:root[data-theme="neumorphism"] .sidebar {
+  border-right:0;
+  box-shadow:inset -5px 0 8px -6px var(--neu-shadow-dark), 3px 0 7px -4px var(--neu-shadow-light);
+}
+:root[data-theme="neumorphism"] .sidebar-resizer {
+  width:12px; left:calc(var(--sidebar-width, 190px) - 6px);
+}
+:root[data-theme="neumorphism"] .sidebar-resizer::after {
+  inset:18px 4px; background:var(--control-fill);
+  box-shadow:inset 2px 0 3px var(--neu-shadow-dark), inset -2px 0 3px var(--neu-shadow-light);
+  opacity:.65; transition:opacity 180ms ease;
+}
+:root[data-theme="neumorphism"] .sidebar-resizer:hover::after,
+:root[data-theme="neumorphism"] .sidebar-resizer:focus-visible::after,
+:root[data-theme="neumorphism"] body.sidebar-resizing .sidebar-resizer::after { opacity:1; }
+:root[data-theme="neumorphism"] .sidebar-resizer:focus-visible { outline:2px solid var(--focus); outline-offset:2px; border-radius:999px; }
+@media(max-width:800px) {
+  :root[data-theme="neumorphism"] .sidebar {
+    border-bottom:0;
+    box-shadow:inset 0 -5px 8px -6px var(--neu-shadow-dark), 0 3px 7px -4px var(--neu-shadow-light);
+  }
+}
+
+.firmware-library { max-width:1200px; }
+.firmware-upload > summary { margin-bottom:18px; }
+.firmware-upload form { margin-top:24px; }
+.firmware-tag-choices,.firmware-tags { display:flex; flex-wrap:wrap; gap:8px; margin-block:10px; }
+.firmware-tag-choices button { border:0; cursor:pointer; }
+.firmware-filters { display:flex; flex-wrap:wrap; gap:24px; margin-block:28px; }
+.firmware-filters label { display:grid; gap:10px; min-width:170px; }
+.firmware-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr)); gap:24px; }
+.firmware-card { min-width:0; }
+.firmware-card h3,.firmware-card p { overflow-wrap:anywhere; }
+.firmware-card .row-actions { display:flex; gap:12px; flex-wrap:wrap; margin-top:24px; }
+.firmware-notes { white-space:pre-wrap; }
+.firmware-hash { display:block; overflow-wrap:anywhere; margin-top:12px; font-size:11px; }
+.firmware-tag[data-release="stable"] { color:var(--accent-algorithm); background:color-mix(in srgb,var(--accent-algorithm) 12%,var(--control-fill)); }
+.firmware-tag[data-release="beta"] { color:var(--accent-hardware); background:color-mix(in srgb,var(--accent-hardware) 12%,var(--control-fill)); }
+.firmware-tag[data-release="test"] { color:var(--accent-app); background:color-mix(in srgb,var(--accent-app) 12%,var(--control-fill)); }
+
+/* Firmware categories and release labels share the soft raised controls. */
+.firmware-kind-tags { display:flex; flex-wrap:wrap; align-items:center; gap:14px; }
+.firmware-kind-tag { border:1px solid var(--line); gap:10px; min-height:38px; padding:8px 15px; cursor:pointer; }
+.firmware-kind-tag span { opacity:.65; font-family:var(--mono); }
+.firmware-kind-tag[aria-pressed="true"] { color:var(--primary); border-color:var(--primary); }
+.firmware-kind-tag[data-firmware-kind="hardware"] { color:var(--accent-hardware); }
+.firmware-kind-tag[data-firmware-kind="algorithm"] { color:var(--accent-algorithm); }
+.firmware-kind-tag[data-firmware-kind="application"] { color:var(--accent-app); }
+.firmware-filters { align-items:center; justify-content:space-between; }
+.firmware-tag-choices button { min-height:32px; padding:6px 12px; }
+:root[data-theme="neumorphism"] :is(.firmware-kind-tag,.firmware-tag-choices button,.firmware-tag) {
+  border-color:transparent; background:var(--control-fill); box-shadow:var(--neu-raised-sm);
+  transition:box-shadow 180ms ease,background-color 180ms ease;
+}
+:root[data-theme="neumorphism"] :is(.firmware-kind-tag,.firmware-tag-choices button):hover { box-shadow:var(--neu-raised-hover); }
+:root[data-theme="neumorphism"] .firmware-kind-tag[aria-pressed="true"],
+:root[data-theme="neumorphism"] .firmware-tag-choices button:active { box-shadow:var(--neu-sunken-sm); }
+.firmware-tag-choices button[data-firmware-tag="stable"] { color:var(--accent-algorithm); }
+.firmware-tag-choices button[data-firmware-tag="beta"] { color:var(--accent-hardware); }
+.firmware-tag-choices button[data-firmware-tag="test"] { color:var(--accent-app); }
+:root .form-field .firmware-file-input { padding:8px; min-height:54px; cursor:pointer; color:var(--muted); }
+.firmware-file-input::file-selector-button { font:inherit; color:var(--accent-info); background:var(--soft); border:1px solid var(--line); border-radius:999px; padding:8px 16px; margin-right:14px; cursor:pointer; transition:box-shadow 180ms ease; }
+:root[data-theme="neumorphism"] .firmware-file-input::file-selector-button { background:var(--control-fill); border-color:transparent; box-shadow:var(--neu-raised-sm); }
+:root[data-theme="neumorphism"] .firmware-file-input:hover::file-selector-button { box-shadow:var(--neu-raised-hover); }
+:root[data-theme="neumorphism"] .firmware-file-input:active::file-selector-button { box-shadow:var(--neu-sunken-sm); }
+.firmware-kind-tag:focus-visible,.firmware-tag-choices button:focus-visible { outline:2px solid var(--focus); outline-offset:4px; }
+
+/* Keep field labels, controls and form actions on separate layout rows. */
+#workspace .firmware-upload .profile-form { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; gap:28px 32px; margin:0; }
+#workspace .firmware-upload .form-field { margin:0; }
+#workspace .firmware-upload .field-label { display:flex; min-height:28px; margin:0 0 10px; }
+#workspace .firmware-upload .form-field :is(input:not([type="file"]),.select-menu-trigger) { min-height:46px; }
+#workspace .firmware-notes-field { grid-column:1 / -1; }
+#workspace .firmware-notes-field textarea { min-height:100px; resize:vertical; }
+#workspace .firmware-form-actions { display:flex; align-items:center; justify-content:flex-end; flex-wrap:wrap; gap:16px; margin-top:32px; padding:8px 0 4px; }
+#workspace .firmware-form-actions .button { min-height:44px; padding:10px 22px; }
+#workspace .firmware-tag-choices { margin:16px 0 0; gap:12px; }
+#workspace .firmware-filters { align-items:flex-end; gap:24px; }
+#workspace .firmware-filters .form-field { margin:0; gap:10px; }
+#workspace .firmware-kind-tags { padding-block:3px; gap:14px; }
+.firmware-upload input[type="file"] { overflow:hidden; text-overflow:ellipsis; }
+@media(max-width:760px) {
+  #workspace .firmware-upload .profile-form { grid-template-columns:minmax(0,1fr); gap:24px; }
+  #workspace .firmware-form-actions { justify-content:flex-start; }
+  #workspace .firmware-filters > .form-field { width:100%; }
+}
+.firmware-composition { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:24px; margin-bottom:28px; }
+.firmware-composition .panel { margin:0; min-width:0; overflow-wrap:anywhere; }
+.firmware-parts-tray { margin-top:24px; }
+.firmware-parts-tray .parts-items { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; }
+.assembly-slot[data-drop-kind="firmware"] { margin-top:18px; --part-color:var(--accent-app); }
+[data-firmware-bundle-form] .profile-form { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:24px; }
+[data-firmware-bundle-form] .firmware-form-actions { display:flex; gap:16px; flex-wrap:wrap; margin-top:32px; }
+@media(max-width:760px) { .firmware-composition,[data-firmware-bundle-form] .profile-form { grid-template-columns:minmax(0,1fr); } }
+.shelf-navigation + .firmware-kind-tags { margin:24px 0 30px; }
+.design-list .design-toolbar { flex-wrap:wrap; gap:14px; }
+.design-list .design-item .attribute-tag { margin:8px 6px 0 0; }
+
+.firmware-toolbar { display:flex; justify-content:space-between; align-items:center; gap:24px; margin:24px 0 28px; flex-wrap:wrap; }
+.firmware-toolbar-actions { display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+.firmware-category-tabs { margin:0 0 0 auto; padding:0; border:0; gap:12px; }
+.firmware-category-tabs [data-firmware-component-kind="hardware"] { --tab-color:var(--accent-hardware); }
+.firmware-category-tabs [data-firmware-component-kind="algorithm"] { --tab-color:var(--accent-algorithm); }
+.firmware-category-tabs [data-firmware-component-kind="application"] { --tab-color:var(--accent-app); }
+.firmware-category-tabs button:focus-visible { outline:2px solid var(--focus); outline-offset:3px; }
+.firmware-upload > h2 { margin:0 0 24px; }
+@media(max-width:760px) { .firmware-category-tabs { margin-left:0; width:100%; } }
+
+.firmware-list-empty { display:flex; flex-direction:column; align-items:center; gap:14px; padding:30px 16px; text-align:center; }
+.firmware-list-empty strong { font-size:13px; color:var(--ink); }
+.firmware-list-empty p { margin:0; color:var(--muted); font-size:12px; line-height:1.7; }
+.firmware-empty-mark { display:grid; place-items:center; width:42px; height:42px; border-radius:14px; background:var(--soft); color:var(--subtle); font-size:22px; }
+:root[data-theme="neumorphism"] .firmware-empty-mark { background:var(--control-fill); box-shadow:var(--neu-sunken-sm); }
+.firmware-list-empty .button { margin-top:4px; }
+.firmware-list-empty .firmware-empty-mark { width:auto; min-width:88px; height:48px; padding:0 14px; font:500 18px/1.2 var(--font); white-space:nowrap; }
+
+.mcu-info .field-description:has(.button) { margin-top:16px; }
+
+/* Tables fit their content pane; scrolling is confined to narrow table wrappers. */
+.contract-table-wrap { width:100%; min-width:0; max-width:100%; overflow-x:auto; }
+.contract-table { width:100%; min-width:0; table-layout:auto; }
+.contract-table :is(th,td) { min-width:0; overflow-wrap:anywhere; }
+.contract-table th { white-space:normal; }
+.contract-table :is(input,select,textarea,.select-menu) { min-width:0; max-width:100%; }
+.contract-table .select-menu-trigger { min-width:0; }
+.contract-table :is(.fields-table,.interface-mapping-table) { min-width:0; }
+.fields-table,.interface-mapping-table { table-layout:fixed; }
+.contract-table .row-actions { flex-wrap:wrap; }
+@media(max-width:760px) {
+  .contract-table { min-width:560px; }
+  .fields-table { min-width:620px; }
+  .interface-mapping-table { min-width:480px; }
+}
+
+.cia402-mode-picker { border-radius:16px; padding:14px 16px; background:var(--control-fill); border:1px solid var(--line); }
+.cia402-mode-picker > summary { display:flex; align-items:center; gap:12px; cursor:pointer; min-height:30px; }
+.cia402-mode-picker > summary .attribute-tag { margin-left:auto; }
+.cia402-mode-picker section { margin-top:22px; }
+.cia402-mode-picker h4 { margin:0 0 12px; color:var(--muted); font-size:12px; font-weight:500; }
+.cia402-mode-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr)); gap:12px; }
+.cia402-mode-choice { min-width:0; align-items:center; }
+.cia402-mode-choice > span:last-child { font-size:11px; overflow-wrap:anywhere; }
+.cia402-selected-tags { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+:root[data-theme="neumorphism"] .cia402-mode-picker { border-color:transparent; box-shadow:var(--neu-sunken-sm); }
+.module-call-entry .interface-comment { margin:14px 0; font-size:12px; line-height:1.8; color:var(--muted); max-width:80ch; }
+.module-call-entry pre { white-space:pre-wrap; overflow-wrap:anywhere; }
+.interface-parameters { display:grid; gap:12px; margin:18px 0 24px; }
+.interface-parameters > div { display:grid; grid-template-columns:130px minmax(0,1fr); gap:16px; align-items:baseline; }
+.interface-parameters dt { font-size:12px; }
+.interface-parameters dt code { margin-left:8px; color:var(--accent-info); }
+.interface-parameters dd { margin:0; font-size:12px; line-height:1.7; color:var(--muted); }
+.interface-source > summary { display:flex; align-items:center; gap:12px; cursor:pointer; min-height:36px; font-size:12px; }
+.interface-source .syntax-code { padding:20px; margin-top:16px; border-radius:16px; background:var(--soft); color:var(--ink); font:12px/1.9 var(--mono); tab-size:4; }
+:root[data-theme="neumorphism"] .interface-source .syntax-code { background:var(--control-fill); box-shadow:var(--neu-sunken-sm); }
+.code-comment { color:var(--muted); }
+.code-keyword { color:var(--accent-app); font-weight:600; }
+.code-type { color:var(--accent-algorithm); }
+.code-function { color:var(--accent-info); }
+.code-string,.code-number { color:var(--accent-hardware); }
+@media(max-width:480px) { .interface-parameters > div { grid-template-columns:1fr; gap:4px; } }
+
+/* Driver and protection switches share one right-aligned ON/OFF control. */
+#workspace .protection-switches > .form-field { display:flex; align-items:center; justify-content:space-between; gap:24px; margin:0; }
+#workspace .protection-switches .field-label { margin:0; flex:1; }
+#workspace .protection-switches .checkbox-field { flex:0 0 auto; min-height:32px; margin:0; }
+#workspace .protection-switches { margin-bottom:28px; }
+.sensor-enable .switch-field .switch-ui,.protection-switches .switch-field .switch-ui { width:64px; }
+.sensor-enable .switch-field .switch-ui::before,.protection-switches .switch-field .switch-ui::before { right:8px; letter-spacing:0; }
+.sensor-enable .switch-field input:checked ~ .switch-ui::before,.protection-switches .switch-field input:checked ~ .switch-ui::before { left:9px; right:auto; }
+.sensor-enable .switch-field input:checked ~ .switch-ui::after,.protection-switches .switch-field input:checked ~ .switch-ui::after { left:36px; }
+@keyframes switch-control-on { from { left:4px; } to { left:36px; } }
+@keyframes switch-control-off { from { left:36px; } to { left:4px; } }
+@media(prefers-reduced-motion:no-preference) {
+  :is(.sensor-enable,.protection-switches) [data-switch-motion="on"] .switch-ui::after { animation:switch-control-on 240ms ease-out; }
+  :is(.sensor-enable,.protection-switches) [data-switch-motion="off"] .switch-ui::after { animation:switch-control-off 240ms ease-out; }
+}
+
+/* Peripheral picker owns its rows, unaffected by generic toolbar flex rules. */
+#workspace .design-toolbar .hardware-add-menu { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; width:320px; max-width:calc(100vw - 48px); max-height:min(440px,60vh); overflow-y:auto; padding:14px; align-items:stretch; z-index:80; }
+#workspace .hardware-add-menu > .button { position:static; display:flex; width:100%; min-width:0; min-height:40px; margin:0; padding:10px 12px; justify-content:flex-start; white-space:normal; overflow-wrap:anywhere; }
+.derived-value-label { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+.derived-value-label .field-help { margin:0; flex:none; vertical-align:middle; }
+.derived-value-label .attribute-tag { margin-left:auto; }
+:root .select-menu-option[data-conflict="true"] { color:var(--danger); background:color-mix(in srgb,var(--danger) 8%,var(--surface)); opacity:1; cursor:not-allowed; }
+:root .hardware-field-invalid :is(select,.select-menu-trigger) { color:var(--danger); border:1px solid var(--danger); }
+:root[data-theme="neumorphism"] .hardware-field-invalid .select-menu-trigger { box-shadow:var(--neu-sunken-sm),0 0 0 1px var(--danger); }
+.hardware-resource.module-call-entry { padding:0; margin:16px 0; border:1px solid var(--line); }
+.hardware-resource.module-call-entry > .hardware-resource-body { display:block; font-size:13px; }
+.hardware-resource.module-call-entry > summary { min-height:60px; gap:14px; }
+.hardware-resource.module-call-entry .interface-comment { margin-top:4px; }
+:root[data-theme="neumorphism"] .hardware-resource.module-call-entry { border-color:transparent; background:var(--control-fill); box-shadow:var(--neu-raised-sm); }
+.guide-content > .guide-summary { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; margin-bottom:20px; }
+.guide-summary-copy { flex:1; min-width:0; }
+.guide-summary-actions { flex:none; margin-left:auto; }
+.guide-summary-actions .issue-notice { margin:0; }
+@media(max-width:760px) { .guide-content > .guide-summary { flex-wrap:wrap; gap:14px; } .guide-summary-actions { margin-left:0; } }
+.guide-summary-actions { display:flex; flex-direction:column; align-items:flex-end; gap:10px; }
+.guide-summary-actions .status-pill { margin:0; }
+@media(max-width:760px) { .guide-summary-actions { align-items:flex-start; } }
+.module-interfaces > .module-interface-list { display:block; margin:0; padding:0; }
+.module-interface-card > summary { min-height:60px; }
+.module-interface-card .module-interface-editor { margin:0; border:0; border-radius:0; background:transparent; box-shadow:none; }
+:root[data-theme="neumorphism"] .module-interface-card { border-color:transparent; background:var(--control-fill); box-shadow:var(--neu-raised-sm); }
+
+/* One disclosure surface for call entries, module interfaces and peripherals. */
+:root .resource-disclosure.hardware-resource { margin:16px 0; padding:0; border:1px solid var(--line); border-radius:14px; background:var(--surface); }
+:root .resource-disclosure.hardware-resource > summary { display:flex; align-items:center; gap:14px; min-height:60px; padding:16px; }
+:root .resource-disclosure.hardware-resource > summary > strong { font-size:13px; font-weight:550; }
+:root .resource-disclosure.hardware-resource > summary > .hardware-resource-meta { margin-left:auto; font:12px/1.6 var(--font); color:var(--muted); }
+:root .resource-disclosure.hardware-resource > .hardware-resource-body { display:block; padding:18px; min-width:0; }
+:root[data-theme="neumorphism"] .resource-disclosure.hardware-resource { border-color:transparent; background:var(--control-fill); box-shadow:var(--neu-raised-sm); }
+@media(max-width:700px) {
+  :root .resource-disclosure.hardware-resource > summary { flex-wrap:wrap; gap:10px; padding:14px; }
+  :root .resource-disclosure.hardware-resource > .hardware-resource-body { padding:14px; }
+}
+.issue-card .issue-action.button { display:inline-flex; align-items:center; margin-top:10px; padding:9px 14px; font-size:12px; text-decoration:none; }
+.issue-card .issue-action.button:hover { text-decoration:none; }
+[data-guide-module] { scroll-margin-top:20px; }
+.build-module-table .module-toggles { display:flex; flex-direction:column; align-items:flex-start; gap:14px; }
+.build-module-table .module-tag-switch { display:inline-flex; align-items:center; gap:14px; min-height:36px; }
+.build-module-table .module-tag-switch .module-tag { min-width:58px; text-align:center; }
+.build-module-table .module-tag-switch .switch-ui { width:64px; height:32px; }
+.build-module-table .module-tag-switch .switch-ui::before { right:8px; }
+.build-module-table .module-tag-switch input:checked ~ .switch-ui::before { left:9px; right:auto; }
+.build-module-table .module-tag-switch input:checked ~ .switch-ui::after { left:36px; }
+.build-module-table .module-tag-switch input:disabled ~ :is(.switch-ui,.module-tag) { opacity:.45; }
+.build-module-table td { vertical-align:middle; padding-block:16px; }
+.build-core-tag { text-decoration:none; white-space:normal; line-height:1.6; }
+@media(prefers-reduced-motion:no-preference) {
+ .module-tag-switch[data-switch-motion="on"] .switch-ui::after { animation:switch-control-on 240ms ease-out; }
+ .module-tag-switch[data-switch-motion="off"] .switch-ui::after { animation:switch-control-off 240ms ease-out; }
+}
+.live-input-error { display:block; margin-top:8px; font-size:12px; line-height:1.6; color:var(--danger); }
+:root input[aria-invalid="true"] { border-color:var(--danger); outline:1px solid var(--danger); }
+.contract-field-meta { grid-template-columns:74px 78px; }
+@media(max-width:480px) { .contract-field-meta { grid-template-columns:64px 64px; } }
+.interface-source h4 { margin:22px 0 10px; display:flex; align-items:center; gap:12px; font-size:12px; }
+.interface-source .implementation-code { max-height:520px; overflow:auto; }
+.syntax-code .code-keyword { color:var(--accent-app); }
+.syntax-code .code-type { color:var(--accent-algorithm); }
+.syntax-code .code-function { color:var(--accent-info); }
+.syntax-code :is(.code-string,.code-number) { color:var(--accent-hardware); }
+.syntax-code .code-comment { color:var(--muted); }
+
+/* Runtime configuration uses the same padded disclosure body as peripherals. */
+#workspace .runtime-configuration { min-width:0; margin-top:28px; }
+#workspace .runtime-configuration .design-toolbar { flex-wrap:wrap; gap:12px; }
+#workspace .runtime-configuration .profile-form {
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));
+  margin:0; padding:0; gap:24px 28px;
+}
+#workspace .runtime-configuration :is(.form-field,.field-input-wrap,.multiselect) { min-width:0; max-width:100%; }
+#workspace .runtime-configuration .field-label { display:flex; flex-wrap:wrap; height:auto; }
+#workspace .runtime-configuration .field-label > label { min-width:0; overflow-wrap:anywhere; }
+#workspace .runtime-configuration :is(.field-input,.field-select) { min-width:0; width:100%; box-sizing:border-box; }
+#workspace .runtime-configuration .choice { min-width:0; white-space:normal; overflow-wrap:anywhere; }
+#workspace .runtime-configuration > details > summary > .attribute-tag { margin-left:auto; flex-shrink:0; }
+
+#workspace .runtime-configuration .runtime-config-switch { flex-shrink:0; margin:0 0 0 4px; }
+#workspace .runtime-configuration > details > summary { flex-wrap:nowrap; }
+#workspace .runtime-configuration > details > summary > strong { flex:1; }
+/* Give the track a real layout box, including when its label sits in summary. */
+#workspace .runtime-configuration .runtime-config-switch {
+  display:inline-flex; align-items:center; justify-content:center;
+  position:relative; flex:0 0 64px; width:64px; height:40px;
+  padding:0; gap:0; cursor:pointer;
+}
+#workspace .runtime-config-switch .switch-ui { display:block; box-sizing:border-box; }
+#workspace .runtime-configuration .runtime-config-subgroup > summary { flex-wrap:nowrap; }
+#workspace .runtime-configuration .runtime-config-subgroup > summary > strong { flex:1; min-width:0; }
+#workspace .runtime-configuration .runtime-config-subgroup > summary > .attribute-tag { flex-shrink:0; }
+/* Size suffix capsules from their content, reserving their own grid column. */
+#workspace .field-input-wrap:has(> .field-unit) {
+  display:grid; grid-template-columns:minmax(0,1fr) max-content; gap:0;
+  position:relative; isolation:isolate;
+}
+#workspace .field-input-wrap:has(> .field-unit) > .field-input {
+  grid-column:1 / -1; grid-row:1; width:100%; min-width:0; padding-right:12px;
+}
+#workspace .field-input-wrap:has(> .field-unit) > .field-unit {
+  position:relative; inset:auto; transform:none; grid-column:2; grid-row:1;
+  width:auto; min-width:54px; max-width:none; height:auto;
+  margin:8px; padding:6px 10px; box-sizing:border-box; white-space:nowrap;
+}
+#workspace .field-input-wrap:has(> .field-unit) > .field-input {
+  grid-column:1; border-top-right-radius:0; border-bottom-right-radius:0;
+}
+#workspace .field-input-wrap:has(> .field-unit) { border:1px solid var(--line-strong); border-radius:16px; background:var(--surface); }
+#workspace .field-input-wrap:has(> .field-unit) > .field-input { border:0; border-radius:16px; background:transparent; box-shadow:none; }
+:root[data-theme="neumorphism"] #workspace .field-input-wrap:has(> .field-unit) { border-color:transparent; background:var(--control-fill); }
+#workspace .field-input-wrap:has(> .field-input:focus-visible) { outline:2px solid var(--focus); outline-offset:2px; }
+#workspace .issue-notice-error { color:#d52f43; }
+#workspace .issue-notice-warning { color:#b17d00; }
+#workspace .issue-notice-success { color:#128346; }
+#workspace .issue-notice .issue-notice-count { color:inherit; background:color-mix(in srgb,currentColor 10%,var(--surface)); }
+:root[data-theme="dark"] #workspace .issue-notice-error { color:#ff7a8b; }
+:root[data-theme="dark"] #workspace .issue-notice-warning { color:#ffdc4a; }
+:root[data-theme="dark"] #workspace .issue-notice-success { color:#54e392; }
+
+#workspace .schedule-task.resource-disclosure { overflow:visible; }
+#workspace .schedule-task.resource-disclosure > summary { background:transparent; }
+/* Phase switches: blue for code inclusion, green for runtime enablement. */
+#workspace .module-toggle-compile { --phase-color:var(--driver); }
+#workspace :is(.module-toggle-runtime,.phase-runtime-switch) { --phase-color:var(--actuator); }
+#workspace :is(.module-tag-switch,.phase-runtime-switch) {
+  display:inline-flex; align-items:center; flex:0 0 100px; width:100px; min-width:100px; height:40px; gap:0;
+}
+#workspace :is(.module-tag-switch,.phase-runtime-switch) .switch-ui {
+  display:block; width:100px; height:34px; border-radius:999px; box-sizing:border-box;
+  color:var(--phase-color); background:color-mix(in srgb,var(--phase-color) 8%,var(--surface));
+}
+#workspace :is(.module-tag-switch,.phase-runtime-switch) .switch-ui::before {
+  content:attr(data-phase-label); left:auto; right:10px; color:var(--phase-color); font-size:11px; letter-spacing:0;
+}
+#workspace :is(.module-tag-switch,.phase-runtime-switch) input:checked ~ .switch-ui::before {
+  content:attr(data-phase-label); left:10px; right:auto; color:var(--phase-color);
+}
+#workspace :is(.module-tag-switch,.phase-runtime-switch) .switch-ui::after { left:4px; width:24px; height:24px; animation:none; }
+#workspace :is(.module-tag-switch,.phase-runtime-switch) input:checked ~ .switch-ui {
+  border-color:var(--phase-color); background:color-mix(in srgb,var(--phase-color) 16%,var(--surface));
+}
+#workspace :is(.module-tag-switch,.phase-runtime-switch) input:checked ~ .switch-ui::after { left:70px; background:var(--phase-color); }
+@media(prefers-reduced-motion:no-preference) {
+  @keyframes phase-switch-on { from { left:4px; } to { left:70px; } }
+  @keyframes phase-switch-off { from { left:70px; } to { left:4px; } }
+  #workspace :is(.module-tag-switch,.phase-runtime-switch)[data-switch-motion="on"] .switch-ui::after { animation:phase-switch-on 200ms ease-out; }
+  #workspace :is(.module-tag-switch,.phase-runtime-switch)[data-switch-motion="off"] .switch-ui::after { animation:phase-switch-off 200ms ease-out; }
+}
+@media(prefers-reduced-motion:no-preference) {
+  .switch-field .switch-ui,
+  .switch-field .switch-ui::after,
+  .module-toggle-pill::after {
+    transition-duration:280ms;
+    transition-timing-function:cubic-bezier(.22,1,.36,1);
+  }
+}
+.cia402-mode-choice:has(input:disabled) { opacity:.45; cursor:not-allowed; }
+/* Recessed checks for calibration and other grouped choices. */
+:root[data-theme="neumorphism"] .cia402-mode-choice {
+  padding:12px 14px; gap:12px; min-height:48px;
+  background:var(--control-fill); border:1px solid transparent;
+}
+:root[data-theme="neumorphism"] .cia402-mode-choice > input[type="checkbox"] {
+  appearance:none; -webkit-appearance:none; position:relative; display:grid; place-items:center;
+  flex:0 0 24px; width:24px; height:24px; min-height:24px; margin:0; padding:0;
+  border:1px solid transparent; border-radius:8px; cursor:pointer;
+  background:var(--control-fill); box-shadow:var(--neu-sunken-sm);
+  transition:background-color 220ms ease,box-shadow 220ms ease;
+}
+:root[data-theme="neumorphism"] .cia402-mode-choice > input[type="checkbox"]::after {
+  content:''; width:6px; height:11px; margin-top:-3px;
+  border:solid var(--primary); border-width:0 2px 2px 0;
+  transform:rotate(45deg) scale(.5); opacity:0;
+  transition:transform 220ms ease,opacity 160ms ease;
+}
+:root[data-theme="neumorphism"] .cia402-mode-choice > input:checked {
+  background:color-mix(in srgb,var(--primary) 12%,var(--control-fill));
+  box-shadow:var(--neu-sunken-sm);
+}
+:root[data-theme="neumorphism"] .cia402-mode-choice > input:checked::after { opacity:1; transform:rotate(45deg) scale(1); }
+:root[data-theme="neumorphism"] .cia402-mode-choice:has(input:checked) { border-color:transparent; box-shadow:var(--neu-sunken-sm); }
+:root[data-theme="neumorphism"] .cia402-mode-choice > input:focus-visible { outline:2px solid var(--primary); outline-offset:4px; }
+:root[data-theme="neumorphism"] .cia402-mode-choice > input:disabled { cursor:not-allowed; }
+@media(prefers-reduced-motion:reduce) {
+  .cia402-mode-choice > input[type="checkbox"],.cia402-mode-choice > input[type="checkbox"]::after { transition:none; }
+}
+@media(forced-colors:active) {
+  :root[data-theme="neumorphism"] .cia402-mode-choice > input[type="checkbox"] { appearance:auto; }
+  :root[data-theme="neumorphism"] .cia402-mode-choice > input[type="checkbox"]::after { display:none; }
+}
+#workspace .runtime-configuration > details > summary > .attribute-tag { margin-left:0; }
+#workspace .guide-module > summary > .module-toggles { margin-left:auto; }
+#workspace .guide-module > summary > .guide-module-count { margin-left:0; flex:0 0 auto; white-space:nowrap; }
+/* Stable right-hand slots: hiding runtime settings never moves the compile switch. */
+#workspace :is(.guide-module > summary,.module-excluded-summary) > .module-toggles {
+  display:grid; grid-template-columns:100px 100px; gap:12px; flex:0 0 212px;
+  width:212px; margin:0 0 0 auto; padding:0; text-align:left;
+}
+#workspace .guide-module > summary > .guide-module-count { width:76px; text-align:right; font-variant-numeric:tabular-nums; }
+#workspace .module-excluded-summary { padding-right:90px; min-height:60px; }
+#workspace .runtime-configuration details > summary > .attribute-tag {
+  flex:0 0 60px; width:60px; box-sizing:border-box; justify-content:center;
+  margin-left:0; font-variant-numeric:tabular-nums; white-space:nowrap;
+}
+@media(max-width:760px) {
+  #workspace :is(.guide-module > summary,.module-excluded-summary) { flex-wrap:wrap; }
+  #workspace :is(.guide-module > summary,.module-excluded-summary) > strong { flex-basis:100%; }
+}
+#workspace .parameter-phase-switch { --phase-color:var(--driver); }
+#workspace .parameter-phase-switch[data-phase="runtime"] { --phase-color:var(--actuator); }
+#workspace .parameter-phase-switch .switch-ui {
+  display:block; flex:0 0 100px; width:100px; height:34px; box-sizing:border-box;
+  background:color-mix(in srgb,var(--phase-color) 8%,var(--surface));
+}
+#workspace .parameter-phase-switch .switch-ui::before {
+  content:attr(data-phase-label); left:auto; right:10px; color:var(--phase-color); font-size:11px; letter-spacing:0;
+}
+#workspace .parameter-phase-switch input:checked ~ .switch-ui::before {
+  content:attr(data-phase-label); left:10px; right:auto; color:var(--phase-color);
+}
+#workspace .parameter-phase-switch .switch-ui::after { left:4px; width:24px; height:24px; }
+#workspace .parameter-phase-switch input:checked ~ .switch-ui { background:color-mix(in srgb,var(--phase-color) 16%,var(--surface)); border-color:var(--phase-color); }
+#workspace .parameter-phase-switch input:checked ~ .switch-ui::after { left:70px; background:var(--phase-color); }
+.core-exception-types { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
+/* Animate the actual pseudo-element; Web Animations pseudoElement is not portable. */
+[data-switch-sampling] .switch-ui::after,
+[data-switch-sampling] .module-toggle-pill::after { transition:none !important; animation:none !important; }
+@keyframes switch-thumb-replay {
+  from { left:var(--switch-from-left); right:var(--switch-from-right); background-color:var(--switch-from-background-color); box-shadow:var(--switch-from-box-shadow); }
+  to { left:var(--switch-to-left); right:var(--switch-to-right); background-color:var(--switch-to-background-color); box-shadow:var(--switch-to-box-shadow); }
+}
+@media(prefers-reduced-motion:no-preference) {
+  #workspace [data-switch-replay]::after { animation:switch-thumb-replay 280ms cubic-bezier(.22,1,.36,1) both !important; }
+}
+#workspace .guide-module > summary > .module-toggles > .module-toggle-runtime { grid-column:1; grid-row:1; }
+#workspace .guide-module > summary > .module-toggles > .module-toggle-compile { grid-column:2; grid-row:1; }
+#workspace .guide-module > summary > .guide-module-count { margin-left:auto; }
+#workspace .guide-module > summary > .module-toggles { margin-left:12px; }
+#workspace .module-excluded > summary > .guide-module-count { display:none; }
+#workspace .module-excluded > summary > .module-toggles { margin-left:auto; }
+/* Attribute badges share the inset surface used by the other neumorphic tags. */
+:root[data-theme="neumorphism"] .attribute-tag {
+  border:1px solid transparent;
+  background:var(--control-fill);
+  box-shadow:var(--neu-sunken-sm);
+}
+#workspace .core-exception-card {
+  grid-column:1 / -1;
+  width:100%;
+  min-width:0;
+  box-sizing:border-box;
+}
+/* Avoid stacking card margins on top of the parent grid gap. */
+#workspace .profile-form:has(> .core-exception-card) { row-gap:16px; }
+#workspace .profile-form > .core-exception-card { margin-block:0; }
+/* Compact capsule tabs; keep the active inset treatment. */
+#workspace .configuration-module-tabs { gap:12px; border-bottom:0; margin-bottom:20px; }
+:is(#workspace,#inspector) :is(.configuration-module-tabs a,.equipment-tabs a,.equipment-tabs button,.inspector-tabs button) {
+  min-height:30px; padding:5px 14px; line-height:18px; border-radius:999px;
+  box-sizing:border-box; white-space:nowrap;
+}
+#workspace .equipment-tabs { gap:10px; }
+@media(pointer:coarse) {
+  :is(#workspace,#inspector) :is(.configuration-module-tabs a,.equipment-tabs a,.equipment-tabs button,.inspector-tabs button) { min-height:36px; padding-block:8px; }
+}
+@media(prefers-reduced-motion:no-preference) {
+  #workspace [data-switch-replay]::after {
+    animation:switch-thumb-replay 380ms cubic-bezier(.4,0,.2,1) both !important;
+    transition:none !important;
+  }
+  #workspace .switch-field .switch-ui::after {
+    transition:left 380ms cubic-bezier(.4,0,.2,1),background-color 380ms ease,box-shadow 380ms ease;
+  }
+}
+#workspace .module-shared-structures { padding:18px; min-width:0; }
+.shared-structures-body { display:grid; gap:24px; padding-top:20px; min-width:0; }
+.shared-structure-group { min-width:0; }
+#workspace .shared-structure-group h3 { margin:0; font-size:13px; }
+#workspace .shared-structure-group .design-toolbar { gap:16px; flex-wrap:wrap; margin:0 0 16px; }
+.shared-structure-list { display:grid; gap:12px; margin-top:16px; min-width:0; }
+#workspace .module-shared-structures .module-data-item {
+  display:grid; gap:10px; min-width:0; padding:16px; border:1px solid var(--line);
+  border-radius:14px; overflow-wrap:anywhere; white-space:normal;
+}
+.shared-structure-heading { display:flex; align-items:center; gap:16px; min-width:0; }
+.shared-structure-heading strong { flex:1; min-width:0; }
+.shared-structure-arrow { flex-shrink:0; }
+.shared-structure-meta { display:flex; align-items:center; flex-wrap:wrap; gap:8px 12px; }
+.shared-structure-add { margin-top:20px; min-width:0; }
+#workspace .shared-structure-add .form-field { margin:0; min-width:0; }
+#workspace .shared-structure-add :is(select,.field-select,[data-select-menu]) { width:100%; min-width:0; max-width:100%; }
+.shared-structure-group + .shared-structure-group { border-top:1px solid var(--line); padding-top:24px; }
+.core-id-trailing { margin-left:auto; }
+.schedule-task-meta .core-id-tag { margin-left:8px; vertical-align:middle; }
+/* Labels stay left; property and mode badges align at the trailing edge. */
+#workspace .field-label > .phase-tag { margin-left:auto; flex-shrink:0; }
+#workspace .cia402-mode-choice > input { order:0; }
+#workspace .cia402-mode-choice > span:not(.attribute-tag):not(.option-badge) { order:1; min-width:0; }
+#workspace .cia402-mode-choice > :is(.attribute-tag,.option-badge) { order:2; margin-left:auto; flex-shrink:0; }
+#workspace .cia402-mode-picker > summary > .attribute-tag { margin-left:auto; }
+#workspace .current-feedback-config { grid-column:1 / -1; min-width:0; }
+#workspace .shelf-part-card {
+  display:flex; flex-wrap:wrap; align-items:center; gap:10px;
+  padding:16px; margin:0 0 14px; min-width:0; cursor:pointer;
+  text-decoration:none; color:var(--ink); border-radius:20px;
+}
+#workspace .shelf-part-card > strong { flex:1 1 100%; min-width:0; overflow-wrap:anywhere; }
+#workspace .shelf-part-card > small { flex:1 1 100%; color:var(--muted); line-height:1.6; }
+#workspace .shelf-part-card .attribute-tag { margin:0; }
+#workspace .shelf-part-card[data-part-kind="actuator"] { --part-color:var(--actuator); --part-border:var(--actuator-border); --part-tint:var(--actuator-tint); }
+#workspace .shelf-part-card[data-part-kind="driver"] { --part-color:var(--driver); --part-border:var(--driver-border); --part-tint:var(--driver-tint); }
+#workspace .shelf-part-card { --card-outline:var(--part-border,var(--line)); }
+#workspace .shelf-part-card.selected { --card-front:var(--part-tint,var(--soft)); }
+#workspace .shelf-part-card.selected > strong { color:var(--part-color,var(--primary)); }
+#workspace .shelf-history { min-width:0; }
+#workspace .shelf-history-actions { margin:16px 0 20px; }
+#workspace .shelf-history-actions .button { width:100%; }
+#workspace .shelf-history-item { grid-template-columns:minmax(0,1fr); gap:8px; margin:8px 0; padding:14px 12px; }
+#workspace .shelf-history-item > :is(strong,span,small,div) { grid-column:1; min-width:0; }
+#workspace .shelf-history-item > .attribute-tag { justify-self:start; margin:0; }
+#workspace .shelf-history .assembly-components { margin-top:0; gap:8px; }
+#workspace .parts-tray .part-select { width:auto; min-width:48px; padding-inline:10px; }
+#workspace .algorithm-path-card > summary { flex-wrap:wrap; }
+#workspace .algorithm-path-card > summary > strong { flex:1; min-width:0; }
+.algorithm-path-switches { display:grid; grid-template-columns:100px 100px; gap:12px; margin-left:auto; flex:0 0 212px; }
+.algorithm-path-switches .parameter-phase-switch { display:flex; margin:0; min-height:40px; }
+.select-search-bar { display:flex; align-items:center; gap:10px; padding:10px; position:sticky; top:0; background:var(--surface); z-index:1; }
+.select-search-bar .field-input { min-width:0; flex:1; }
+.select-menu-option[hidden] { display:none; }
+#workspace .algorithm-children { grid-column:1 / -1; min-width:0; }
+#workspace .algorithm-children > .design-toolbar { flex-wrap:wrap; gap:16px; margin-top:20px; }
+
+.algorithm-contract { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,240px),1fr)); gap: 16px 24px; margin-top: 24px; }
+.algorithm-contract > div { min-width: 0; }
+.algorithm-contract > div > span { font-size: 12px; opacity: .65; }
+.algorithm-contract p { margin: 6px 0 0; line-height: 1.7; overflow-wrap: anywhere; }
+.algorithm-contract .algorithm-equation { grid-column: 1 / -1; overflow-x: auto; padding: 8px 0; }
+.algorithm-children > details > summary > .attribute-tag { margin-left: auto; }
+.algorithm-children > details > summary > .algorithm-path-switches { margin-left: 12px; flex-shrink: 0; }
+@media (max-width: 600px) { .algorithm-children > details > summary > .attribute-tag { display: none; } }
+
+.observer-guide, .observer-published-results { grid-column: 1 / -1; min-width: 0; margin-bottom: 20px; }
+.observer-stages { display:flex; flex-wrap:wrap; align-items:center; gap:10px 18px; list-style:none; padding:0; margin:14px 0 20px; }
+.observer-stages li { position:relative; padding:7px 12px; border-radius:10px; font-size:12px; background:var(--surface,#f4f5f2); box-shadow:inset 2px 2px 4px #00000009,inset -2px -2px 4px #ffffff65; }
+.observer-stages li + li::before { content:'›'; position:absolute; left:-13px; top:50%; transform:translateY(-50%); opacity:.45; }
+.observer-guide-notes { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.observer-parameter-group { margin-top:22px; min-width:0; }
+.observer-parameter-group h4 { margin:0 0 14px; font-size:13px; font-weight:600; }
+.observer-published-results { margin-top:24px; }
+.observer-data-grid { display:grid; grid-template-columns:1fr; gap:20px; min-width:0; }
+.observer-data-grid section, .observer-chain-data { min-width:0; }
+.observer-data-grid .contract-field-preview li { gap:8px; }
+.observer-data-grid .contract-field-preview code { overflow-wrap:anywhere; min-width:0; }
+.observer-data-grid .contract-field-meta { margin-left:auto; flex-shrink:0; }
+.observer-chain-data > details { margin:12px 0; }
+.observer-architecture-list article { margin:20px 0; }
+.observer-contract-notes { margin-top:20px; }
+.observer-contract-notes > summary { cursor:pointer; font-size:13px; }
+.observer-contract-notes .algorithm-contract { margin-top:14px; }

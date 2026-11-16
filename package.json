@@ -1,0 +1,13 @@
+{
+  "name": "abd-foc",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node workbench/server.mjs",
+    "test": "node --test workbench/test/*.test.mjs",
+    "test:firmware": "node --test workbench/test/new-generator.test.mjs workbench/test/compiler-manifest.test.mjs",
+    "check": "node workbench/check.mjs",
+    "start:build-service": "node workbench/build-server.mjs"
+  }
+}

@@ -1,0 +1,4 @@
+/* Keep long equations within cards and help surfaces on narrow screens. */
+.katex { font-size: 1.08em; }
+.katex-display { max-width: 100%; overflow-x: auto; overflow-y: hidden; padding: .25em 0; }
+.field-help-tooltip .katex-display { margin: .65em 0; }

@@ -1,0 +1,20 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createProject} from '../web/src/core/model.mjs';
+import {MODULES} from '../web/src/core/catalog.mjs';
+import {parameterVisible} from '../web/src/modules/shared/visibility.mjs';
+test('type-specific fields follow current choices',()=>{
+ const p=createProject();
+ const visible=(id,key)=>parameterVisible(p,id,MODULES.find(m=>m.id===id).params.find(f=>f.key===key));
+ const sensor=p.instances['hw-sensors'].parameters;
+ sensor.encoderCapability='present';sensor.motorEncoderType='absolute';
+ assert(visible('hw-sensors','encoderBits'));assert(!visible('hw-sensors','motorEncoderCountsPerRev'));
+ sensor.motorEncoderType='incremental';
+ assert(!visible('hw-sensors','encoderBits'));assert(visible('hw-sensors','motorEncoderCountsPerRev'));
+ sensor.encoderCapability='absent';assert(!visible('hw-sensors','motorEncoderCountsPerRev'));
+ sensor.encoderCapability='present';sensor.motorEncoderType='hall';
+ assert(!visible('hw-sensors','motorEncoderSinResource'));
+ sensor.motorEncoderHallMode='linear';assert(visible('hw-sensors','motorEncoderSinResource'));
+ p.instances['app-params'].parameters.zeroing=[];assert(!visible('app-params','zeroSamples'));
+ p.instances['app-params'].parameters.zeroing=['output_zero'];assert(visible('app-params','zeroSamples'));
+});

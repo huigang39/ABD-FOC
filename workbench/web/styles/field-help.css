@@ -1,0 +1,13 @@
+.field-help { display: inline-flex; vertical-align: middle; align-items: center; justify-content: center; flex: 0 0 auto; width: 24px; height: 24px; padding: 3px; border: 0; border-radius: 50%; color: var(--subtle); background: transparent; cursor: help; }
+.field-help:hover,.field-help[aria-describedby] { color: var(--primary); background: var(--soft); }
+.field-help:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.field-label > .field-help { margin-right: auto; }
+.field-label:has(> .field-help) { align-items: center; justify-content: flex-start; gap: 6px; }
+.field-help-tooltip { position: fixed; inset: auto; z-index: 10000; width: max-content; max-width: min(340px, calc(100vw - 24px)); margin: 0; padding: 11px 14px; border: 1px solid var(--line-strong); border-radius: 10px; background: var(--surface); color: var(--ink); box-shadow: 0 5px 24px rgb(0 0 0 / 12%); font: 12px/1.75 var(--font); white-space: pre-line; overflow-wrap: anywhere; }
+.field-help-tooltip[hidden] { display: none; }
+.guide-module > summary .field-help { margin-left: 4px; }
+@media (pointer: coarse) { .field-help { width: 32px; height: 32px; } }
+
+.field-help { line-height: 1; }
+.field-help > svg { display: block; flex: none; }
+:is(h2,h3,strong) > .field-help { vertical-align: middle; margin-left: 4px; }

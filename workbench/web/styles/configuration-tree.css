@@ -1,0 +1,63 @@
+.configuration-tree.guide-steps { display: block; max-height: calc(100dvh - 116px); overflow: auto; padding-right: 5px; scrollbar-width: thin; }
+.configuration-tree ul { margin: 0; padding: 0; list-style: none; }
+.configuration-tree-heading { display: flex; align-items: center; gap: 6px; padding: 8px 10px 14px; color: var(--muted); font-size: 11px; }
+.configuration-tree-item + .configuration-tree-item { margin-top: 4px; }
+.configuration-tree summary { display: flex; align-items: center; list-style: none; border-radius: 9px; }
+.configuration-tree summary::-webkit-details-marker { display: none; }
+.configuration-tree summary .guide-step { flex: 1; min-width: 0; padding-right: 3px; }
+.configuration-tree summary:hover { background: var(--surface-hover); }
+.configuration-tree .guide-step { align-items: center; gap: 9px; padding: 10px; background: transparent; border: 0; font-size: 12px; }
+.configuration-tree .guide-step.active { background: var(--soft); }
+.configuration-tree .step-index { width: 24px; height: 24px; font-size: 10px; }
+.configuration-tree .step-copy { flex: 1; }
+.tree-progress { font: 10px var(--mono); color: var(--subtle); }
+.tree-chevron { flex: 0 0 30px; height: 36px; display: grid; place-items: center; cursor: pointer; }
+.tree-chevron::before { content: ''; width: 7px; height: 7px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; opacity: .55; transform: rotate(-45deg); transform-origin: 70% 70%; transition: transform var(--motion), opacity var(--motion); }
+.configuration-tree details[open] > summary .tree-chevron::before { opacity: .85; transform: rotate(45deg); }
+.configuration-tree .configuration-tree-children { margin: 4px 0 10px 21px; padding-left: 11px; border-left: 1px solid var(--line); }
+.configuration-tree-module { display: flex; flex: 1; min-width: 0; gap: 6px; align-items: center; min-height: 40px; padding: 8px 0 8px 6px; border-radius: 6px; color: var(--muted); text-decoration: none; font-size: 11px; }
+.tree-module-title { flex: 1; min-width: 0; line-height: 1.6; }
+.module-sequence { flex: 0 0 16px; color: var(--subtle); font: 10px var(--mono); font-weight: 400; white-space: nowrap; }
+.tree-module-number { flex: 0 0 18px; display: inline-grid; place-items: center; width: 18px; height: 18px; border: 1px solid var(--line-strong); border-radius: 50%; color: var(--subtle); background: var(--surface); font: 9px var(--mono); white-space: nowrap; }
+.module-sequence { display: inline-block; margin-right: 9px; font-size: 11px; }
+.configuration-module-branch > summary .tree-chevron { flex-basis: 24px; }
+.configuration-module-branch > summary:has(.active) { background: var(--soft); }
+.configuration-module-branch > summary .configuration-status { flex-basis: 17px; width: 17px; height: 17px; }
+.configuration-tree .configuration-module-pages { margin: 0 0 7px 24px; padding: 2px 0 2px 12px; border-left: 1px solid var(--line); }
+.configuration-module-pages a { display: block; padding: 8px; margin: 1px 0; border-radius: 5px; color: var(--muted); text-decoration: none; font-size: 11px; }
+.configuration-module-pages a:hover { color: var(--ink); background: var(--surface-hover); }
+.configuration-module-pages a[aria-current="page"] { color: var(--primary); background: var(--soft); }
+.configuration-tree-module:hover { background: var(--surface-hover); color: var(--ink); }
+.configuration-tree-module.active { color: var(--primary); font-weight: 600; }
+.configuration-tree-module[data-state="disabled"] { color: var(--subtle); }
+.configuration-status { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 20px; width: 20px; height: 20px; border-radius: 50%; color: var(--line-strong); }
+.configuration-status.configured { color: var(--foc); background: var(--foc-tint); }
+.configuration-status.blocked { color: var(--danger); background: var(--danger-tint); }
+.configuration-status.disabled { color: var(--subtle); }
+.guide-module > summary > strong .configuration-status { margin-right: 5px; vertical-align: middle; }
+@media (max-width: 800px) { .configuration-tree.guide-steps { max-height: none; padding: 10px; border: 1px solid var(--line); border-radius: 12px; } }
+@media (max-width: 600px) { .configuration-tree-module,.configuration-module-pages a { min-height: 44px; } .tree-chevron { min-height: 44px; } }
+
+:root[data-theme="neumorphism"] .configuration-status {
+  background:var(--control-fill); border:0;
+  box-shadow:2px 2px 4px var(--neu-shadow-dark),-2px -2px 4px var(--neu-shadow-light);
+}
+:root[data-theme="neumorphism"] .configuration-status.configured { color:var(--accent-algorithm); }
+:root[data-theme="neumorphism"] .configuration-status.blocked { color:var(--danger); }
+:root[data-theme="neumorphism"] .configuration-status:is(.todo,.disabled) { box-shadow:var(--neu-sunken-sm); }
+.configuration-navigation-target { scroll-margin-top:24px; outline:2px solid var(--focus); outline-offset:5px; border-radius:12px; }
+.configuration-status.todo { color:var(--warning); background:var(--warning-tint,var(--soft)); }
+:root[data-theme="neumorphism"] .configuration-status.todo { color:var(--warning); background:var(--control-fill); box-shadow:2px 2px 4px var(--neu-shadow-dark),-2px -2px 4px var(--neu-shadow-light); }
+/* Pending configuration uses a distinct golden yellow in both appearance modes. */
+:root .configuration-status.todo { color:#c58a00; background:#fff3bf; }
+:root[data-theme="neumorphism"] .configuration-status.todo { color:#ca9200; background:color-mix(in srgb,#ffda55 20%,var(--control-fill)); }
+:root[data-theme="dark"] .configuration-status.todo,
+:root[data-theme="neumorphism"][data-mode="dark"] .configuration-status.todo { color:#ffdc4a; background:color-mix(in srgb,#ffda55 12%,var(--control-fill)); }
+.configuration-status.todo svg { stroke-width:1.9; }
+:root .configuration-status.blocked { color:#cc3446; background:#ffe6e9; }
+:root .configuration-status.configured { color:#168348; background:#def5e7; }
+:root[data-theme="neumorphism"] .configuration-status.blocked { color:#d52f43; background:color-mix(in srgb,#ff697b 16%,var(--control-fill)); }
+:root[data-theme="neumorphism"] .configuration-status.configured { color:#128346; background:color-mix(in srgb,#48d98a 16%,var(--control-fill)); }
+:root[data-theme="dark"] .configuration-status.blocked,:root[data-theme="neumorphism"][data-mode="dark"] .configuration-status.blocked { color:#ff7a8b; }
+:root[data-theme="dark"] .configuration-status.configured,:root[data-theme="neumorphism"][data-mode="dark"] .configuration-status.configured { color:#54e392; }
+.configuration-status:is(.blocked,.configured) svg { stroke-width:1.9; }

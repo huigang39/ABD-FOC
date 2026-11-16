@@ -1,0 +1,7 @@
+.field-select[data-empty="true"] { color:var(--subtle); }
+.field-select option { color:var(--ink); }
+.segmented-choice { display:flex; flex-wrap:wrap; gap:6px; }
+.segmented-choice label { position:relative; flex:1 1 auto; display:flex; align-items:center; justify-content:center; min-height:40px; padding:8px 14px; border:1px solid var(--control-border); border-radius:8px; color:var(--muted); cursor:pointer; }
+.segmented-choice label:has(input:checked) { background:var(--soft); border-color:var(--primary); color:var(--primary); }
+.segmented-choice label:has(input:focus-visible) { outline:2px solid var(--focus); outline-offset:3px; }
+.segmented-choice input { position:absolute; width:1px; height:1px; opacity:0; }

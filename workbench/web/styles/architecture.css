@@ -1,0 +1,43 @@
+/* The architecture catalogue is independent of active configuration state. */
+.architecture-exchange { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 34px; width: min(100%,430px); height: 68px; margin: 0 auto; }
+.architecture-flow { display: grid; align-items: center; min-width: 0; gap: 12px; font-size: 11px; line-height: 1.5; letter-spacing: .04em; }
+.architecture-flow-down { grid-template-columns: minmax(0,1fr) 16px; color: var(--driver); text-align: right; }
+.architecture-flow-down > span { grid-column: 1; grid-row: 1; }
+.architecture-flow-down .architecture-flow-line { grid-column: 2; }
+.architecture-flow-up { grid-template-columns: 16px minmax(0,1fr); color: var(--actuator); }
+.architecture-flow-up > span { grid-column: 2; grid-row: 1; }
+.architecture-flow-line { display: block; width: 16px; height: 68px; grid-row: 1; overflow: visible; }
+.architecture-flow-up .architecture-flow-line { grid-column: 1; }
+.architecture-flow-stem { opacity: .5; }
+/* 数据在层级间流动：短划线沿管线方向行进；动效开关与减动效可停。 */
+.architecture-flow-line .architecture-flow-stem { stroke-dasharray: 3 5; animation: architecture-dash 1.4s linear infinite; }
+@keyframes architecture-dash { to { stroke-dashoffset: -16; } }
+:root:has([data-action="toggle-visual-motion"][aria-pressed="false"]) .architecture-flow-line .architecture-flow-stem { animation-play-state: paused; }
+.architecture-flow-arrow { stroke-linecap: round; stroke-linejoin: round; }
+.architecture-flow-line circle { fill: var(--page); stroke-width: 1; }
+.architecture-overview .architecture-principles { margin-top: 26px; }
+.architecture-role-strip { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; border-top: 1px solid var(--line); margin-top: 20px; padding-top: 18px; }
+.architecture-role-strip > div { min-width: 0; }
+.architecture-role-strip strong { display: block; font-size: 12px; color: var(--ink); }
+.architecture-role-strip span { display: block; color: var(--muted); font-size: 11px; line-height: 1.7; margin-top: 5px; }
+.architecture-layer .module-card { text-decoration: none; }
+.architecture-layer .module-card:focus-visible { outline: 2px solid var(--primary); outline-offset: 5px; }
+.architecture-inspector .detail-section:first-of-type { margin-top: 16px; }
+.architecture-inspector .detail-section > p { font-size: 12px; color: var(--muted); line-height: 1.85; margin-top: 8px; overflow-wrap: anywhere; }
+.architecture-contracts { display: grid; margin-top: 12px; }
+.architecture-contract { min-width: 0; padding: 13px 0; border-top: 1px solid var(--line); }
+.architecture-contract:first-child { padding-top: 0; border-top: 0; }
+.architecture-contract:last-child { padding-bottom: 0; }
+.architecture-contract h4 { font-size: 12px; font-weight: 600; }
+.architecture-contract code { display: block; color: var(--subtle); font: 10px/1.6 var(--mono); margin-top: 4px; overflow-wrap: anywhere; }
+.architecture-contract p { color: var(--muted); font-size: 12px; line-height: 1.8; margin-top: 5px; overflow-wrap: anywhere; }
+.architecture-inspector .dependency-links a { display: inline-flex; align-items: baseline; flex-wrap: wrap; gap: 6px; }
+.architecture-inspector .dependency-links small { color: var(--subtle); font-size: 10px; }
+.architecture-inspector .architecture-empty { color: var(--subtle); }
+@media (max-width: 560px) {
+  .architecture-exchange { width: min(100%,280px); gap: 24px; }
+  .architecture-flow { gap: 9px; font-size: 10px; letter-spacing: 0; }
+  .architecture-role-strip { grid-template-columns: 1fr; gap: 13px; }
+  .architecture-role-strip > div { display: grid; grid-template-columns: 36px minmax(0,1fr); gap: 10px; align-items: baseline; }
+  .architecture-role-strip span { margin-top: 0; }
+}

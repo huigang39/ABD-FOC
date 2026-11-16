@@ -1,0 +1,49 @@
+.hardware-editor { grid-column:1/-1; min-width:0; margin-top:16px; }
+.hardware-editor .design-toolbar { align-items:flex-start; gap:16px; }
+.hardware-editor .design-toolbar h3 { margin:0; font-size:15px; }
+.hardware-editor .design-toolbar .design-note { margin:5px 0 0; }
+.hardware-resource { margin:12px 0; border:1px solid var(--line); border-radius:12px; background:var(--surface); overflow:visible; }
+.hardware-resource>summary { display:flex; align-items:center; gap:12px; padding:16px; cursor:pointer; }
+.hardware-resource>summary strong { font-size:13px; font-weight:550; min-width:0; overflow-wrap:anywhere; }
+.hardware-resource-kind { font:11px ui-monospace,monospace; color:var(--muted); border:1px solid var(--line); padding:3px 6px; border-radius:5px; flex-shrink:0; }
+.hardware-resource-meta { color:var(--subtle); font:11px ui-monospace,monospace; margin-left:auto; text-align:right; max-width:42%; overflow-wrap:anywhere; }
+.hardware-resource-body { padding:0 18px 18px; }
+.hardware-resource .profile-form { margin:0; padding:14px 0; }
+.hardware-pin-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(125px,1fr)); gap:12px; padding:14px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+.hardware-pin-grid .form-field { min-width:0; }
+.hardware-resource-footer { display:flex; justify-content:flex-end; align-items:center; gap:12px; margin-top:12px; }
+.hardware-resource-footer .button { color:var(--muted); }
+.hardware-empty { padding:24px; border:1px dashed var(--line-strong); border-radius:12px; color:var(--muted); font-size:13px; line-height:1.8; }
+.hardware-add-menu { min-width:180px; display:grid; grid-template-columns:1fr 1fr; padding:8px; }
+.hardware-trip { padding:18px; }
+.hardware-trip-flow { display:flex; align-items:center; flex-wrap:wrap; gap:10px; padding-bottom:14px; border-bottom:1px solid var(--line); font-size:12px; color:var(--muted); }
+.hardware-trip-flow strong { font-weight:550; color:var(--ink); }
+.hardware-latch { margin-right:auto; color:var(--muted); font-size:11px; }
+.hardware-editor .field-input,.hardware-editor .field-select { width:100%; min-width:0; box-sizing:border-box; }
+@media(max-width:700px) { .hardware-resource-meta { display:none; } .hardware-editor .design-toolbar { flex-wrap:wrap; } .hardware-resource-body { padding:0 12px 12px; } }
+
+.hardware-field-group { grid-column:1/-1; min-width:0; border-top:1px solid var(--line); padding-top:18px; margin-top:8px; }
+.hardware-field-group h3 { font-size:14px; margin:0 0 16px; }
+.hardware-field-group .profile-form { padding:0; margin:0; }
+
+.hardware-resource>summary { list-style:none; }
+.hardware-resource>summary::-webkit-details-marker { display:none; }
+.hardware-resource[open]>summary { border-bottom:1px solid var(--line); }
+
+.platform-cores, .platform-cooperation { grid-column:1/-1; min-width:0; }
+.platform-cooperation>summary { cursor:pointer; padding:0 0 12px; font-size:14px; font-weight:550; }
+.platform-cooperation>.panel { margin:0; padding:16px; }
+.platform-core .design-note { padding:16px 0 0; margin:0; }
+
+.sensor-communication { margin:18px 0; border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
+.sensor-communication>summary { display:flex; align-items:center; min-height:32px; font-size:13px; font-weight:500; cursor:pointer; }
+.sensor-communication[open]>summary { margin-bottom:18px; }
+.driver-transport { border-bottom:1px solid var(--line); padding-bottom:20px; margin-bottom:20px; }
+.driver-transport-title { display:flex; gap:8px; align-items:center; margin-bottom:14px; font-size:12px; color:var(--muted); }
+.sensor-config { grid-template-columns:1fr; }
+.sensor-fields { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.platform-cooperation .core-module-grid { grid-template-columns:1fr; }
+@media(max-width:700px) { .sensor-fields { grid-template-columns:1fr; } }
+.sensor-communication.platform-cooperation > summary { display:flex; align-items:center; min-height:32px; padding:0; font-size:13px; font-weight:500; }
+.sensor-communication.platform-cooperation[open] > summary { margin-bottom:18px; }
+.sensor-communication.platform-cooperation > .panel { border:0; padding:0; background:transparent; box-shadow:none; }
