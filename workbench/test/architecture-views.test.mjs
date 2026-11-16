@@ -7,13 +7,12 @@ function assertReadOnly(html) {
   assert.doesNotMatch(html.replace(/<button[^>]*class="field-help"[^>]*>.*?<\/button>/gs, ''), /<(?:input|textarea|select|button)\b|data-(?:action|edit|scope)=/);
   assert.doesNotMatch(html, />参数配置(?: · \d+)?<|>参数编辑<|>配置接口|>已启用<|>未包含<|工作草案|当前项目/);
   for (const [, href] of html.matchAll(/href="([^"]+)"/g)) {
-    assert.ok(href.startsWith('#/architecture') || href.startsWith('/assets/icons.svg#'), href);
+    assert.ok(href.startsWith('#/') || href.startsWith('/assets/icons.svg#'), href);
   }
 }
 
-test('architecture overview presents all three static layers and their exchange boundaries', () => {
+test('architecture overview is the full-lifecycle canvas: three layers, satellites and lifecycle band', () => {
   const html = renderArchitectureOverview();
-  assert.match(html, /<h1>架构<\/h1>/);
   assert.deepEqual([...html.matchAll(/<a class="layer-entry layer-([^"]+)"/g)].map(match => match[1]), ['app', 'foc', 'hardware']);
   assert.deepEqual([...html.matchAll(/data-mark="([^"]+)"/g)].map(match => match[1]), ['app', 'foc', 'hardware']);
   assert.match(html, /icons.svg#algorithm/);
@@ -22,6 +21,17 @@ test('architecture overview presents all three static layers and their exchange 
   assert.match(html, /算法 ↔ 硬件/);
   assert.equal((html.match(/data-flow-direction="down"/g) || []).length, 2);
   assert.equal((html.match(/data-flow-direction="up"/g) || []).length, 2);
+  // 设计与仿真卫星：硬件左 PCBA、右硬件仿真；算法挂数字信号仿真、应用挂动力学仿真。
+  assert.match(html, /PCBA 设计/);
+  assert.match(html, /硬件仿真/);
+  assert.match(html, /数字信号仿真/);
+  assert.match(html, /动力学仿真/);
+  // 生命周期带覆盖选型到维护，全部可点。
+  for (const stage of ['选型', '烧录', '校准', '测试', '上位机', '调试器', '维护']) assert.match(html, new RegExp(`>${stage}<`));
+  assert.deepEqual([...html.matchAll(/class="canvas-stage" href="([^"]+)"/g)].map(match => match[1]),
+    ['#/equipment', '#/project/flash', '#/project/application?module=app-calibration&tab=config', '#/performance', '#/project/protocol', '#/debug', '#/project/faults']);
+  // 主页画布不保留标题与说明文字。
+  assert.doesNotMatch(html, /<h1>|page-description/);
   assert.doesNotMatch(html, /layer-interface-bridge|connection-line/);
   assertReadOnly(html);
 });

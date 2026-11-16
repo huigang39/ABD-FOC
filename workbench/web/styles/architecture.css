@@ -41,5 +41,36 @@
   .architecture-role-strip > div { display: grid; grid-template-columns: 36px minmax(0,1fr); gap: 10px; align-items: baseline; }
   .architecture-role-strip span { margin-top: 0; }
 }
-/* 总览只剩三层入口：内容在视口内垂直居中，避免底部大片留白。 */
-.architecture-overview { min-height: calc(100dvh - 150px); display: flex; flex-direction: column; justify-content: center; }
+/* 主页全景画布：三层脊柱 + 左右卫星 + 生命周期带；主页隐藏侧栏，全幅呈现。 */
+.architecture-overview { min-height: calc(100dvh - 150px); display: flex; flex-direction: column; justify-content: center; gap: 30px; }
+.app-shell:has(.lifecycle-canvas) > .sidebar, .app-shell:has(.lifecycle-canvas) > .sidebar-resizer { display: none; }
+.app-shell:has(.lifecycle-canvas) #workspace { padding: 20px 34px; max-width: none; }
+.canvas-spine { display: flex; flex-direction: column; }
+.canvas-row { display: grid; grid-template-columns: minmax(0, 1fr) 252px; gap: 18px; align-items: stretch; }
+.canvas-row .layer-entry { grid-column: 1; }
+.canvas-row .canvas-satellite { grid-column: 2; }
+.canvas-row-hardware { grid-template-columns: 244px minmax(0, 1fr) 244px; }
+.canvas-row-hardware .canvas-satellite-pcb { grid-column: 1; grid-row: 1; }
+.canvas-row-hardware .layer-entry { grid-column: 2; grid-row: 1; }
+.canvas-row-hardware .canvas-satellite-sim { grid-column: 3; grid-row: 1; }
+.canvas-spine .architecture-exchange { margin-right: 270px; }
+.canvas-satellite { display: flex; flex-direction: column; justify-content: center; gap: 8px; padding: 16px 18px; border: 1px dashed var(--line-strong); border-radius: 14px; color: var(--muted); text-decoration: none; }
+a.canvas-satellite:hover { border-color: var(--primary); background: var(--surface-hover); }
+.canvas-satellite strong { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink); }
+.canvas-soon { padding: 2px 8px; border-radius: 999px; background: var(--soft); color: var(--subtle); font: 500 10px/1.4 var(--font); }
+.canvas-satellite-items { display: flex; flex-wrap: wrap; gap: 5px; }
+.canvas-satellite-items span { padding: 3px 9px; border-radius: 999px; background: var(--soft); font-size: 10.5px; }
+.canvas-satellite small { color: var(--subtle); font-size: 10.5px; line-height: 1.5; }
+.canvas-lifecycle { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 6px; }
+.canvas-stage { display: flex; flex-direction: column; gap: 3px; padding: 10px 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink); text-decoration: none; transition: border-color var(--motion), background-color var(--motion); }
+.canvas-stage:hover { border-color: var(--primary); }
+.canvas-stage strong { font-size: 12.5px; }
+.canvas-stage small { color: var(--muted); font-size: 10.5px; }
+.canvas-stage-arrow { color: var(--subtle); }
+:root[data-theme="neumorphism"] .canvas-satellite { border-color: transparent; border-radius: 16px; box-shadow: var(--neu-raised-sm); }
+:root[data-theme="neumorphism"] .canvas-satellite-items span, :root[data-theme="neumorphism"] .canvas-soon { background: var(--control-fill); box-shadow: var(--neu-sunken-sm); }
+:root[data-theme="neumorphism"] .canvas-stage { border-color: transparent; border-radius: 999px; box-shadow: var(--neu-raised-sm); }
+@media (max-width: 1100px) {
+  .canvas-row, .canvas-row-hardware { grid-template-columns: minmax(0, 1fr); }
+  .canvas-row .canvas-satellite, .canvas-row-hardware .canvas-satellite, .canvas-spine .architecture-exchange { grid-column: 1; grid-row: auto; margin-right: 0; }
+}
