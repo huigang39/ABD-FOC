@@ -41,36 +41,91 @@
   .architecture-role-strip > div { display: grid; grid-template-columns: 36px minmax(0,1fr); gap: 10px; align-items: baseline; }
   .architecture-role-strip span { margin-top: 0; }
 }
-/* 主页全景画布：三层脊柱 + 左右卫星 + 生命周期带；主页隐藏侧栏，全幅呈现。 */
-.architecture-overview { min-height: calc(100dvh - 150px); display: flex; flex-direction: column; justify-content: center; gap: 30px; }
-.app-shell:has(.lifecycle-canvas) > .sidebar, .app-shell:has(.lifecycle-canvas) > .sidebar-resizer { display: none; }
-.app-shell:has(.lifecycle-canvas) #workspace { padding: 20px 34px; max-width: none; }
-.canvas-spine { display: flex; flex-direction: column; }
-.canvas-row { display: grid; grid-template-columns: minmax(0, 1fr) 252px; gap: 18px; align-items: stretch; }
-.canvas-row .layer-entry { grid-column: 1; }
-.canvas-row .canvas-satellite { grid-column: 2; }
-.canvas-row-hardware { grid-template-columns: 244px minmax(0, 1fr) 244px; }
-.canvas-row-hardware .canvas-satellite-pcb { grid-column: 1; grid-row: 1; }
-.canvas-row-hardware .layer-entry { grid-column: 2; grid-row: 1; }
-.canvas-row-hardware .canvas-satellite-sim { grid-column: 3; grid-row: 1; }
-.canvas-spine .architecture-exchange { margin-right: 270px; }
-.canvas-satellite { display: flex; flex-direction: column; justify-content: center; gap: 8px; padding: 16px 18px; border: 1px dashed var(--line-strong); border-radius: 14px; color: var(--muted); text-decoration: none; }
-a.canvas-satellite:hover { border-color: var(--primary); background: var(--surface-hover); }
-.canvas-satellite strong { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink); }
-.canvas-soon { padding: 2px 8px; border-radius: 999px; background: var(--soft); color: var(--subtle); font: 500 10px/1.4 var(--font); }
-.canvas-satellite-items { display: flex; flex-wrap: wrap; gap: 5px; }
-.canvas-satellite-items span { padding: 3px 9px; border-radius: 999px; background: var(--soft); font-size: 10.5px; }
-.canvas-satellite small { color: var(--subtle); font-size: 10.5px; line-height: 1.5; }
+/* 主页全景画布：信号与功率链。画布尽量铺满视口，卡片随网格拉伸。 */
+.architecture-overview { min-height: calc(100dvh - 104px); display: flex; flex-direction: column; gap: 14px; }
+.lifecycle-canvas { overflow-x: auto; }
+.canvas-flow {
+  display: grid; flex: 1; width: 100%; min-width: 1080px;
+  grid-template-columns: 158px minmax(130px, 190px) minmax(480px, 1.6fr) 62px minmax(220px, 0.9fr);
+  grid-template-rows: auto minmax(150px, auto) minmax(150px, auto) auto;
+  grid-template-areas:
+    ".    sims sims  .    ."
+    "host host drv   thp  act"
+    "dbg  dbg  drv   thp  act"
+    "dyn  dyn  dyn   dyn  dyn";
+  align-items: stretch; column-gap: 6px; row-gap: 12px;
+}
+/* 分组容器：虚线大块 + 顶部名称标签；内部为链网格（节点+连接交替）。 */
+.canvas-group { position: relative; display: flex; flex-direction: column; border: 1.5px dashed var(--line-strong); border-radius: 20px; padding: 20px 14px 12px; }
+.canvas-group-label { position: absolute; top: -10px; left: 18px; display: flex; align-items: center; gap: 10px; background: var(--page); padding: 0 10px; }
+.canvas-group-label b { font-size: 13px; color: var(--ink); }
+.canvas-group-label a { font-size: 10.5px; color: var(--primary); text-decoration: none; }
+.canvas-group-label a:hover { text-decoration: underline; }
+.canvas-group-chain { flex: 1; }
+.canvas-group-chain .chain-node { height: 100%; box-sizing: border-box; }
+.canvas-group-chain-layers { display: grid; grid-template-columns: minmax(150px, 1fr) 76px minmax(150px, 1fr) 76px minmax(170px, 1.15fr); column-gap: 6px; align-items: stretch; }
+.canvas-group-chain-physical { display: grid; grid-template-columns: minmax(96px, 1fr) 46px minmax(96px, 1fr); column-gap: 4px; align-items: stretch; }
+.canvas-sims { display: flex; gap: 14px; justify-content: space-between; align-items: end; padding: 0 6px; }
+.canvas-sims .canvas-sim { flex: 0 1 auto; min-width: 240px; }
+/* 指令源单元：竖排两枚，各自带箭头与通信方式；点选哪个亮哪个。 */
+.canvas-source-unit { display: flex; align-items: center; gap: 10px; position: relative; cursor: pointer; }
+.canvas-source-unit input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.canvas-source-unit .canvas-source-card { flex: 0 0 150px; display: flex; flex-direction: column; gap: 3px; padding: 12px 14px; border: 1px solid var(--line-strong); border-radius: 12px; background: var(--surface); transition: border-color var(--motion), background-color var(--motion), box-shadow var(--motion); }
+.canvas-source-card a { font-size: 10px; color: var(--primary); text-decoration: none; margin-top: 2px; }
+.canvas-source-card a:hover { text-decoration: underline; }
+.canvas-source-unit .canvas-link { flex: 1; flex-direction: row; align-items: center; gap: 8px; }
+.canvas-source-unit .canvas-link > span { text-align: left; flex: none; }
+.canvas-source-unit .canvas-link i { width: auto; flex: 1; }
+.canvas-source-unit:not(:has(input:checked)) { opacity: .5; }
+.canvas-source-unit:not(:has(input:checked)) .canvas-link i, .canvas-source-unit:not(:has(input:checked)) .canvas-link i::after { border-color: var(--line); }
+.canvas-source-unit:has(input:checked) .canvas-source-card { border-color: var(--primary); background: var(--soft); box-shadow: 0 0 0 1px var(--primary); }
+.canvas-source-unit:has(input:checked) .canvas-link i, .canvas-source-unit:has(input:checked) .canvas-link i::after { border-color: var(--primary); }
+.canvas-source-unit input:focus-visible + .canvas-source-card { outline: 2px solid var(--focus); outline-offset: 2px; }
+/* 链节点：三层固件 + 物理端（电机 / 减速机）。 */
+.chain-node { display: flex; flex-direction: column; gap: 8px; padding: 15px 16px 12px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); color: var(--ink); text-decoration: none; transition: border-color var(--motion), background-color var(--motion); min-width: 0; }
+a.chain-node:hover { border-color: var(--primary); background: var(--surface-hover); }
+.chain-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.chain-head strong { font-size: 14.5px; }
+.chain-head small { font: 600 10px var(--font); letter-spacing: .1em; color: var(--subtle); }
+.chain-summary { font-size: 10.5px; color: var(--muted); line-height: 1.5; }
+.chain-node .layer-capabilities { display: flex; flex-wrap: wrap; gap: 4px; }
+.chain-node .layer-capabilities span { padding: 2px 8px; border-radius: 999px; background: var(--soft); font-size: 9.5px; color: var(--muted); white-space: nowrap; }
+.chain-node .line-field { width: 100%; height: 62px; }
+.chain-foot { display: flex; justify-content: space-between; align-items: center; font-size: 10.5px; color: var(--subtle); }
+.chain-embedded { margin-top: 2px; padding: 8px 10px; border: 1px dashed var(--line-strong); border-radius: 10px; display: flex; flex-direction: column; gap: 2px; }
+.chain-embedded b { font-size: 11px; }
+.chain-embedded i { font-style: normal; font-size: 9.5px; color: var(--subtle); }
+.chain-physical { justify-content: center; text-align: center; background: transparent; border-style: dashed; gap: 6px; }
+/* 链上连接：标签 + 双向轨道（单向时只留右箭头）。 */
+.canvas-link { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 0 4px; }
+.canvas-link > span { font-size: 10px; color: var(--muted); text-align: center; line-height: 1.45; }
+.canvas-link > span small { display: block; color: var(--subtle); font-size: 9px; }
+.canvas-link i { display: block; width: 100%; height: 0; border-top: 1.5px solid var(--line-strong); position: relative; }
+.canvas-link i::before, .canvas-link i::after { content: ''; position: absolute; top: -4.5px; width: 7px; height: 7px; border-top: 1.5px solid var(--line-strong); border-left: 1.5px solid var(--line-strong); }
+.canvas-link i::before { left: -1px; transform: rotate(-45deg); }
+.canvas-link i::after { right: -1px; transform: rotate(135deg); }
+.canvas-link-one i::before { display: none; }
+.canvas-link-one i { border-top-width: 3px; }
+/* 指令源：上位机 / 调试器 单选，选择态高亮；下方两个直达链接。 */
+/* 仿真卡：上方两张 + 底部动力学带。 */
+.canvas-sim { position: relative; display: flex; flex-direction: column; gap: 7px; padding: 12px 16px; border: 1px dashed var(--line-strong); border-radius: 13px; color: var(--muted); align-self: end; }
+.canvas-sim strong { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink); }
+.canvas-soon { position: absolute; top: 9px; right: 11px; padding: 2px 8px; border-radius: 999px; background: var(--soft); color: var(--subtle); font: 500 9.5px/1.4 var(--font); }
+.canvas-sim-items { display: flex; flex-wrap: wrap; gap: 5px; }
+.canvas-sim-items span { padding: 2px 9px; border-radius: 999px; background: var(--soft); font-size: 10px; }
+.canvas-sim small { font-size: 10px; color: var(--subtle); line-height: 1.5; }
+.canvas-dynamics { position: relative; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 16px; margin-top: 8px; padding: 12px 20px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+.canvas-dynamics strong { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink); }
+.canvas-dynamics small { font-size: 10px; color: var(--subtle); }
+/* 生命周期带。 */
 .canvas-lifecycle { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 6px; }
 .canvas-stage { display: flex; flex-direction: column; gap: 3px; padding: 10px 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink); text-decoration: none; transition: border-color var(--motion), background-color var(--motion); }
 .canvas-stage:hover { border-color: var(--primary); }
 .canvas-stage strong { font-size: 12.5px; }
 .canvas-stage small { color: var(--muted); font-size: 10.5px; }
 .canvas-stage-arrow { color: var(--subtle); }
-:root[data-theme="neumorphism"] .canvas-satellite { border-color: transparent; border-radius: 16px; box-shadow: var(--neu-raised-sm); }
-:root[data-theme="neumorphism"] .canvas-satellite-items span, :root[data-theme="neumorphism"] .canvas-soon { background: var(--control-fill); box-shadow: var(--neu-sunken-sm); }
-:root[data-theme="neumorphism"] .canvas-stage { border-color: transparent; border-radius: 999px; box-shadow: var(--neu-raised-sm); }
-@media (max-width: 1100px) {
-  .canvas-row, .canvas-row-hardware { grid-template-columns: minmax(0, 1fr); }
-  .canvas-row .canvas-satellite, .canvas-row-hardware .canvas-satellite, .canvas-spine .architecture-exchange { grid-column: 1; grid-row: auto; margin-right: 0; }
-}
+:root[data-theme="neumorphism"] .chain-node, :root[data-theme="neumorphism"] .canvas-dynamics, :root[data-theme="neumorphism"] .canvas-stage { border-color: transparent; box-shadow: var(--neu-raised-sm); }
+:root[data-theme="neumorphism"] .chain-node:hover { background: var(--control-fill); }
+:root[data-theme="neumorphism"] .canvas-sim, :root[data-theme="neumorphism"] .chain-physical, :root[data-theme="neumorphism"] .canvas-source-card { border-color: transparent; box-shadow: var(--neu-sunken-sm); }
+:root[data-theme="neumorphism"] .canvas-source-unit:has(input:checked) .canvas-source-card { box-shadow: var(--neu-sunken-sm), var(--neu-ring); border-color: transparent; background: var(--control-fill); }
+:root[data-theme="neumorphism"] .canvas-sim-items span, :root[data-theme="neumorphism"] .canvas-soon, :root[data-theme="neumorphism"] .chain-node .layer-capabilities span { background: var(--control-fill); box-shadow: var(--neu-sunken-sm); }

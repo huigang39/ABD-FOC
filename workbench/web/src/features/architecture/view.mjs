@@ -34,35 +34,32 @@ export function architectureModuleRoute(moduleId) {
   return module ? `#/architecture/${module.layer}?module=${encodeURIComponent(module.id)}` : '#/architecture';
 }
 
-function bridge(index) {
-  const application = index === 1;
-  const downstream = application ? '控制给定' : '调制结果';
-  const upstream = application ? '反馈快照' : '同步采样';
-  const label = application ? '应用 ↔ 算法：应用向下提交控制给定，算法向上返回反馈快照。' : '算法 ↔ 硬件：算法向下提交调制结果，硬件向上返回同步采样。';
-  const lane = (direction, text) => `<div class="architecture-flow architecture-flow-${direction}" data-flow-direction="${direction}"><span>${text}</span><svg class="architecture-flow-line" width="16" height="68" viewBox="0 0 16 68" fill="none" stroke="currentColor" stroke-width="1.25" aria-hidden="true"><path class="architecture-flow-stem" d="M8 2V66"/><path class="architecture-flow-arrow" d="${direction === 'down' ? 'm4.5 31 3.5 4 3.5-4' : 'm4.5 37 3.5-4 3.5 4'}"/><circle cx="8" cy="2" r="2"/><circle cx="8" cy="66" r="2"/></svg></div>`;
-  return `<div class="architecture-exchange" role="img" aria-label="${label}">${lane('down', downstream)}${lane('up', upstream)}</div>`;
-}
 
-/** 主页全景画布：关节模组全生命周期。中央三层为实现主线，左右挂设计与仿真，底部为生命周期带。 */
+/** 主页全景画布：信号与功率链。指令源（上位机/调试器）→【驱动器：应用·算法·硬件(+PCB)】→ 三相 →【执行器：电机·减速机】；
+ * 上方数字信号仿真与硬件仿真，底部动力学仿真横跨全图。 */
 export function renderArchitectureOverview() {
-  // 右侧按层挂接的仿真卫星：算法=纯数字信号仿真，应用=动力学仿真。
-  const satellite = (kind, title, items, note) => `<div class="canvas-satellite canvas-satellite-${kind}" aria-label="${esc(title)}"><strong>${esc(title)}<span class="canvas-soon">规划中</span></strong><span class="canvas-satellite-items">${items.map(item => `<span>${esc(item)}</span>`).join('')}</span><small>${esc(note)}</small></div>`;
-  const simApp = satellite('sim', '动力学仿真', ['单摆', '机械臂', '负载等效'], '以执行器参数驱动被控对象，闭环演练应用层策略');
-  const simFoc = satellite('sim', '数字信号仿真', ['电流环', '观测器', '滤波器'], '纯数字信号注入，验证算法层的离散域行为');
-  const pcbCard = `<a class="canvas-satellite canvas-satellite-pcb" href="#/architecture/hardware" aria-label="PCBA 设计"><strong>PCBA 设计<span class="canvas-soon">规划中</span></strong><span class="canvas-satellite-items"><span>原理约束</span><span>引脚网表</span><span>功率与预驱</span></span><small>从硬件配置生成设计输入，软硬同源</small></a>`;
-  const simHardware = `<div class="canvas-satellite canvas-satellite-sim" aria-label="硬件仿真"><strong>硬件仿真<span class="canvas-soon">规划中</span></strong><span class="canvas-satellite-items"><span>逆变功率级</span><span>电机电气</span><span>采样链</span></span><small>在宿主机运行生成代码，模拟硬件边界</small></div>`;
-  const spine = (id, extra = '') => `<a class="layer-entry layer-${id}" href="#/architecture/${id}"><span class="layer-order">${icon(LAYER_ICONS[id], 'layer-order-icon')}<small>${LAYERS[id].code}</small></span><span class="layer-main"><strong>${LAYERS[id].name}</strong><span>${LAYERS[id].summary}</span><span class="layer-capabilities">${layerModules(id).map(module => `<span>${esc(module.title)}</span>`).join('')}</span></span><canvas class="line-field" data-mark="${id}" aria-hidden="true"></canvas><span class="layer-meta"><strong>${layerModules(id).length} 个模块</strong><span>查看功能</span></span>${icon('arrow-right', 'entry-arrow')}</a>${extra}`;
-  // 生命周期带：从选型到维护，全部指向既有页面。
-  const lifecycle = [['选型', '货架 · 执行器与驱动', '#/equipment'], ['烧录', '双核镜像烧写', '#/project/flash'], ['校准', '编码器与摩擦辨识', '#/project/application?module=app-calibration&tab=config'], ['测试', '台架测量记录', '#/performance'], ['上位机', '通信协议与解析', '#/project/protocol'], ['调试器', 'J-Link 实时监控', '#/debug'], ['维护', '错误码与版本', '#/project/faults']].map(([title, note, href]) => `<a class="canvas-stage" href="${href}"><strong>${esc(title)}</strong><small>${esc(note)}</small></a>`).join('<span class="canvas-stage-arrow" aria-hidden="true">→</span>');
-  return `<section class="architecture-overview lifecycle-canvas" aria-label="关节模组全生命周期导航">
-    <div class="canvas-spine">
-      <div class="canvas-row">${spine('app', simApp)}</div>
-      ${bridge(1)}
-      <div class="canvas-row">${spine('foc', simFoc)}</div>
-      ${bridge(2)}
-      <div class="canvas-row canvas-row-hardware">${pcbCard}${spine('hardware')}${simHardware}</div>
+  const soon = '<span class="canvas-soon">规划中</span>';
+  const simCard = (cls, title, items) => `<div class="canvas-sim ${cls}"><strong>${esc(title)}${soon}</strong><span class="canvas-sim-items">${items.map(item => `<span>${esc(item)}</span>`).join('')}</span></div>`;
+  const chainNode = (id, extra = '') => `<a class="chain-node chain-${id}" href="#/architecture/${id}"><span class="chain-head"><strong>${LAYERS[id].name}</strong><small>${LAYERS[id].code}</small></span><span class="chain-summary">${LAYERS[id].summary}</span><span class="layer-capabilities">${layerModules(id).map(module => `<span>${esc(module.title)}</span>`).join('')}</span><canvas class="line-field" data-mark="${id}" aria-hidden="true"></canvas><span class="chain-foot"><strong>${layerModules(id).length} 个模块</strong>${icon('arrow-right', 'entry-arrow')}</span>${extra}</a>`;
+  // 链上连接：标签在上、双向轨道在下（单向只留右箭头）；area 为空时由内部链网格排布。
+  const link = (label, sub = '', oneWay = false, area = '') => `<div class="canvas-link${oneWay ? ' canvas-link-one' : ''}"${area ? ` style="grid-area:${area}"` : ''} aria-hidden="true"><span>${label}${sub ? `<small>${sub}</small>` : ''}</span><i></i></div>`;
+  return `<section class="architecture-overview lifecycle-canvas" aria-label="关节模组信号与功率链全景">
+    <div class="canvas-flow">
+      <div class="canvas-sims" style="grid-area:sims">${simCard('canvas-sim-signal', '数字信号仿真', ['电流环', '观测器', '滤波器', '状态机'])}${simCard('canvas-sim-hardware', '硬件仿真', ['逆变功率级', '电机电气', '采样链'])}</div>
+      <label class="canvas-source-unit" style="grid-area:host" title="单击选择指令来源 · 双击进入上位机" ondblclick="location.hash='#/project/protocol'"><input type="radio" name="canvas-source" value="host" checked><span class="canvas-source-card"><strong>上位机</strong><small>以太网 · CAN · RS485</small></span>${link('指令 / 遥测', '以太网 · CAN · RS485')}</label>
+      <label class="canvas-source-unit" style="grid-area:dbg" title="单击选择指令来源 · 双击进入调试器" ondblclick="location.hash='#/debug'"><input type="radio" name="canvas-source" value="debugger"><span class="canvas-source-card"><strong>调试器</strong><small>SEGGER J-Link</small></span>${link('访问 / 监控', 'J-Link · SWD')}</label>
+      <div class="canvas-group canvas-group-driver" style="grid-area:driver">
+        <span class="canvas-group-label"><b>驱动器</b><a href="#/equipment/drivers">货架 →</a></span>
+        <div class="canvas-group-chain canvas-group-chain-layers">${chainNode('app')}${link('控制给定 / 反馈快照')}${chainNode('foc')}${link('调制提交 / 同步采样')}${chainNode('hardware', '<span class="chain-embedded"><b>PCB 设计</b></span>')}</div>
+      </div>
+      ${link('三相', 'U · V · W', true, 'gapD')}
+      <div class="canvas-group canvas-group-actuator" style="grid-area:actuator">
+        <span class="canvas-group-label"><b>执行器</b><a href="#/equipment/actuators">货架 →</a></span>
+        <div class="canvas-group-chain canvas-group-chain-physical"><a class="chain-node chain-physical" href="#/equipment/actuators"><span class="chain-head"><strong>电机</strong></span><span class="chain-summary">三相永磁同步电机</span></a>${link('轴', '', true)}<a class="chain-node chain-physical" href="#/equipment/actuators"><span class="chain-head"><strong>减速机</strong></span><span class="chain-summary">行星 / 谐波减速</span></a></div>
+      </div>
+      <div class="canvas-dynamics" style="grid-area:dyn"><strong>动力学仿真${soon}</strong><span class="canvas-sim-items"><span>单摆</span><span>机械臂</span><span>负载等效</span></span></div>
     </div>
-    <div class="canvas-lifecycle" aria-label="生命周期">${lifecycle}</div>
+    <div class="canvas-lifecycle" aria-label="生命周期">${[['选型', '货架 · 执行器与驱动', '#/equipment'], ['工程', '配置 · 生成 · 烧录', '#/project/actuator'], ['调试', 'J-Link 实时监控', '#/debug'], ['测试', '台架测量记录', '#/performance']].map(([title, note, href]) => `<a class="canvas-stage" href="${href}"><strong>${esc(title)}</strong><small>${esc(note)}</small></a>`).join('<span class="canvas-stage-arrow" aria-hidden="true">→</span>')}</div>
   </section>`;
 }
 

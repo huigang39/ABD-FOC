@@ -92,6 +92,13 @@ code,.mono { font-family: var(--mono); font-size: .88em; overflow-wrap: anywhere
 .skip-link:focus { top: 10px; }
 
 .app-shell { display: grid; grid-template-columns: var(--sidebar-width, 190px) minmax(0,1fr); min-height: 100vh; transition: grid-template-columns var(--motion); }
+/* 全站无侧栏：顶栏承担主导航，所有子页面全屏。 */
+.sidebar, .sidebar-resizer { display: none !important; }
+.app-shell { grid-template-columns: minmax(0, 1fr) !important; }
+#workspace { max-width: none; }
+.topbar-nav { display: flex; align-items: center; gap: 4px; margin-left: 20px; }
+.topbar-nav a { display: inline-flex; align-items: center; min-height: 34px; padding: 6px 14px; border-radius: 999px; color: var(--muted); font-size: 12.5px; font-weight: 500; text-decoration: none; white-space: nowrap; transition: background-color var(--motion), color var(--motion); }
+.topbar-nav a:hover { background: var(--soft); color: var(--ink); }
 /* 侧栏折叠：窄化为图标栏；状态记录在 <html data-sidebar> 并持久化。 */
 .sidebar-toggle-icon { transition: transform var(--motion); }
 @media (min-width: 801px) {
