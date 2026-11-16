@@ -370,6 +370,8 @@ test('旧模块名 hw-sensors 的七个数据面载入时折叠为 hw-drivers，
   const release = project.layerVersions.releases[0];
   swap(release.snapshot.instances); swapProvenance(release.snapshot.provenance);
   const record = project.performance.records[0];
+  project.build.moduleOptimizations['hw-sensors'] = 'O2';
+  record.snapshot.build.moduleOptimizations['hw-sensors'] = 'O2';
   swap(record.snapshot.driver.hardware);
   for (const layer of Object.values(record.snapshot.layers)) swap(layer.configuration);
   const loaded = parseProject(JSON.stringify(project));
@@ -390,5 +392,9 @@ test('旧模块名 hw-sensors 的七个数据面载入时折叠为 hw-drivers，
   const saved = loaded.performance.records[0].snapshot;
   assert.equal(Object.hasOwn(saved.driver.hardware, 'hw-drivers'), true);
   assert.equal(Object.hasOwn(saved.layers.hardware.configuration, 'hw-drivers'), true);
+  assert.equal(Object.hasOwn(loaded.build.moduleOptimizations, 'hw-sensors'), false);
+  assert.equal(loaded.build.moduleOptimizations['hw-drivers'], 'O2');
+  assert.equal(Object.hasOwn(saved.build.moduleOptimizations, 'hw-sensors'), false);
+  assert.equal(saved.build.moduleOptimizations['hw-drivers'], 'O2');
   assert.deepEqual(parseProject(serializeProject(loaded)), loaded);
 });

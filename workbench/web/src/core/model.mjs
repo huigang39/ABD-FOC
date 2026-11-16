@@ -241,6 +241,7 @@ function migrateDriverModule(project) {
   const renameProvenance=provenance=>{if(!plain(provenance))return;for(const key of Object.keys(provenance))if(key.startsWith('hw-sensors.')){const next=`hw-drivers.${key.slice('hw-sensors.'.length)}`;if(!Object.hasOwn(provenance,next))provenance[next]=provenance[key];delete provenance[key];}};
   rename(project.instances,'hw-sensors','hw-drivers');
   rename(project.execution?.assignments,'hw-sensors','hw-drivers');
+  rename(project.build?.moduleOptimizations,'hw-sensors','hw-drivers');
   renameProvenance(project.provenance);
   if(Array.isArray(project.catalog?.drivers))for(const driver of project.catalog.drivers)rename(driver?.hardware,'hw-sensors','hw-drivers');
   const design=project.design;
@@ -265,6 +266,7 @@ function migrateDriverModule(project) {
   for(const record of project.performance?.records||[]) {
     const snapshot=record?.snapshot;
     rename(snapshot?.driver?.hardware,'hw-sensors','hw-drivers');
+    rename(snapshot?.build?.moduleOptimizations,'hw-sensors','hw-drivers');
     for(const layer of Object.values(snapshot?.layers||{}))rename(layer?.configuration,'hw-sensors','hw-drivers');
   }
 }
