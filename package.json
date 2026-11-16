@@ -6,8 +6,9 @@
   "scripts": {
     "start": "node workbench/server.mjs",
     "test": "node --test workbench/test/*.test.mjs",
-    "test:firmware": "node --test workbench/test/new-generator.test.mjs workbench/test/compiler-manifest.test.mjs",
+    "test:firmware": "node --test workbench/test/new-generator.test.mjs workbench/test/compiler-manifest.test.mjs workbench/test/neo-minimal.test.mjs",
     "check": "node workbench/check.mjs",
+    "build:neo-minimal": "node workbench/native/build-neo-minimal.mjs",
     "start:build-service": "node workbench/build-server.mjs"
   }
 }
